@@ -110,7 +110,7 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
                             TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.black87)),
                     const SizedBox(height: 24),
                     DropdownButtonFormField<String>(
-                      initialValue: category,
+                      value: category,
                       items: _categoryImages.keys
                           .map((c) => DropdownMenuItem(
                                 value: c,
