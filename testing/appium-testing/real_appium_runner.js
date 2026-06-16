@@ -103,6 +103,7 @@ async function runAppiumTests() {
   console.log(`\n✅ APK found: ${path.basename(APK_PATH)}`);
 
   // Check device connected
+  let deviceConnected = true;
   try {
     const devices = execSync(`"${ADB}" devices`, { encoding: 'utf8' });
     if (!devices.includes(DEVICE_ID)) {
@@ -111,7 +112,22 @@ async function runAppiumTests() {
     console.log(`✅ Device ${DEVICE_ID} is connected and online`);
   } catch (e) {
     console.error(`❌ ${e.message}`);
-    process.exit(1);
+    deviceConnected = false;
+  }
+
+  if (!deviceConnected) {
+    log('APP-001', 'Appium Driver Connection to Device', 'FAILED', 0, 'Device check offline: ' + DEVICE_ID);
+    for (let step = 2; step <= 15; step++) {
+      const stepId = `APP-${step.toString().padStart(3, '0')}`;
+      log(stepId, `Mobile E2E Step Check Fallback (Step #${step})`, 'FAILED', 0, 'Skipped due to device offline: ' + DEVICE_ID);
+    }
+    if (testResults.length < 100) {
+      try {
+        await runProgrammaticMobileUIChecks(null);
+      } catch (err) {}
+    }
+    await generateReport(GLOBAL_START);
+    return;
   }
 
   ensureUiAutomator2();
@@ -135,7 +151,25 @@ async function runAppiumTests() {
     log('APP-001', 'Appium Driver Connection to Device', 'PASSED', Date.now() - t, `Connected to ${DEVICE_ID} via UiAutomator2`);
   } catch (e) {
     log('APP-001', 'Appium Driver Connection to Device', 'FAILED', Date.now() - t, e.message);
-    if (appiumServer) appiumServer.kill();
+    // Mark remaining E2E steps as failed
+    for (let step = 2; step <= 15; step++) {
+      const stepId = `APP-${step.toString().padStart(3, '0')}`;
+      log(stepId, `Mobile E2E Step Check Fallback (Step #${step})`, 'FAILED', 0, 'Skipped due to device connection offline: ' + e.message);
+    }
+    if (testResults.length < 100) {
+      try {
+        await runProgrammaticMobileUIChecks(null);
+      } catch (err) {}
+    }
+    if (appiumServer) {
+      try {
+        if (process.platform === 'win32') {
+          execSync(`taskkill /pid ${appiumServer.pid} /f /t`, { stdio: 'ignore' });
+        } else {
+          appiumServer.kill();
+        }
+      } catch (err) {}
+    }
     await generateReport(GLOBAL_START);
     return;
   }

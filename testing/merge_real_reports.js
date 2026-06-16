@@ -22,7 +22,7 @@ const FILES_TO_MERGE = [
   },
   {
     name: 'Backend Security Rules',
-    path: path.join(__dirname, 'automated-testing/vulnerability_report.xlsx'),
+    path: path.join(__dirname, 'automated-testing/automated.xlsx'),
     prefix: 'Sec_Rules_'
   }
 ];
