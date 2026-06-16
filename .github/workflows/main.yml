@@ -126,7 +126,7 @@ jobs:
         working-directory: frontend
         timeout-minutes: 15  # ✅ APK build timeout
         env:
-          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx2048m"
+          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx3072m"
         run: flutter build apk --debug
 
       - name: Install Appium dependencies
