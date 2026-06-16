@@ -196,3 +196,5 @@ jobs:
         with:
           name: localsync3-security-report
           path: backend/testing/automated-testing/automated.xlsx
+
+# trigger: 1
