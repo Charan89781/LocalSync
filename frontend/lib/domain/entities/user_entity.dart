@@ -1,0 +1,126 @@
+enum UserRole { resident, admin, moderator }
+
+class UserEntity {
+  final String id;
+  final String email;
+  final String? name;
+  final String? phoneNumber;
+  final String? profileImageUrl;
+  final String? address;
+  final bool isVerified;
+  final double trustScore;
+  final int totalHelps;
+  final int totalPosts;
+  final UserRole role;
+  final UserSettings settings;
+
+  UserEntity({
+    required this.id,
+    required this.email,
+    this.name,
+    this.phoneNumber,
+    this.profileImageUrl,
+    this.address,
+    this.isVerified = false,
+    this.trustScore = 5.0,
+    this.totalHelps = 0,
+    this.totalPosts = 0,
+    this.role = UserRole.resident,
+    UserSettings? settings,
+  }) : this.settings = settings ?? UserSettings();
+
+  UserEntity copyWith({
+    String? id,
+    String? email,
+    String? name,
+    String? phoneNumber,
+    String? profileImageUrl,
+    String? address,
+    bool? isVerified,
+    double? trustScore,
+    int? totalHelps,
+    int? totalPosts,
+    UserRole? role,
+    UserSettings? settings,
+  }) {
+    return UserEntity(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      name: name ?? this.name,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      address: address ?? this.address,
+      isVerified: isVerified ?? this.isVerified,
+      trustScore: trustScore ?? this.trustScore,
+      totalHelps: totalHelps ?? this.totalHelps,
+      totalPosts: totalPosts ?? this.totalPosts,
+      role: role ?? this.role,
+      settings: settings ?? this.settings,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'email': email,
+      'name': name,
+      'phoneNumber': phoneNumber,
+      'profileImageUrl': profileImageUrl,
+      'address': address,
+      'isVerified': isVerified,
+      'trustScore': trustScore,
+      'totalHelps': totalHelps,
+      'totalPosts': totalPosts,
+      'role': role.name,
+      'settings': settings.toMap(),
+    };
+  }
+
+  factory UserEntity.fromMap(Map<String, dynamic> map, String id) {
+    return UserEntity(
+      id: id,
+      email: map['email'] ?? '',
+      name: map['name'],
+      phoneNumber: map['phoneNumber'],
+      profileImageUrl: map['profileImageUrl'],
+      address: map['address'],
+      isVerified: map['isVerified'] ?? false,
+      trustScore: (map['trustScore'] ?? 5.0).toDouble(),
+      totalHelps: map['totalHelps'] ?? 0,
+      totalPosts: map['totalPosts'] ?? 0,
+      role: UserRole.values.firstWhere(
+        (e) => e.name == (map['role'] ?? 'resident'),
+        orElse: () => UserRole.resident,
+      ),
+      settings:
+          UserSettings.fromMap(map['settings'] as Map<String, dynamic>? ?? {}),
+    );
+  }
+}
+
+class UserSettings {
+  final bool enablePushNotifications;
+  final bool showLocation;
+  final bool darkMode;
+  final bool biometricLock;
+
+  UserSettings({
+    this.enablePushNotifications = true,
+    this.showLocation = true,
+    this.darkMode = false,
+    this.biometricLock = false,
+  });
+
+  Map<String, dynamic> toMap() => {
+        'enablePushNotifications': enablePushNotifications,
+        'showLocation': showLocation,
+        'darkMode': darkMode,
+        'biometricLock': biometricLock,
+      };
+
+  factory UserSettings.fromMap(Map<String, dynamic> map) => UserSettings(
+        enablePushNotifications: map['enablePushNotifications'] ?? true,
+        showLocation: map['showLocation'] ?? true,
+        darkMode: map['darkMode'] ?? false,
+        biometricLock: map['biometricLock'] ?? false,
+      );
+}

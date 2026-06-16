@@ -1,0 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/services/storage_service.dart';
+
+final storageProvider = Provider((ref) => StorageService());

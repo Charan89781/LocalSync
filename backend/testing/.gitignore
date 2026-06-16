@@ -1,0 +1,6 @@
+node_modules/
+selenium-tests/node_modules/
+appium-testing/node_modules/
+automated-testing/node_modules/
+**/~$*.xlsx
+~$*.xlsx

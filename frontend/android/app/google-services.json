@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "852345152269",
+    "project_id": "localsync-d68dc",
+    "storage_bucket": "localsync-d68dc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:852345152269:android:f40bff7fd3f1dfeda2c644",
+        "android_client_info": {
+          "package_name": "com.example.localsync"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "852345152269-sao3q85tu2oh0rrjq5cij9jhhk3b87mv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.localsync",
+            "certificate_hash": "62ff2c1b82cbf2d542d5f928a91045ae9ccd9346"
+          }
+        },
+        {
+          "client_id": "852345152269-b466ovincdfem50p9ib9poeb2ckr63mo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDNvjWcYNHJa-3S46DmTZ2bHqMziQcUgeU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "852345152269-b466ovincdfem50p9ib9poeb2ckr63mo.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
