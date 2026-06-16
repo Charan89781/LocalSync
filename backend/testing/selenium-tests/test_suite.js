@@ -315,6 +315,16 @@ async function runTests() {
 
     console.log('Generating Excel analysis report...');
     await generateExcelReport(testResults, REPORT_PATH);
+    
+    // Explicitly exit process to prevent hanging handles from keeping CI runner alive
+    const failedSteps = testResults.filter(r => r.status === 'FAILED');
+    if (failedSteps.length > 0) {
+      console.log(`Test suite finished with ${failedSteps.length} failures.`);
+      process.exit(1);
+    } else {
+      console.log('Test suite completed successfully.');
+      process.exit(0);
+    }
   }
 }
 
