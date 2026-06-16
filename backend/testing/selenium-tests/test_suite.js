@@ -13,7 +13,9 @@ const BASE_URL = process.env.GITHUB_ACTIONS === 'true'
   : `http://localhost:${PORT}`;
 const REPORT_PATH = path.join(__dirname, 'test_report.xlsx');
 
-let serverProcess = null;
+const http = require('http');
+
+let nativeServer = null;
 let driver = null;
 const testResults = [];
 
@@ -23,43 +25,113 @@ function logStep(stepName, status, durationMs, details = '') {
   console.log(`[${status}] ${stepName} (${durationMs}ms) ${details ? '- ' + details : ''}`);
 }
 
-function startLocalServer() {
-  // Create symlink for base-href support on GitHub Actions if needed
-  if (process.env.GITHUB_ACTIONS === 'true') {
-    const symlinkPath = path.join(BUILD_PATH, 'LocalSync');
-    if (!fs.existsSync(symlinkPath)) {
-      try {
-        fs.symlinkSync('.', symlinkPath, 'dir');
-        console.log('Created LocalSync symlink for GitHub Pages base-href compatibility');
-      } catch (err) {
-        console.error('Failed to create symlink:', err.message);
-      }
+function removeSymlinkIfExists() {
+  const symlinkPath = path.join(BUILD_PATH, 'LocalSync');
+  try {
+    const stats = fs.lstatSync(symlinkPath);
+    if (stats.isSymbolicLink()) {
+      fs.unlinkSync(symlinkPath);
+      console.log('Successfully removed existing LocalSync symlink.');
+    } else if (stats.isDirectory()) {
+      fs.rmSync(symlinkPath, { recursive: true, force: true });
+      console.log('Removed LocalSync directory.');
+    } else {
+      fs.unlinkSync(symlinkPath);
+    }
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      console.error('Error removing LocalSync symlink/directory:', err.message);
     }
   }
+}
+
+function startLocalServer() {
+  // Always clean up any existing symlink/directory from BUILD_PATH
+  removeSymlinkIfExists();
 
   return new Promise((resolve, reject) => {
-    console.log(`Starting http-server on port ${PORT}...`);
-    const cmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-    serverProcess = spawn(cmd, ['http-server', BUILD_PATH, '-p', PORT.toString(), '-c-1'], {
-      shell: true
+    console.log(`Starting native HTTP server on port ${PORT} serving ${BUILD_PATH}...`);
+    
+    const MIME_TYPES = {
+      '.html': 'text/html',
+      '.css': 'text/css',
+      '.js': 'application/javascript',
+      '.json': 'application/json',
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.gif': 'image/gif',
+      '.svg': 'image/svg+xml',
+      '.wasm': 'application/wasm',
+      '.ttf': 'font/ttf',
+      '.otf': 'font/otf',
+      '.woff': 'font/woff',
+      '.woff2': 'font/woff2'
+    };
+
+    nativeServer = http.createServer((req, res) => {
+      let reqPath = decodeURIComponent(req.url.split('?')[0]);
+      
+      // Strip /LocalSync prefix if it exists
+      if (reqPath.startsWith('/LocalSync')) {
+        reqPath = reqPath.slice('/LocalSync'.length);
+      }
+      
+      // Default directory requests to index.html
+      if (reqPath === '' || reqPath === '/' || reqPath.endsWith('/')) {
+        reqPath = path.join(reqPath, 'index.html');
+      }
+
+      const filePath = path.join(BUILD_PATH, reqPath);
+      
+      // Basic security check to prevent directory traversal
+      if (!filePath.startsWith(BUILD_PATH)) {
+        res.statusCode = 403;
+        res.end('Forbidden');
+        return;
+      }
+
+      fs.stat(filePath, (err, stats) => {
+        if (err || !stats.isFile()) {
+          // Fallback to index.html for SPA routing
+          const indexFallback = path.join(BUILD_PATH, 'index.html');
+          fs.readFile(indexFallback, (fallbackErr, content) => {
+            if (fallbackErr) {
+              res.statusCode = 404;
+              res.end('404 Not Found');
+            } else {
+              res.writeHead(200, { 'Content-Type': 'text/html' });
+              res.end(content);
+            }
+          });
+          return;
+        }
+
+        const ext = path.extname(filePath).toLowerCase();
+        const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+
+        res.writeHead(200, { 'Content-Type': contentType });
+        
+        const stream = fs.createReadStream(filePath);
+        stream.on('error', (streamErr) => {
+          console.error('Stream error:', streamErr);
+          if (!res.headersSent) {
+            res.statusCode = 500;
+            res.end('Internal Server Error');
+          }
+        });
+        stream.pipe(res);
+      });
     });
 
-    serverProcess.stdout.on('data', (data) => {
-      const output = data.toString();
-      if (output.includes('Available on:') || output.includes('Hit CTRL-C')) {
+    nativeServer.listen(PORT, (err) => {
+      if (err) {
+        console.error('Failed to start native server:', err);
+        reject(err);
+      } else {
+        console.log(`Native HTTP server is listening on port ${PORT}`);
         resolve();
       }
     });
-
-    serverProcess.stderr.on('data', (data) => {
-      console.error(`[Server Error] ${data.toString()}`);
-    });
-
-    serverProcess.on('close', (code) => {
-      console.log(`HTTP Server exited with code ${code}`);
-    });
-
-    setTimeout(() => resolve(), 3000);
   });
 }
 
@@ -317,14 +389,14 @@ async function runTests() {
       }
       await driver.quit();
     }
-    if (serverProcess) {
+    removeSymlinkIfExists();
+    if (nativeServer) {
       try {
-        if (process.platform === 'win32') {
-          require('child_process').execSync(`taskkill /pid ${serverProcess.pid} /f /t`, { stdio: 'ignore' });
-        } else {
-          serverProcess.kill();
-        }
-      } catch (err) {}
+        nativeServer.close();
+        console.log('Native HTTP server stopped.');
+      } catch (err) {
+        console.error('Error stopping native server:', err.message);
+      }
     }
     logStep('Shutdown Browser & Terminate Server', 'PASSED', Date.now() - stepStart, 'All background processes killed cleanly');
 
