@@ -150,6 +150,19 @@ jobs:
           name: localsync3-appium-report
           path: backend/testing/appium-testing/appium_test_report.xlsx
 
+      # Automatically deploys the APK to GitHub Releases under tag 'latest'
+      - name: Deploy APK to GitHub Releases
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: "Latest Android Build"
+          draft: false
+          prerelease: false
+          files: frontend/build/app/outputs/flutter-apk/app-debug.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   security-rules-audit:
     runs-on: ubuntu-latest
 
