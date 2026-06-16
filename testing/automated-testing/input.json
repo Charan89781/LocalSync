@@ -1,0 +1,52 @@
+{
+  "userAuthentication": {
+    "validUser": {
+      "email": "testuser@localsync.com",
+      "password": "password123",
+      "displayName": "Pavan Kumar",
+      "society": "Block A"
+    },
+    "invalidUser": {
+      "email": "malicious_hacker_test.com",
+      "password": "12",
+      "displayName": "",
+      "society": "Unknown Block"
+    }
+  },
+  "noticeBoardAnnouncements": [
+    {
+      "title": "Maintenance Notice - Water Supply Interruption",
+      "description": "Routine overhead tank cleaning is scheduled for Tuesday. Water supply will be unavailable from 10:00 AM to 1:00 PM.",
+      "category": "Maintenance",
+      "priority": "Urgent",
+      "societyTarget": "Block A"
+    },
+    {
+      "title": "Community Gathering Sunday Brunch",
+      "description": "Join us for our monthly society get-together at the central lawn.",
+      "category": "Events",
+      "priority": "General",
+      "societyTarget": "All"
+    }
+  ],
+  "marketplaceItems": [
+    {
+      "title": "Cordless Drill Set",
+      "description": "Perfect working condition cordless drill. Includes battery and charger. For borrowing.",
+      "price": 0.0,
+      "category": "Tools",
+      "condition": "Good",
+      "ownerId": "user_uid_12345678"
+    }
+  ],
+  "emergencySOS": {
+    "activeAlert": {
+      "alertId": "sos_alert_987654",
+      "userId": "user_uid_12345678",
+      "latitude": 12.971598,
+      "longitude": 77.594562,
+      "status": "active",
+      "message": "Assistance needed in block A elevator lobby"
+    }
+  }
+}

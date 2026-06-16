@@ -111,14 +111,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ),
                         ],
                       ),
-                      TextButton(
-                        onPressed: () => context.go('/login'),
-                        child: Text(
-                          'Skip',
-                          style: GoogleFonts.inter(
-                            color: Colors.white.withOpacity(0.6),
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
+                      Semantics(
+                        label: 'Skip',
+                        container: true,
+                        child: TextButton(
+                          onPressed: () => context.go('/login'),
+                          child: Text(
+                            'Skip',
+                            style: GoogleFonts.inter(
+                              color: Colors.white.withOpacity(0.6),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
                       ),
@@ -173,15 +177,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 ),
                                 const SizedBox(height: 40),
                                 // Slide Title
-                                Text(
-                                  slide.title,
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                    height: 1.2,
-                                    letterSpacing: -0.8,
+                                Semantics(
+                                  label: slide.title,
+                                  child: Text(
+                                    slide.title,
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                      height: 1.2,
+                                      letterSpacing: -0.8,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 20),

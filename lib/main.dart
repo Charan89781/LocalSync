@@ -33,9 +33,7 @@ void main() async {
     ),
   );
 
-  if (kIsWeb) {
-    SemanticsBinding.instance.ensureSemantics();
-  }
+  SemanticsBinding.instance.ensureSemantics();
 }
 
 

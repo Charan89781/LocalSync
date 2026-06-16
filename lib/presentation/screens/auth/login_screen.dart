@@ -433,51 +433,57 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                      const SizedBox(height: 32),
                      // Glass Card Form
                      GlassCard(
-                       borderRadius: 24,
+                   borderRadius: 24,
                        padding: const EdgeInsets.all(24),
                        child: Column(
                          crossAxisAlignment: CrossAxisAlignment.stretch,
                          children: [
-                           Text(
-                             'SIGN IN',
-                             style: GoogleFonts.outfit(
-                               color: Colors.white,
-                               fontSize: 20,
-                               fontWeight: FontWeight.w800,
-                               letterSpacing: 1.5,
+                           Semantics(
+                             label: 'SIGN IN',
+                             child: Text(
+                               'SIGN IN',
+                               style: GoogleFonts.outfit(
+                                 color: Colors.white,
+                                 fontSize: 20,
+                                 fontWeight: FontWeight.w800,
+                                 letterSpacing: 1.5,
+                               ),
+                               textAlign: TextAlign.center,
                              ),
-                             textAlign: TextAlign.center,
                            ),
                            const SizedBox(height: 24),
                            // Email Field
                            _buildInputWrapper(
                              focused: _emailFocused,
                              error: _emailError != null,
-                             child: TextField(
-                               controller: _emailController,
-                               focusNode: _focusNodeEmail,
-                               keyboardType: TextInputType.emailAddress,
-                               style: GoogleFonts.inter(color: Colors.white),
-                               decoration: InputDecoration(
-                                 prefixIcon: Icon(
-                                   Icons.mail_outline_rounded,
-                                   color: _emailError != null
-                                       ? AppColors.errorRed
-                                       : (_emailFocused ? AppColors.neonCyan : Colors.white38),
+                             child: Semantics(
+                               label: 'Email address',
+                               child: TextField(
+                                 controller: _emailController,
+                                 focusNode: _focusNodeEmail,
+                                 keyboardType: TextInputType.emailAddress,
+                                 style: GoogleFonts.inter(color: Colors.white),
+                                 decoration: InputDecoration(
+                                   prefixIcon: Icon(
+                                     Icons.mail_outline_rounded,
+                                     color: _emailError != null
+                                         ? AppColors.errorRed
+                                         : (_emailFocused ? AppColors.neonCyan : Colors.white38),
+                                   ),
+                                   hintText: 'Email address',
+                                   border: InputBorder.none,
+                                   enabledBorder: InputBorder.none,
+                                   focusedBorder: InputBorder.none,
+                                   filled: false,
+                                   contentPadding: const EdgeInsets.symmetric(
+                                       vertical: 16, horizontal: 16),
                                  ),
-                                 hintText: 'Email address',
-                                 border: InputBorder.none,
-                                 enabledBorder: InputBorder.none,
-                                 focusedBorder: InputBorder.none,
-                                 filled: false,
-                                 contentPadding: const EdgeInsets.symmetric(
-                                     vertical: 16, horizontal: 16),
+                                 onChanged: (_) {
+                                   if (_emailError != null) {
+                                     setState(() => _emailError = null);
+                                   }
+                                 },
                                ),
-                               onChanged: (_) {
-                                 if (_emailError != null) {
-                                   setState(() => _emailError = null);
-                                 }
-                               },
                              ),
                            ),
                            if (_emailError != null) ...[
@@ -495,45 +501,48 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                            _buildInputWrapper(
                              focused: _passwordFocused,
                              error: _passwordError != null,
-                             child: TextField(
-                               controller: _passwordController,
-                               focusNode: _focusNodePassword,
-                               obscureText: _obscurePassword,
-                               style: GoogleFonts.inter(color: Colors.white),
-                               decoration: InputDecoration(
-                                 prefixIcon: Icon(
-                                   Icons.lock_outline_rounded,
-                                   color: _passwordError != null
-                                       ? AppColors.errorRed
-                                       : (_passwordFocused ? AppColors.neonCyan : Colors.white38),
-                                 ),
-                                 suffixIcon: IconButton(
-                                   icon: Icon(
-                                     _obscurePassword
-                                         ? Icons.visibility_off_rounded
-                                         : Icons.visibility_rounded,
-                                     color: Colors.white38,
-                                     size: 18,
+                             child: Semantics(
+                               label: 'Password',
+                               child: TextField(
+                                 controller: _passwordController,
+                                 focusNode: _focusNodePassword,
+                                 obscureText: _obscurePassword,
+                                 style: GoogleFonts.inter(color: Colors.white),
+                                 decoration: InputDecoration(
+                                   prefixIcon: Icon(
+                                     Icons.lock_outline_rounded,
+                                     color: _passwordError != null
+                                         ? AppColors.errorRed
+                                         : (_passwordFocused ? AppColors.neonCyan : Colors.white38),
                                    ),
-                                   onPressed: () {
-                                     setState(() {
-                                       _obscurePassword = !_obscurePassword;
-                                     });
-                                   },
+                                   suffixIcon: IconButton(
+                                     icon: Icon(
+                                       _obscurePassword
+                                           ? Icons.visibility_off_rounded
+                                           : Icons.visibility_rounded,
+                                       color: Colors.white38,
+                                       size: 18,
+                                     ),
+                                     onPressed: () {
+                                       setState(() {
+                                         _obscurePassword = !_obscurePassword;
+                                       });
+                                     },
+                                   ),
+                                   hintText: 'Password',
+                                   border: InputBorder.none,
+                                   enabledBorder: InputBorder.none,
+                                   focusedBorder: InputBorder.none,
+                                   filled: false,
+                                   contentPadding: const EdgeInsets.symmetric(
+                                       vertical: 16, horizontal: 16),
                                  ),
-                                 hintText: 'Password',
-                                 border: InputBorder.none,
-                                 enabledBorder: InputBorder.none,
-                                 focusedBorder: InputBorder.none,
-                                 filled: false,
-                                 contentPadding: const EdgeInsets.symmetric(
-                                     vertical: 16, horizontal: 16),
+                                 onChanged: (_) {
+                                   if (_passwordError != null) {
+                                     setState(() => _passwordError = null);
+                                   }
+                                 },
                                ),
-                               onChanged: (_) {
-                                 if (_passwordError != null) {
-                                   setState(() => _passwordError = null);
-                                 }
-                               },
                              ),
                            ),
                            if (_passwordError != null) ...[
@@ -600,9 +609,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                      child: CircularProgressIndicator(color: AppColors.neonCyan),
                                    ),
                                  )
-                               : GradientButton(
+                               : Semantics(
                                    label: 'Sign In',
-                                   onPressed: _handleLogin,
+                                   button: true,
+                                   child: GradientButton(
+                                     label: 'Sign In',
+                                     onPressed: _handleLogin,
+                                   ),
                                  ),
                          ],
                        ),

@@ -1,0 +1,17 @@
+{
+  "name": "localsync-appium-testing",
+  "version": "1.0.0",
+  "description": "Appium mobile E2E testing for LocalSync3",
+  "main": "appium_test.js",
+  "scripts": {
+    "test": "node appium_test.js"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0",
+    "webdriverio": "^8.36.0"
+  },
+  "devDependencies": {
+    "appium": "^2.11.5",
+    "appium-uiautomator2-driver": "^2.45.1"
+  }
+}
