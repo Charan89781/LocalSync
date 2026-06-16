@@ -5,10 +5,13 @@ on:
     paths:
       - 'frontend/**'
       - 'backend/**'
+      - '.github/workflows/**'
   pull_request:
     paths:
       - 'frontend/**'
       - 'backend/**'
+      - '.github/workflows/**'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -73,7 +76,7 @@ jobs:
             backend/testing/selenium-tests/manual_web_test_report.xlsx
 
       - name: Deploy to GitHub Pages
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: frontend/build/web
