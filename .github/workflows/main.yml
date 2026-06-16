@@ -59,6 +59,7 @@ jobs:
         timeout-minutes: 10  # ✅ Flutter web build timeout
         run: |
           flutter build web --base-href "/LocalSync/" --release
+          touch build/web/.nojekyll
 
       - name: Run Selenium E2E tests
         working-directory: backend/testing/selenium-tests
