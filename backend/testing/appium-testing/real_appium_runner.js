@@ -16,9 +16,9 @@ const fs = require('fs');
 // ─── Paths & Config ──────────────────────────────────────────
 const APK_PATH   = path.join(__dirname, '../../../frontend/build/app/outputs/flutter-apk/app-debug.apk');
 const REPORT_PATH = path.join(__dirname, 'appium_test_report.xlsx');
-const APPIUM_BIN  = path.join(__dirname, 'node_modules/.bin/appium.cmd');
-const ADB         = 'D:\\AndroidFiles\\Sdk\\platform-tools\\adb.exe';
-const DEVICE_ID   = '65c2cb36';
+const APPIUM_BIN  = process.platform === 'win32' ? path.join(__dirname, 'node_modules/.bin/appium.cmd') : path.join(__dirname, 'node_modules/.bin/appium');
+const ADB         = process.env.ADB_PATH || (process.platform === 'win32' ? 'D:\\AndroidFiles\\Sdk\\platform-tools\\adb.exe' : 'adb');
+const DEVICE_ID   = process.env.DEVICE_ID || '65c2cb36';
 
 const capabilities = {
   platformName: 'Android',
@@ -69,13 +69,13 @@ function ensureUiAutomator2() {
   try {
     console.log('  🔧 Checking UiAutomator2 driver...');
     const result = execSync(`"${APPIUM_BIN}" driver list --installed 2>&1`, {
-      env: { ...process.env, ANDROID_HOME: 'D:\\AndroidFiles\\Sdk', JAVA_HOME: 'C:\\Program Files\\Microsoft\\jdk-17.0.14.7-hotspot' },
+      env: { ...process.env, ANDROID_HOME: process.env.ANDROID_HOME || 'D:\\AndroidFiles\\Sdk', JAVA_HOME: process.env.JAVA_HOME || 'C:\\Program Files\\Microsoft\\jdk-17.0.14.7-hotspot' },
       encoding: 'utf8', timeout: 15000, shell: true
     });
     if (!result.includes('uiautomator2')) {
       console.log('  📦 Installing UiAutomator2 driver...');
       execSync(`"${APPIUM_BIN}" driver install uiautomator2 2>&1`, {
-        env: { ...process.env, ANDROID_HOME: 'D:\\AndroidFiles\\Sdk' },
+        env: { ...process.env, ANDROID_HOME: process.env.ANDROID_HOME || 'D:\\AndroidFiles\\Sdk' },
         encoding: 'utf8', timeout: 120000, shell: true, stdio: 'inherit'
       });
     } else {
