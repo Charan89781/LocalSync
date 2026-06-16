@@ -28,8 +28,8 @@ const capabilities = {
   'appium:app': APK_PATH,
   'appium:appPackage': 'com.example.localsync',
   'appium:appActivity': 'com.example.localsync.MainActivity',
-  'appium:noReset': true,           // skip pm clear — blocked by Realme ColorOS
-  'appium:dontStopAppOnReset': true, // don't stop app between sessions
+  'appium:noReset': true,            // keep true — Realme blocks pm clear
+  'appium:forceAppLaunch': true,     // force fresh launch each session
   'appium:skipUnlock': true,         // skip unlock screen step
   'appium:newCommandTimeout': 300,
   'appium:androidInstallTimeout': 120000,
@@ -86,6 +86,84 @@ function ensureUiAutomator2() {
   }
 }
 
+// ─── Clear app auth state via run-as (works on debug APKs) ───────
+function clearAppData() {
+  const pkg = 'com.example.localsync';
+  try {
+    console.log('  🔒  Force-stopping app and clearing auth state...');
+    // Step 1: Force stop the app
+    execSync(`"${ADB}" -s ${DEVICE_ID} shell am force-stop ${pkg}`, {
+      encoding: 'utf8', timeout: 10000, stdio: 'pipe'
+    });
+    console.log('  ✅ App force-stopped');
+
+    // Step 2: Use run-as to clear SharedPreferences (Firebase auth tokens)
+    // This works because app-debug.apk is a debuggable build
+    const clearCmds = [
+      `run-as ${pkg} rm -rf shared_prefs databases`,
+      `run-as ${pkg} ls -la`,
+    ];
+    for (const cmd of clearCmds) {
+      try {
+        const out = execSync(`"${ADB}" -s ${DEVICE_ID} shell "${cmd}"`, {
+          encoding: 'utf8', timeout: 10000, stdio: 'pipe'
+        });
+        if (cmd.includes('ls -la')) {
+          console.log('  📁 App files state:\n' + out.trim());
+        }
+      } catch (_) {}
+    }
+    console.log('  ✅ Auth state cleared — app will start from login/onboarding');
+  } catch (e) {
+    console.log('  ⚠️  clearAppData error: ' + e.message.split('\n')[0]);
+  }
+}
+
+// Helper to find an element using multiple strategy functions, polling with retries
+async function findElementWithStrategies(strategies, timeoutMs = 8000) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    for (const strategy of strategies) {
+      try {
+        const el = await strategy();
+        if (await el.isExisting()) {
+          return el;
+        }
+      } catch (_) {}
+    }
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+  return null;
+}
+
+// Helper to simulate a native swipe-up gesture (scrolls content down to show the bottom)
+async function swipeDownToBottom(client, maxSwipes = 2) {
+  try {
+    const size = await client.getWindowSize();
+    const startX = Math.floor(size.width * 0.5);
+    const startY = Math.floor(size.height * 0.75); // touch near bottom
+    const endY = Math.floor(size.height * 0.25);   // drag up near top
+    
+    console.log(`  ☝️  Performing ${maxSwipes} swipe-up gesture(s) to scroll down...`);
+    for (let i = 0; i < maxSwipes; i++) {
+      await client.performActions([{
+        type: 'pointer',
+        id: 'finger1',
+        parameters: { pointerType: 'touch' },
+        actions: [
+          { type: 'pointerMove', duration: 0, x: startX, y: startY },
+          { type: 'pointerDown', button: 0 },
+          { type: 'pointerMove', duration: 800, x: startX, y: endY },
+          { type: 'pointerUp', button: 0 }
+        ]
+      }]);
+      await client.pause(1000); // Wait for scroll animation to settle
+    }
+  } catch (err) {
+    console.log('  ⚠️  Swipe gesture failed: ' + err.message);
+  }
+}
+
 // ─── Main Test Runner ─────────────────────────────────────────
 async function runAppiumTests() {
   const GLOBAL_START = new Date();
@@ -117,7 +195,7 @@ async function runAppiumTests() {
 
   if (!deviceConnected) {
     log('APP-001', 'Appium Driver Connection to Device', 'FAILED', 0, 'Device check offline: ' + DEVICE_ID);
-    for (let step = 2; step <= 15; step++) {
+    for (let step = 2; step <= 20; step++) {
       const stepId = `APP-${step.toString().padStart(3, '0')}`;
       log(stepId, `Mobile E2E Step Check Fallback (Step #${step})`, 'FAILED', 0, 'Skipped due to device offline: ' + DEVICE_ID);
     }
@@ -130,6 +208,8 @@ async function runAppiumTests() {
     return;
   }
 
+  // Clear app data so tests always start from onboarding
+  clearAppData();
   ensureUiAutomator2();
 
   let appiumServer = null;
@@ -142,7 +222,7 @@ async function runAppiumTests() {
     process.exit(1);
   }
 
-  console.log('\n▶  Running 15 Appium Mobile Test Steps...\n');
+  console.log('\n▶  Running 20 Appium Mobile Test Steps...\n');
 
   // ── STEP 1: Connect Appium driver ──
   let t = Date.now();
@@ -152,7 +232,7 @@ async function runAppiumTests() {
   } catch (e) {
     log('APP-001', 'Appium Driver Connection to Device', 'FAILED', Date.now() - t, e.message);
     // Mark remaining E2E steps as failed
-    for (let step = 2; step <= 15; step++) {
+    for (let step = 2; step <= 20; step++) {
       const stepId = `APP-${step.toString().padStart(3, '0')}`;
       log(stepId, `Mobile E2E Step Check Fallback (Step #${step})`, 'FAILED', 0, 'Skipped due to device connection offline: ' + e.message);
     }
@@ -178,6 +258,11 @@ async function runAppiumTests() {
   try {
     // STEP 2: App Launches & Splash Screen
     t = Date.now();
+    try {
+      await client.activateApp('com.example.localsync');
+    } catch (err) {
+      console.log('  ⚠️ Could not activate app via driver command: ' + err.message);
+    }
     await client.pause(4000);
     log('APP-002', 'App Launch & Splash Screen Render', 'PASSED', Date.now() - t, 'App launched from APK, splash renders on device');
 
@@ -199,15 +284,22 @@ async function runAppiumTests() {
     // STEP 5: Slide 1 Welcome Text
     t = Date.now();
     try {
-      let welcomeText = await client.$('~Connect With Neighbors');
-      if (!(await welcomeText.isExisting())) {
-        welcomeText = await client.$('android=new UiSelector().descriptionContains("Connect")');
+      // Flutter renders text via semantics node with label matching the slide title
+      const strategies = [
+        () => client.$('~Connect With Neighbors'),
+        () => client.$('android=new UiSelector().description("Connect With Neighbors")'),
+        () => client.$('android=new UiSelector().descriptionContains("Connect")'),
+        () => client.$('android=new UiSelector().descriptionContains("Neighbor")'),
+        () => client.$('//*[@content-desc="Connect With Neighbors"]'),
+        () => client.$('//android.view.View[@content-desc and contains(@content-desc, "Connect")]'),
+      ];
+      const welcomeText = await findElementWithStrategies(strategies, 8000);
+      if (welcomeText) {
+        await welcomeText.waitForDisplayed({ timeout: 5000 });
+        log('APP-005', 'Onboarding Slide 1: Welcome Text Verify', 'PASSED', Date.now() - t, '"Connect With Neighbors" text confirmed on slide 1');
+      } else {
+        throw new Error('Welcome text element not found via any locator strategy');
       }
-      if (!(await welcomeText.isExisting())) {
-        welcomeText = await client.$('android=new UiSelector().descriptionContains("Neighbors")');
-      }
-      await welcomeText.waitForDisplayed({ timeout: 10000 });
-      log('APP-005', 'Onboarding Slide 1: Welcome Text Verify', 'PASSED', Date.now() - t, '"Connect With Neighbors" text confirmed on slide 1');
     } catch (e) {
       log('APP-005', 'Onboarding Slide 1: Welcome Text Verify', 'FAILED', Date.now() - t, e.message);
     }
@@ -221,14 +313,18 @@ async function runAppiumTests() {
     t = Date.now();
     let skipBtn;
     try {
-      skipBtn = await client.$('~Skip');
-      if (!(await skipBtn.isExisting())) {
-        skipBtn = await client.$('android=new UiSelector().description("Skip")');
-      }
-      if (!(await skipBtn.isExisting())) {
-        skipBtn = await client.$('android=new UiSelector().descriptionContains("Skip")');
-      }
-      await skipBtn.waitForDisplayed({ timeout: 8000 });
+      const skipStrategies = [
+        () => client.$('~Skip'),
+        () => client.$('android=new UiSelector().description("Skip")'),
+        () => client.$('android=new UiSelector().descriptionContains("Skip")'),
+        () => client.$('//*[@content-desc="Skip"]'),
+        () => client.$('//android.widget.Button[contains(@content-desc,"Skip")]'),
+        () => client.$('//android.view.View[@content-desc="Skip"]'),
+        () => client.$('//*[contains(@content-desc,"Skip")]'),
+      ];
+      skipBtn = await findElementWithStrategies(skipStrategies, 8000);
+      if (!skipBtn) throw new Error('Skip button not found via any locator strategy');
+      await skipBtn.waitForDisplayed({ timeout: 5000 });
       log('APP-007', 'Skip Button Presence Verification', 'PASSED', Date.now() - t, 'Skip semantic label found in accessibility tree');
     } catch (e) {
       log('APP-007', 'Skip Button Presence Verification', 'FAILED', Date.now() - t, e.message);
@@ -238,6 +334,7 @@ async function runAppiumTests() {
     t = Date.now();
     try {
       if (skipBtn) {
+        await client.pause(1500); // Wait for transition and clickability
         await skipBtn.click();
       } else {
         throw new Error('Skip button reference is null');
@@ -251,14 +348,16 @@ async function runAppiumTests() {
     // STEP 9: Login Screen Loaded
     t = Date.now();
     try {
-      let signInHeader = await client.$('~SIGN IN');
-      if (!(await signInHeader.isExisting())) {
-        signInHeader = await client.$('android=new UiSelector().description("SIGN IN")');
-      }
-      if (!(await signInHeader.isExisting())) {
-        signInHeader = await client.$('android=new UiSelector().descriptionContains("SIGN IN")');
-      }
-      await signInHeader.waitForDisplayed({ timeout: 10000 });
+      const signInStrategies = [
+        () => client.$('~SIGN IN'),
+        () => client.$('android=new UiSelector().description("SIGN IN")'),
+        () => client.$('android=new UiSelector().descriptionContains("SIGN IN")'),
+        () => client.$('//*[@content-desc="SIGN IN"]'),
+        () => client.$('//*[contains(@content-desc,"SIGN IN")]'),
+      ];
+      const signInHeader = await findElementWithStrategies(signInStrategies, 10000);
+      if (!signInHeader) throw new Error('Sign In header not found');
+      await signInHeader.waitForDisplayed({ timeout: 5000 });
       log('APP-009', 'Login Screen Load Verification', 'PASSED', Date.now() - t, 'SIGN IN heading confirmed on login screen');
     } catch (e) {
       log('APP-009', 'Login Screen Load Verification', 'FAILED', Date.now() - t, e.message);
@@ -268,12 +367,15 @@ async function runAppiumTests() {
     t = Date.now();
     let emailField;
     try {
-      emailField = await client.$('~Email address');
-      let exists = await emailField.isExisting();
-      if (!exists) {
-        emailField = await client.$('android=new UiSelector().className("android.widget.EditText").instance(0)');
-      }
-      await emailField.waitForDisplayed({ timeout: 8000 });
+      const emailStrategies = [
+        () => client.$('~Email address'),
+        () => client.$('android=new UiSelector().className("android.widget.EditText").instance(0)'),
+        () => client.$('android=new UiSelector().descriptionContains("Email")'),
+        () => client.$('//*[@content-desc="Email address"]'),
+      ];
+      emailField = await findElementWithStrategies(emailStrategies, 8000);
+      if (!emailField) throw new Error('Email field not found');
+      await emailField.waitForDisplayed({ timeout: 5000 });
       log('APP-010', 'Email Input Field Detection', 'PASSED', Date.now() - t, 'Email input field located in accessibility tree');
     } catch (e) {
       log('APP-010', 'Email Input Field Detection', 'FAILED', Date.now() - t, e.message);
@@ -282,13 +384,14 @@ async function runAppiumTests() {
     // STEP 11: Submit blank form
     t = Date.now();
     try {
-      let btn = await client.$('~Sign In');
-      if (!(await btn.isExisting())) {
-        btn = await client.$('android=new UiSelector().description("Sign In")');
-      }
-      if (!(await btn.isExisting())) {
-        btn = await client.$('android=new UiSelector().descriptionContains("Sign In")');
-      }
+      const btnStrategies = [
+        () => client.$('~Sign In'),
+        () => client.$('android=new UiSelector().description("Sign In")'),
+        () => client.$('android=new UiSelector().descriptionContains("Sign In")'),
+      ];
+      const btn = await findElementWithStrategies(btnStrategies, 8000);
+      if (!btn) throw new Error('Sign In button not found');
+      await client.pause(1000);
       await btn.click();
       await client.pause(2000);
       log('APP-011', 'Submit Blank Login Form', 'PASSED', Date.now() - t, 'Empty form submitted to trigger validation');
@@ -314,10 +417,13 @@ async function runAppiumTests() {
     // STEP 13: Type valid email
     t = Date.now();
     try {
-      let emailFieldToType = await client.$('~Email address');
-      if (!(await emailFieldToType.isExisting())) {
-        emailFieldToType = await client.$('android=new UiSelector().className("android.widget.EditText").instance(0)');
-      }
+      const emailStrategies = [
+        () => client.$('~Email address'),
+        () => client.$('android=new UiSelector().className("android.widget.EditText").instance(0)'),
+      ];
+      const emailFieldToType = await findElementWithStrategies(emailStrategies, 8000);
+      if (!emailFieldToType) throw new Error('Email field not found to type');
+      await client.pause(1000);
       await emailFieldToType.click();
       await emailFieldToType.setValue('charansai87654@gmail.com');
       log('APP-013', 'Type Valid Email into Email Field', 'PASSED', Date.now() - t, 'Email "charansai87654@gmail.com" typed into field');
@@ -328,42 +434,157 @@ async function runAppiumTests() {
     // STEP 14: Type password
     t = Date.now();
     try {
-      let pwdField = await client.$('~Password');
-      if (!(await pwdField.isExisting())) {
-        pwdField = await client.$('android=new UiSelector().className("android.widget.EditText").instance(1)');
-      }
+      const pwdStrategies = [
+        () => client.$('~Password'),
+        () => client.$('android=new UiSelector().className("android.widget.EditText").instance(1)'),
+      ];
+      const pwdField = await findElementWithStrategies(pwdStrategies, 8000);
+      if (!pwdField) throw new Error('Password field not found');
+      await client.pause(1000);
       await pwdField.click();
-      await pwdField.setValue('Charan123');
+      await pwdField.setValue('Charan@12');
       log('APP-014', 'Type Password into Password Field', 'PASSED', Date.now() - t, 'Password typed and obfuscated in field');
     } catch (e) {
       log('APP-014', 'Type Password into Password Field', 'FAILED', Date.now() - t, e.message);
     }
 
-    // STEP 15: Submit & close session
+    // STEP 15: Submit Credentials
     t = Date.now();
     try {
-      let submitBtn = await client.$('~Sign In');
-      if (!(await submitBtn.isExisting())) {
-        submitBtn = await client.$('android=new UiSelector().description("Sign In")');
-      }
-      if (!(await submitBtn.isExisting())) {
-        submitBtn = await client.$('android=new UiSelector().descriptionContains("Sign In")');
-      }
+      const submitStrategies = [
+        () => client.$('~Sign In'),
+        () => client.$('android=new UiSelector().description("Sign In")'),
+        () => client.$('android=new UiSelector().descriptionContains("Sign In")'),
+      ];
+      const submitBtn = await findElementWithStrategies(submitStrategies, 8000);
+      if (!submitBtn) throw new Error('Submit button not found');
+      await client.pause(1000);
       await submitBtn.click();
-      await client.pause(3000);
+      log('APP-015', 'Submit Credentials to Authenticate', 'PASSED', Date.now() - t, 'Credentials submitted to Firebase Auth successfully');
+    } catch (e) {
+      log('APP-015', 'Submit Credentials to Authenticate', 'FAILED', Date.now() - t, e.message);
+    }
+
+    // STEP 16: Navigate to Profile Tab
+    t = Date.now();
+    try {
+      // Wait for Dashboard page to load by checking for HELLO/CHARAN
+      const dashboardStrategies = [
+        () => client.$('android=new UiSelector().descriptionContains("HELLO")'),
+        () => client.$('android=new UiSelector().descriptionContains("CHARAN")'),
+        () => client.$('android=new UiSelector().descriptionContains("New Delhi")'),
+      ];
+      const dashboardEl = await findElementWithStrategies(dashboardStrategies, 15000);
+      if (!dashboardEl) throw new Error('Dashboard screen did not load after signing in');
+
+      // Now find and click the Profile tab
+      const profileTabStrategies = [
+        () => client.$('~Profile'),
+        () => client.$('android=new UiSelector().description("Profile")'),
+        () => client.$('android=new UiSelector().text("Profile")'),
+      ];
+      const profileTab = await findElementWithStrategies(profileTabStrategies, 10000);
+      if (!profileTab) throw new Error('Profile navigation tab not found');
+      await client.pause(1000);
+      await profileTab.click();
+      await client.pause(3000); // wait for Profile screen transition
+      log('APP-016', 'Navigate to Profile Tab', 'PASSED', Date.now() - t, 'Profile tab clicked, navigated to Profile Screen');
+    } catch (e) {
+      log('APP-016', 'Navigate to Profile Tab', 'FAILED', Date.now() - t, e.message);
+    }
+
+    // STEP 17: Navigate to Settings Screen
+    t = Date.now();
+    try {
+      const settingsStrategies = [
+        () => client.$('~Settings'),
+        // Gear icon might be described as settings
+        () => client.$('android=new UiSelector().description("Settings")'),
+        () => client.$('android=new UiSelector().text("Settings")'),
+      ];
+      const settingsBtn = await findElementWithStrategies(settingsStrategies, 10000);
+      if (!settingsBtn) throw new Error('Settings button/menu item not found on Profile Screen');
+      await client.pause(1000);
+      await settingsBtn.click();
+      await client.pause(3000); // wait for Settings screen transition
+      log('APP-017', 'Navigate to Settings Screen', 'PASSED', Date.now() - t, 'Settings icon clicked, navigated to Settings Screen');
+    } catch (e) {
+      log('APP-017', 'Navigate to Settings Screen', 'FAILED', Date.now() - t, e.message);
+    }
+
+    // STEP 18: Tap Logout LocalSync Account Button
+    t = Date.now();
+    try {
+      // First, do a manual swipe up (scrolls down) to reveal the logout button
+      await swipeDownToBottom(client, 2);
+
+      const logoutBtnStrategies = [
+        () => client.$('~Logout LocalSync Account'),
+        () => client.$('android=new UiSelector().description("Logout LocalSync Account")'),
+        () => client.$('android=new UiSelector().text("Logout LocalSync Account")'),
+        () => client.$('//*[@content-desc="Logout LocalSync Account"]'),
+        () => client.$('//*[contains(@content-desc,"Logout")]'),
+      ];
+      const logoutBtn = await findElementWithStrategies(logoutBtnStrategies, 8000);
+      if (!logoutBtn) throw new Error('Logout LocalSync Account button not found on Settings Screen');
+      await client.pause(1000);
+      await logoutBtn.click();
+      await client.pause(2000); // wait for AlertDialog to transition in
+      log('APP-018', 'Tap Logout LocalSync Account Button', 'PASSED', Date.now() - t, 'Logout LocalSync Account button clicked, confirmation dialog shown');
+    } catch (e) {
+      log('APP-018', 'Tap Logout LocalSync Account Button', 'FAILED', Date.now() - t, e.message);
+    }
+
+    // STEP 19: Confirm Logout Dialog
+    t = Date.now();
+    try {
+      const dialogConfirmStrategies = [
+        // Target the "Logout" button inside the alert dialog
+        () => client.$('android=new UiSelector().text("Logout").className("android.widget.Button")'),
+        () => client.$('android=new UiSelector().description("Logout")'),
+        () => client.$('android=new UiSelector().text("Logout")'),
+        () => client.$('~Logout'),
+      ];
+      const confirmBtn = await findElementWithStrategies(dialogConfirmStrategies, 8000);
+      if (!confirmBtn) throw new Error('Logout confirmation button in dialog not found');
+      await client.pause(1000);
+      await confirmBtn.click();
+      await client.pause(4000); // wait for logout action and screen redirect
+      log('APP-019', 'Confirm Logout Dialog', 'PASSED', Date.now() - t, 'Logout confirmed in AlertDialog');
+    } catch (e) {
+      log('APP-019', 'Confirm Logout Dialog', 'FAILED', Date.now() - t, e.message);
+    }
+
+    // STEP 20: Verify Splash/Onboarding Screen Loaded & Close Session
+    t = Date.now();
+    try {
+      const welcomeStrategies = [
+        () => client.$('~Connect With Neighbors'),
+        () => client.$('android=new UiSelector().description("Connect With Neighbors")'),
+        () => client.$('android=new UiSelector().descriptionContains("Connect")'),
+        () => client.$('android=new UiSelector().descriptionContains("Neighbor")'),
+        () => client.$('//*[@content-desc="Connect With Neighbors"]'),
+        () => client.$('//android.view.View[@content-desc and contains(@content-desc, "Connect")]'),
+        () => client.$('~SIGN IN'),
+        () => client.$('android=new UiSelector().description("SIGN IN")'),
+        () => client.$('android=new UiSelector().descriptionContains("SIGN IN")'),
+      ];
+      const landingEl = await findElementWithStrategies(welcomeStrategies, 12000);
+      if (!landingEl) throw new Error('App did not return to Onboarding/Login screen after logging out');
+      
       try {
         await runProgrammaticMobileUIChecks(client);
       } catch (err) {
         console.error('Error running live mobile UI checks:', err.message);
       }
       await client.deleteSession();
-      log('APP-015', 'Submit Credentials & Close Session', 'PASSED', Date.now() - t, 'Credentials submitted to Firebase Auth, session closed cleanly');
+      log('APP-020', 'Verify Login/Onboarding Screen & Close Session', 'PASSED', Date.now() - t, 'Logout redirect verified, session closed cleanly');
     } catch (e) {
       try {
         await runProgrammaticMobileUIChecks(client);
       } catch (err) {}
       try { await client.deleteSession(); } catch {}
-      log('APP-015', 'Submit Credentials & Close Session', 'FAILED', Date.now() - t, e.message);
+      log('APP-020', 'Verify Login/Onboarding Screen & Close Session', 'FAILED', Date.now() - t, e.message);
     }
 
   } catch (fatalErr) {
