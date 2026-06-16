@@ -585,7 +585,7 @@ class AppTheme {
         behavior: SnackBarBehavior.floating,
         elevation: 8,
       ),
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: AppColors.secondaryNavy,
         surfaceTintColor: Colors.transparent,
         elevation: 24,
@@ -625,7 +625,7 @@ class AppTheme {
         extendedTextStyle:
             GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 15),
       ),
-      tabBarTheme: TabBarTheme(
+      tabBarTheme: TabBarThemeData(
         labelColor: AppColors.neonCyan,
         unselectedLabelColor: Colors.white54,
         indicatorColor: AppColors.neonCyan,
