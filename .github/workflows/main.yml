@@ -1,0 +1,174 @@
+The unified **`selenium.yml`** file has been created and saved at:
+[`.github/workflows/selenium.yml`](file:///D:/AndroidFiles/Projects/LocalSync3/.github/workflows/selenium.yml)
+
+Here is the complete and correct YAML code for your project:
+
+```yaml
+name: LocalSync3 E2E and Security Tests
+
+on:
+  push:
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+  pull_request:
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+
+jobs:
+  selenium-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+
+      - name: Install test runner dependencies
+        working-directory: backend/testing
+        run: |
+          npm ci
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.x'
+          channel: 'stable'
+
+      - name: Install Flutter app dependencies
+        working-directory: frontend
+        run: |
+          flutter pub get
+
+      - name: Build Flutter Web app
+        working-directory: frontend
+        run: |
+          flutter build web --web-renderer html --release
+
+      - name: Run Selenium E2E tests
+        working-directory: backend/testing/selenium-tests
+        run: |
+          node test_suite.js
+
+      - name: Run Manual QA Report Generator
+        working-directory: backend/testing/selenium-tests
+        run: |
+          node manual_web_reporter.js
+
+      - name: Upload Web E2E test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: localsync3-web-reports
+          path: |
+            backend/testing/selenium-tests/test_report.xlsx
+            backend/testing/selenium-tests/manual_web_test_report.xlsx
+
+  appium-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Enable KVM group permissions
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+
+      - name: Install test runner dependencies
+        working-directory: backend/testing
+        run: |
+          npm ci
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.x'
+          channel: 'stable'
+
+      - name: Install Flutter app dependencies
+        working-directory: frontend
+        run: |
+          flutter pub get
+
+      - name: Build Flutter Android APK (Debug)
+        working-directory: frontend
+        run: |
+          flutter build apk --debug
+
+      - name: Run Appium Mobile tests in Android Emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          DEVICE_ID: emulator-5554
+        with:
+          api-level: 29
+          target: default
+          arch: x86_64
+          profile: Nexus 6
+          script: |
+            cd backend/testing/appium-testing
+            npx appium driver install uiautomator2 || true
+            npx appium --port 4723 &
+            sleep 8
+            node real_appium_runner.js
+
+      - name: Upload Appium test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: localsync3-appium-report
+          path: backend/testing/appium-testing/appium_test_report.xlsx
+
+  security-rules-audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+
+      - name: Install test runner dependencies
+        working-directory: backend/testing
+        run: |
+          npm ci
+
+      - name: Run Backend Security Rules Scanner
+        working-directory: backend/testing/automated-testing
+        run: |
+          node vulnerability_scanner.js
+
+      - name: Upload Backend Security audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: localsync3-security-report
+          path: backend/testing/automated-testing/automated.xlsx
+```
