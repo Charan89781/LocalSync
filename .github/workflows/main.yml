@@ -126,8 +126,8 @@ jobs:
         working-directory: frontend
         timeout-minutes: 15  # ✅ APK build timeout
         env:
-          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m -Dkotlin.compiler.execution.strategy=in-process"
-        run: flutter build apk --debug
+          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m"
+        run: flutter build apk --debug --verbose
 
       - name: Install Appium dependencies
         working-directory: backend/testing/appium-testing
