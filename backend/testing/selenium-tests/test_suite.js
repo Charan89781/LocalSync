@@ -7,8 +7,10 @@ const { generateExcelReport } = require('./excel_reporter');
 
 // Configuration
 const PORT = 8095;
-const BASE_URL = `http://localhost:${PORT}`;
 const BUILD_PATH = path.join(__dirname, '../../../frontend/build/web');
+const BASE_URL = process.env.GITHUB_ACTIONS === 'true'
+  ? `http://localhost:${PORT}/LocalSync/`
+  : `http://localhost:${PORT}`;
 const REPORT_PATH = path.join(__dirname, 'test_report.xlsx');
 
 let serverProcess = null;
@@ -22,6 +24,19 @@ function logStep(stepName, status, durationMs, details = '') {
 }
 
 function startLocalServer() {
+  // Create symlink for base-href support on GitHub Actions if needed
+  if (process.env.GITHUB_ACTIONS === 'true') {
+    const symlinkPath = path.join(BUILD_PATH, 'LocalSync');
+    if (!fs.existsSync(symlinkPath)) {
+      try {
+        fs.symlinkSync('.', symlinkPath, 'dir');
+        console.log('Created LocalSync symlink for GitHub Pages base-href compatibility');
+      } catch (err) {
+        console.error('Failed to create symlink:', err.message);
+      }
+    }
+  }
+
   return new Promise((resolve, reject) => {
     console.log(`Starting http-server on port ${PORT}...`);
     const cmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
