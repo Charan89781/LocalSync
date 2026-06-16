@@ -54,7 +54,7 @@ jobs:
       - name: Build Flutter Web app
         working-directory: frontend
         run: |
-          flutter build web --base-href "/LocalSync/" --web-renderer html --release
+          flutter build web --base-href "/LocalSync/" --release
 
       - name: Run Selenium E2E tests
         working-directory: backend/testing/selenium-tests
