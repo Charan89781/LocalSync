@@ -170,7 +170,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)
+          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)
         ],
       ),
       child: Column(
@@ -201,7 +201,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(8)),
       child: Text(status.toUpperCase(),
           style: TextStyle(

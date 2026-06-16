@@ -102,9 +102,9 @@ class _RecycleGuideScreenState extends State<RecycleGuideScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.05),
+                    color: Colors.white.withOpacity(0.05),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+                    border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
                   ),
                   child: TextField(
                     controller: _searchController,
@@ -134,10 +134,10 @@ class _RecycleGuideScreenState extends State<RecycleGuideScreen> {
                         margin: const EdgeInsets.only(right: 8),
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                         decoration: BoxDecoration(
-                          color: isSel ? AppColors.neonCyan : Colors.white.withValues(alpha: 0.05),
+                          color: isSel ? AppColors.neonCyan : Colors.white.withOpacity(0.05),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: isSel ? AppColors.neonCyan : Colors.white.withValues(alpha: 0.1),
+                            color: isSel ? AppColors.neonCyan : Colors.white.withOpacity(0.1),
                           ),
                         ),
                         child: Text(
@@ -165,9 +165,9 @@ class _RecycleGuideScreenState extends State<RecycleGuideScreen> {
                       margin: const EdgeInsets.only(bottom: 16),
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.05),
+                        color: Colors.white.withOpacity(0.05),
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+                        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -182,7 +182,7 @@ class _RecycleGuideScreenState extends State<RecycleGuideScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: AppColors.successGreen.withValues(alpha: 0.1),
+                                  color: AppColors.successGreen.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(color: AppColors.successGreen, width: 1),
                                 ),

@@ -371,15 +371,15 @@ class DashboardScreen extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.04),
+          color: Colors.white.withOpacity(0.04),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: AppColors.neonCyan.withValues(alpha: 0.25),
+            color: AppColors.neonCyan.withOpacity(0.25),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.neonCyan.withValues(alpha: 0.05),
+              color: AppColors.neonCyan.withOpacity(0.05),
               blurRadius: 20,
               spreadRadius: 1,
             ),
@@ -417,7 +417,7 @@ class DashboardScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: AppColors.neonGreen.withValues(alpha: 0.12),
+                color: AppColors.neonGreen.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
@@ -633,9 +633,9 @@ class DashboardScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
+                color: color.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5),
+                border: Border.all(color: color.withOpacity(0.2), width: 1.5),
               ),
               child: Icon(icon, color: color, size: 20),
             ),
@@ -663,7 +663,7 @@ class DashboardScreen extends ConsumerWidget {
                       Text(
                         'JUST NOW',
                         style: TextStyle(
-                          color: color.withValues(alpha: 0.7),
+                          color: color.withOpacity(0.7),
                           fontSize: 8,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 0.5,
@@ -862,15 +862,15 @@ class _DashboardModuleCardState extends State<_DashboardModuleCard>
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: widget.color.withValues(alpha: 0.12),
+                color: widget.color.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: widget.color.withValues(alpha: 0.25),
+                  color: widget.color.withOpacity(0.25),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: widget.color.withValues(alpha: 0.08),
+                    color: widget.color.withOpacity(0.08),
                     blurRadius: 10,
                     spreadRadius: 1,
                   ),
@@ -936,7 +936,7 @@ class _PulsingAiIconState extends State<_PulsingAiIcon>
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: AppColors.neonCyan.withValues(alpha: 0.15),
+              color: AppColors.neonCyan.withOpacity(0.15),
               shape: BoxShape.circle,
             ),
           ),

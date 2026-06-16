@@ -466,7 +466,7 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                                  color: AppColors.primaryBlue.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
@@ -574,7 +574,7 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
                     width: 1.5,
                   ),
                   boxShadow: isSelected ? [
-                    BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.25), blurRadius: 8, offset: const Offset(0, 3)),
+                    BoxShadow(color: AppColors.primaryBlue.withOpacity(0.25), blurRadius: 8, offset: const Offset(0, 3)),
                   ] : [],
                 ),
                 child: Text(
@@ -605,7 +605,7 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
+                color: Colors.black.withOpacity(0.05),
                 blurRadius: 15,
                 offset: const Offset(0, 5))
           ],
@@ -631,7 +631,7 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.6),
+                          color: Colors.black.withOpacity(0.6),
                           borderRadius: BorderRadius.circular(12)),
                       child: Text(
                           DateFormat('MMM dd')
@@ -745,7 +745,7 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                        color: AppColors.primaryBlue.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(

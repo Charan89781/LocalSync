@@ -44,9 +44,9 @@ class _RideSyncScreenState extends ConsumerState<RideSyncScreen> {
         child: Container(
           padding: EdgeInsets.all(padding),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
+            color: Colors.white.withOpacity(0.05),
             borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
+            border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
           ),
           child: child,
         ),
@@ -101,7 +101,7 @@ class _RideSyncScreenState extends ConsumerState<RideSyncScreen> {
     return Container(
       width: double.infinity,
       height: double.infinity,
-      color: Colors.black.withValues(alpha: 0.2),
+      color: Colors.black.withOpacity(0.2),
       child: CustomPaint(
         painter: _RoutePainter(accentColor),
       ),
@@ -140,7 +140,7 @@ class _RideSyncScreenState extends ConsumerState<RideSyncScreen> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: accentColor.withValues(alpha: 0.15),
+                              color: accentColor.withOpacity(0.15),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(Icons.directions_car_rounded, color: accentColor, size: 24),
@@ -220,7 +220,7 @@ class _RoutePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     // Background roads visual grid
     final paintRoad = Paint()
-      ..color = Colors.white.withValues(alpha: 0.05)
+      ..color = Colors.white.withOpacity(0.05)
       ..strokeWidth = 6
       ..style = PaintingStyle.stroke;
 
@@ -237,7 +237,7 @@ class _RoutePainter extends CustomPainter {
 
     // Glowing carpool polyline path
     final paintRouteGlow = Paint()
-      ..color = routeColor.withValues(alpha: 0.25)
+      ..color = routeColor.withOpacity(0.25)
       ..strokeWidth = 10
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
@@ -256,7 +256,7 @@ class _RoutePainter extends CustomPainter {
     canvas.drawPath(pathRoute, paintRoute);
 
     // Active pins representation
-    final paintPinOuter = Paint()..color = routeColor.withValues(alpha: 0.25);
+    final paintPinOuter = Paint()..color = routeColor.withOpacity(0.25);
     final paintPinInner = Paint()..color = routeColor;
 
     canvas.drawCircle(Offset(size.width * 0.3, size.height * 0.1), 16, paintPinOuter);

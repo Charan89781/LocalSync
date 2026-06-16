@@ -57,7 +57,7 @@ class PostCard extends StatelessWidget {
                     Text(
                       '2 mins ago • ${post.locationLabel ?? "Nearby"}',
                       style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.4),
+                          color: Colors.white.withOpacity(0.4),
                           fontSize: 11),
                     ),
                   ],
@@ -105,7 +105,7 @@ class PostCard extends StatelessWidget {
               _InteractionButton(
                 icon: Icons.share_rounded,
                 label: 'Share',
-                color: Colors.white.withValues(alpha: 0.6),
+                color: Colors.white.withOpacity(0.6),
               ),
             ],
           ),
@@ -136,9 +136,9 @@ class PostCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Text(
         type.name.toUpperCase(),
@@ -169,7 +169,7 @@ class _InteractionButton extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
+              color: Colors.white.withOpacity(0.6),
               fontSize: 13,
               fontWeight: FontWeight.w600),
         ),

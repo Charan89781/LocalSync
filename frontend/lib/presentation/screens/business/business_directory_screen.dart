@@ -27,9 +27,9 @@ class BusinessDirectoryScreen extends ConsumerWidget {
         child: Container(
           padding: EdgeInsets.all(padding),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.06),
+            color: Colors.white.withOpacity(0.06),
             borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
+            border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
           ),
           child: child,
         ),
@@ -135,7 +135,7 @@ class BusinessDirectoryScreen extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [AppColors.primaryBlue.withValues(alpha: 0.85), AppColors.secondaryBlue.withValues(alpha: 0.85)],
+            colors: [AppColors.primaryBlue.withOpacity(0.85), AppColors.secondaryBlue.withOpacity(0.85)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -176,9 +176,9 @@ class BusinessDirectoryScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1.5),
+        border: Border.all(color: Colors.white.withOpacity(0.15), width: 1.5),
       ),
       child: TextField(
         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
@@ -212,8 +212,8 @@ class BusinessDirectoryScreen extends ConsumerWidget {
           child: Container(
             height: MediaQuery.of(context).size.height * 0.85,
             decoration: BoxDecoration(
-                color: AppColors.primaryNavy.withValues(alpha: 0.92),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
+                color: AppColors.primaryNavy.withOpacity(0.92),
+                border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(40))),
             padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
             child: SingleChildScrollView(
@@ -301,9 +301,9 @@ class BusinessDirectoryScreen extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
+            color: Colors.white.withOpacity(0.05),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
+            border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
           ),
           child: TextField(
             controller: controller,
@@ -330,9 +330,9 @@ class BusinessDirectoryScreen extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
+            color: Colors.white.withOpacity(0.05),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
+            border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
           ),
           child: DropdownButtonFormField<String>(
             dropdownColor: AppColors.secondaryNavy,
@@ -376,7 +376,7 @@ class BusinessDirectoryScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                          color: accentColor.withValues(alpha: 0.15),
+                          color: accentColor.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(12)),
                       child: Icon(Icons.storefront_rounded,
                           color: accentColor, size: 20),
@@ -435,9 +435,9 @@ class BusinessDirectoryScreen extends ConsumerWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: Colors.white.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
+                  border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
                 ),
                 child: Text(c,
                     style: const TextStyle(

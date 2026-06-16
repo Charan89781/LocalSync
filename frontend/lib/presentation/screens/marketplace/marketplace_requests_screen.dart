@@ -74,7 +74,7 @@ class _MarketplaceRequestsScreenState extends ConsumerState<MarketplaceRequestsS
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: Colors.white.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: TabBar(
@@ -126,9 +126,9 @@ class _MarketplaceRequestsScreenState extends ConsumerState<MarketplaceRequestsS
               margin: const EdgeInsets.only(bottom: 16),
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.05),
+                color: Colors.white.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+                border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,7 +143,7 @@ class _MarketplaceRequestsScreenState extends ConsumerState<MarketplaceRequestsS
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.amber.withValues(alpha: 0.1),
+                          color: Colors.amber.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Text('PENDING', style: TextStyle(color: Colors.amber, fontSize: 10, fontWeight: FontWeight.bold)),
@@ -233,9 +233,9 @@ class _MarketplaceRequestsScreenState extends ConsumerState<MarketplaceRequestsS
               margin: const EdgeInsets.only(bottom: 16),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.05),
+                color: Colors.white.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+                border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
               ),
               child: Row(
                 children: [
@@ -258,7 +258,7 @@ class _MarketplaceRequestsScreenState extends ConsumerState<MarketplaceRequestsS
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.1),
+                      color: statusColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: statusColor, width: 1),
                     ),

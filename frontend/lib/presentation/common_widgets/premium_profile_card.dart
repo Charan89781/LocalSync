@@ -23,7 +23,7 @@ class PremiumProfileCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 30,
             offset: const Offset(0, 15),
           )
@@ -60,7 +60,7 @@ class PremiumProfileCard extends StatelessWidget {
                     Text(
                       user.email,
                       style: TextStyle(
-                        color: AppColors.textGray.withValues(alpha: 0.8),
+                        color: AppColors.textGray.withOpacity(0.8),
                         fontSize: 14,
                       ),
                     ),
@@ -108,7 +108,7 @@ class PremiumProfileCard extends StatelessWidget {
             gradient: AppColors.premiumGradient,
             boxShadow: [
               BoxShadow(
-                color: AppColors.primaryBlue.withValues(alpha: 0.3),
+                color: AppColors.primaryBlue.withOpacity(0.3),
                 blurRadius: 15,
                 offset: const Offset(0, 8),
               )
@@ -154,10 +154,10 @@ class PremiumProfileCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.primaryBlue.withValues(alpha: 0.03),
+        color: AppColors.primaryBlue.withOpacity(0.03),
         borderRadius: BorderRadius.circular(24),
         border:
-            Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.05)),
+            Border.all(color: AppColors.primaryBlue.withOpacity(0.05)),
       ),
       child: Column(
         children: [
@@ -190,7 +190,7 @@ class PremiumProfileCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
               value: user.isVerified ? 0.95 : 0.45,
-              backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
+              backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
               color: AppColors.primaryBlue,
               minHeight: 10,
             ),
@@ -206,7 +206,7 @@ class PremiumProfileCard extends StatelessWidget {
       icon: const Icon(Icons.verified_user_outlined, size: 20),
       label: const Text('VERIFY ACCOUNT'),
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.orange.withValues(alpha: 0.1),
+        backgroundColor: Colors.orange.withOpacity(0.1),
         foregroundColor: Colors.orange,
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

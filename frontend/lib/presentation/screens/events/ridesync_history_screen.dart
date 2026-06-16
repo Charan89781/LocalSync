@@ -79,7 +79,7 @@ class RideSyncHistoryScreen extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(28),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.greenAccent.withValues(alpha: 0.25),
+                        color: Colors.greenAccent.withOpacity(0.25),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),
@@ -125,16 +125,16 @@ class RideSyncHistoryScreen extends ConsumerWidget {
                       margin: const EdgeInsets.only(bottom: 16),
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.05),
+                        color: Colors.white.withOpacity(0.05),
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+                        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
                       ),
                       child: Row(
                         children: [
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.successGreen.withValues(alpha: 0.15),
+                              color: AppColors.successGreen.withOpacity(0.15),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(Icons.eco_rounded, color: AppColors.successGreen, size: 24),

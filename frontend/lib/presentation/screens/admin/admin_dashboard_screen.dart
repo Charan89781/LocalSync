@@ -16,9 +16,9 @@ class AdminDashboardScreen extends ConsumerWidget {
         child: Container(
           padding: EdgeInsets.all(padding),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
+            color: Colors.white.withOpacity(0.05),
             borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
+            border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
           ),
           child: child,
         ),
@@ -161,9 +161,9 @@ class AdminDashboardScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.15),
+                    color: color.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: color.withValues(alpha: 0.25), width: 1)),
+                    border: Border.all(color: color.withOpacity(0.25), width: 1)),
                 child: Icon(icon, color: color, size: 24),
               ),
               const SizedBox(width: 16),

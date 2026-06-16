@@ -14,9 +14,9 @@ class VerificationRequestsScreen extends ConsumerWidget {
         child: Container(
           padding: EdgeInsets.all(padding),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
+            color: Colors.white.withOpacity(0.05),
             borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
+            border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
           ),
           child: child,
         ),
@@ -84,7 +84,7 @@ class VerificationRequestsScreen extends ConsumerWidget {
                           Row(
                             children: [
                               CircleAvatar(
-                                backgroundColor: AppColors.neonCyan.withValues(alpha: 0.2),
+                                backgroundColor: AppColors.neonCyan.withOpacity(0.2),
                                 foregroundColor: AppColors.neonCyan,
                                 child: Text(req['name']![0]),
                               ),

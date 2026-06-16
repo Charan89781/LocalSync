@@ -245,7 +245,7 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
                           ? "What do you want to ask?"
                           : "What's happening in our neighborhood?",
                       hintStyle: TextStyle(
-                          color: AppColors.textGray.withValues(alpha: 0.5)),
+                          color: AppColors.textGray.withOpacity(0.5)),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20)),
                     ),
@@ -304,7 +304,7 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
                         onSelected: (v) =>
                             setSheetState(() => _selectedType = type),
                         selectedColor:
-                            AppColors.primaryBlue.withValues(alpha: 0.2),
+                            AppColors.primaryBlue.withOpacity(0.2),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                       );

@@ -30,7 +30,7 @@ class PremiumPostCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 20,
             offset: const Offset(0, 8),
           )
@@ -79,7 +79,7 @@ class PremiumPostCard extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                         color: hasVoted
-                            ? AppColors.primaryBlue.withValues(alpha: 0.3)
+                            ? AppColors.primaryBlue.withOpacity(0.3)
                             : Colors.grey[200]!),
                   ),
                   child: Stack(
@@ -90,7 +90,7 @@ class PremiumPostCard extends ConsumerWidget {
                           child: Container(
                             decoration: BoxDecoration(
                               color:
-                                  AppColors.primaryBlue.withValues(alpha: 0.1),
+                                  AppColors.primaryBlue.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(11),
                             ),
                           ),
@@ -136,7 +136,7 @@ class PremiumPostCard extends ConsumerWidget {
             backgroundImage: post.authorProfileUrl != null
                 ? NetworkImage(post.authorProfileUrl!)
                 : null,
-            backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
+            backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
             child: post.authorProfileUrl == null
                 ? Text(post.authorName.isNotEmpty ? post.authorName[0] : '?',
                     style: const TextStyle(
@@ -190,7 +190,7 @@ class PremiumPostCard extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(post.type.name.toUpperCase(),
@@ -276,7 +276,7 @@ class PremiumPostCard extends ConsumerWidget {
                   '${post.authorName} shared an update on LocalSync:\n\n${post.content}');
             },
             icon: Icon(Icons.share_rounded,
-                size: 20, color: AppColors.textGray.withValues(alpha: 0.6)),
+                size: 20, color: AppColors.textGray.withOpacity(0.6)),
           ),
         ],
       ),
@@ -394,7 +394,7 @@ class PremiumPostCard extends ConsumerWidget {
                 color: Theme.of(context).cardColor,
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
+                      color: Colors.black.withOpacity(0.05),
                       blurRadius: 10,
                       offset: const Offset(0, -5))
                 ],

@@ -96,9 +96,9 @@ class MyRidesScreen extends ConsumerWidget {
                             margin: const EdgeInsets.only(bottom: 16),
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.05),
+                              color: Colors.white.withOpacity(0.05),
                               borderRadius: BorderRadius.circular(24),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+                              border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
                             ),
                             child: Row(
                               children: [
@@ -106,8 +106,8 @@ class MyRidesScreen extends ConsumerWidget {
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
                                     color: isDriver
-                                        ? AppColors.neonPurple.withValues(alpha: 0.15)
-                                        : AppColors.neonCyan.withValues(alpha: 0.15),
+                                        ? AppColors.neonPurple.withOpacity(0.15)
+                                        : AppColors.neonCyan.withOpacity(0.15),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(

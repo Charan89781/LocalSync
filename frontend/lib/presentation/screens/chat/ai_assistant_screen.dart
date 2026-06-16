@@ -795,9 +795,9 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
             ),
             border: isUser
                 ? null
-                : Border.all(color: Colors.white.withValues(alpha: 0.07), width: 1),
+                : Border.all(color: Colors.white.withOpacity(0.07), width: 1),
             boxShadow: isUser
-                ? [BoxShadow(color: AppColors.neonCyan.withValues(alpha: 0.2), blurRadius: 12, offset: const Offset(0, 4))]
+                ? [BoxShadow(color: AppColors.neonCyan.withOpacity(0.2), blurRadius: 12, offset: const Offset(0, 4))]
                 : null,
           ),
           child: Column(
@@ -812,7 +812,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                     _fmtTime(msg.timestamp),
                     style: TextStyle(
                       color: isUser
-                          ? AppColors.primaryNavy.withValues(alpha: 0.5)
+                          ? AppColors.primaryNavy.withOpacity(0.5)
                           : Colors.white24,
                       fontSize: 9,
                       fontWeight: FontWeight.w600,
@@ -824,7 +824,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                       width: 12, height: 12,
                       child: CircularProgressIndicator(
                         strokeWidth: 1.5,
-                        color: AppColors.neonCyan.withValues(alpha: 0.6),
+                        color: AppColors.neonCyan.withOpacity(0.6),
                       ),
                     ),
                   ],
@@ -927,7 +927,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
             bottomRight: Radius.circular(20),
             bottomLeft: Radius.circular(4),
           ),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+          border: Border.all(color: Colors.white.withOpacity(0.07)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -979,7 +979,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                 decoration: BoxDecoration(
                   color: const Color(0xFF151F2E),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                  border: Border.all(color: Colors.white.withOpacity(0.1)),
                 ),
                 child: Text(
                   '${s['icon']}  ${s['label']}',
@@ -1002,7 +1002,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
       padding: EdgeInsets.fromLTRB(16, 10, 16, MediaQuery.of(context).padding.bottom + 14),
       decoration: BoxDecoration(
         color: const Color(0xFF0A121A),
-        border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.06))),
+        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.06))),
       ),
       child: Row(
         children: [
@@ -1011,7 +1011,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
               decoration: BoxDecoration(
                 color: const Color(0xFF151F2E),
                 borderRadius: BorderRadius.circular(26),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                border: Border.all(color: Colors.white.withOpacity(0.08)),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 18),
               child: TextField(
@@ -1045,7 +1045,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.neonCyan.withValues(alpha: 0.3),
+                    color: AppColors.neonCyan.withOpacity(0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),

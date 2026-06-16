@@ -77,9 +77,9 @@ class SpaceBookingsScreen extends ConsumerWidget {
                           margin: const EdgeInsets.only(bottom: 16),
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.05),
+                            color: Colors.white.withOpacity(0.05),
                             borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.15), width: 1.5),
+                            border: Border.all(color: AppColors.neonCyan.withOpacity(0.15), width: 1.5),
                           ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,7 +87,7 @@ class SpaceBookingsScreen extends ConsumerWidget {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: AppColors.neonCyan.withValues(alpha: 0.1),
+                                  color: AppColors.neonCyan.withOpacity(0.1),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
@@ -129,7 +129,7 @@ class SpaceBookingsScreen extends ConsumerWidget {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: AppColors.successGreen.withValues(alpha: 0.1),
+                                      color: AppColors.successGreen.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(color: AppColors.successGreen, width: 1),
                                     ),

@@ -369,8 +369,8 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen> with TickerPr
                 circleId: CircleId('pulse_${alert.id}'),
                 center: LatLng(alert.latitude, alert.longitude),
                 radius: _radarRadius,
-                fillColor: Colors.red.withValues(alpha: 0.12),
-                strokeColor: Colors.red.withValues(alpha: 0.8),
+                fillColor: Colors.red.withOpacity(0.12),
+                strokeColor: Colors.red.withOpacity(0.8),
                 strokeWidth: 2,
               ),
             );
@@ -380,8 +380,8 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen> with TickerPr
                 circleId: CircleId('bounds_${alert.id}'),
                 center: LatLng(alert.latitude, alert.longitude),
                 radius: 600.0,
-                fillColor: Colors.red.withValues(alpha: 0.03),
-                strokeColor: Colors.red.withValues(alpha: 0.2),
+                fillColor: Colors.red.withOpacity(0.03),
+                strokeColor: Colors.red.withOpacity(0.2),
                 strokeWidth: 1,
               ),
             );
@@ -443,8 +443,8 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen> with TickerPr
               circleId: const CircleId('perimeter'),
               center: _myLocation,
               radius: 300.0,
-              fillColor: accentColor.withValues(alpha: 0.1),
-              strokeColor: accentColor.withValues(alpha: 0.4),
+              fillColor: accentColor.withOpacity(0.1),
+              strokeColor: accentColor.withOpacity(0.4),
               strokeWidth: 2,
             ),
           );
@@ -457,7 +457,7 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen> with TickerPr
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
+                color: Colors.black.withOpacity(0.04),
                 blurRadius: 15,
                 offset: const Offset(0, 5),
               ),
@@ -513,9 +513,9 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen> with TickerPr
         Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
+            color: Colors.white.withOpacity(0.05),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
+            border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
           ),
           child: Column(
             children: helplines
@@ -523,7 +523,7 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen> with TickerPr
                       leading: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: accentColor.withValues(alpha: 0.15),
+                          color: accentColor.withOpacity(0.15),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(h['icon'] as IconData,
@@ -570,9 +570,9 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen> with TickerPr
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
+            color: color.withOpacity(0.1),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5),
+            border: Border.all(color: color.withOpacity(0.2), width: 1.5),
           ),
           child: Icon(icon, color: color, size: 28),
         ),
@@ -665,9 +665,9 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen> with TickerPr
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: Colors.white.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
+                  border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
                 ),
                 child: const Column(
                   children: [
@@ -695,14 +695,14 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen> with TickerPr
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
+        border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
       ),
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: accentColor.withValues(alpha: 0.15),
+            backgroundColor: accentColor.withOpacity(0.15),
             child: Text(contact.name.isNotEmpty ? contact.name[0].toUpperCase() : 'C',
                 style: TextStyle(
                     color: accentColor, fontWeight: FontWeight.bold)),
@@ -744,8 +744,8 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen> with TickerPr
             EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.primaryNavy.withValues(alpha: 0.95),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
+            color: AppColors.primaryNavy.withOpacity(0.95),
+            border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           ),
           child: SingleChildScrollView(
@@ -832,12 +832,12 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen> with TickerPr
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
             color: isResponding
                 ? Colors.green
-                : Colors.red.withValues(alpha: 0.2),
+                : Colors.red.withOpacity(0.2),
             width: 1.5),
       ),
       child: Column(
@@ -864,7 +864,7 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen> with TickerPr
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.2),
+                    color: Colors.green.withOpacity(0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Text('${alert.responderIds.length}',
@@ -884,7 +884,7 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen> with TickerPr
                     .respondToAlert(alert.id, user!.id),
             style: ElevatedButton.styleFrom(
               backgroundColor: isResponding ? Colors.green : Colors.red,
-              disabledBackgroundColor: Colors.green.withValues(alpha: 0.3),
+              disabledBackgroundColor: Colors.green.withOpacity(0.3),
               minimumSize: const Size(double.infinity, 44),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
@@ -1111,9 +1111,9 @@ class _WalkieTalkieWidgetState extends State<WalkieTalkieWidget> with SingleTick
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
+        border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
       ),
       child: Column(
         children: [
@@ -1130,7 +1130,7 @@ class _WalkieTalkieWidgetState extends State<WalkieTalkieWidget> with SingleTick
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: (_isTalking ? widget.accentColor : Colors.green).withValues(alpha: 0.5),
+                          color: (_isTalking ? widget.accentColor : Colors.green).withOpacity(0.5),
                           blurRadius: 6,
                           spreadRadius: 2,
                         ),
@@ -1195,7 +1195,7 @@ class _WalkieTalkieWidgetState extends State<WalkieTalkieWidget> with SingleTick
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: widget.accentColor.withValues(alpha: 1.0 - progress),
+                              color: widget.accentColor.withOpacity(1.0 - progress),
                               width: 1.5,
                             ),
                           ),
@@ -1208,14 +1208,14 @@ class _WalkieTalkieWidgetState extends State<WalkieTalkieWidget> with SingleTick
                   height: 80,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _isTalking ? widget.accentColor : Colors.white.withValues(alpha: 0.08),
+                    color: _isTalking ? widget.accentColor : Colors.white.withOpacity(0.08),
                     border: Border.all(
-                      color: _isTalking ? Colors.white : widget.accentColor.withValues(alpha: 0.5),
+                      color: _isTalking ? Colors.white : widget.accentColor.withOpacity(0.5),
                       width: 2,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: (_isTalking ? widget.accentColor : Colors.transparent).withValues(alpha: 0.3),
+                        color: (_isTalking ? widget.accentColor : Colors.transparent).withOpacity(0.3),
                         blurRadius: 20,
                         spreadRadius: 4,
                       ),
@@ -1279,7 +1279,7 @@ class WaveformPainter extends CustomPainter {
     final heightScales = [1.0, 0.6, 0.3];
 
     for (int i = 0; i < waveCount; i++) {
-      paint.color = accentColor.withValues(alpha: opacities[i]);
+      paint.color = accentColor.withOpacity(opacities[i]);
       final path = Path();
       path.moveTo(0, centerY);
 
