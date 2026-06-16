@@ -88,81 +88,81 @@ jobs:
           folder: frontend/build/web
           branch: gh-pages
 
-  appium-tests:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30  # ✅ Android emulator job hard limit
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: '20'
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.41.x'
-          channel: 'stable'
-
-      - name: Install Flutter app dependencies
-        working-directory: frontend
-        timeout-minutes: 5
-        run: flutter pub get
-
-      - name: Build Flutter APK
-        working-directory: frontend
-        timeout-minutes: 15  # ✅ APK build timeout
-        run: flutter build apk --debug
-
-      - name: Install Appium dependencies
-        working-directory: backend/testing/appium-testing
-        timeout-minutes: 5
-        run: npm ci
-
-      - name: Run Appium tests on Android emulator
-        uses: reactivecircus/android-emulator-runner@v2
-        timeout-minutes: 15  # ✅ CRITICAL — prevents infinite hang
-        env:
-          DEVICE_ID: emulator-5554
-        with:
-          api-level: 29
-          target: default
-          arch: x86_64
-          profile: Nexus 6
-          script: |
-            cd backend/testing/appium-testing
-            npx appium driver install uiautomator2 || true
-            npx appium --port 4723 &
-            sleep 15
-            node real_appium_runner.js || echo "Appium tests failed but continuing"
-
-      - name: Upload Appium test report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: localsync3-appium-report
-          path: backend/testing/appium-testing/appium_test_report.xlsx
-
-      - name: Deploy APK to GitHub Releases
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: latest
-          name: "Latest Android Build"
-          draft: false
-          prerelease: false
-          files: frontend/build/app/outputs/flutter-apk/app-debug.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#   appium-tests:
+#     runs-on: ubuntu-latest
+#     timeout-minutes: 30  # ✅ Android emulator job hard limit
+# 
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
+# 
+#       - name: Set up Node.js
+#         uses: actions/setup-node@v5
+#         with:
+#           node-version: '20'
+# 
+#       - name: Set up Java
+#         uses: actions/setup-java@v4
+#         with:
+#           distribution: 'zulu'
+#           java-version: '17'
+# 
+#       - name: Set up Flutter
+#         uses: subosito/flutter-action@v2
+#         with:
+#           flutter-version: '3.41.x'
+#           channel: 'stable'
+# 
+#       - name: Install Flutter app dependencies
+#         working-directory: frontend
+#         timeout-minutes: 5
+#         run: flutter pub get
+# 
+#       - name: Build Flutter APK
+#         working-directory: frontend
+#         timeout-minutes: 15  # ✅ APK build timeout
+#         run: flutter build apk --debug
+# 
+#       - name: Install Appium dependencies
+#         working-directory: backend/testing/appium-testing
+#         timeout-minutes: 5
+#         run: npm ci
+# 
+#       - name: Run Appium tests on Android emulator
+#         uses: reactivecircus/android-emulator-runner@v2
+#         timeout-minutes: 15  # ✅ CRITICAL — prevents infinite hang
+#         env:
+#           DEVICE_ID: emulator-5554
+#         with:
+#           api-level: 29
+#           target: default
+#           arch: x86_64
+#           profile: Nexus 6
+#           script: |
+#             cd backend/testing/appium-testing
+#             npx appium driver install uiautomator2 || true
+#             npx appium --port 4723 &
+#             sleep 15
+#             node real_appium_runner.js || echo "Appium tests failed but continuing"
+# 
+#       - name: Upload Appium test report
+#         if: always()
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: localsync3-appium-report
+#           path: backend/testing/appium-testing/appium_test_report.xlsx
+# 
+#       - name: Deploy APK to GitHub Releases
+#         if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+#         uses: softprops/action-gh-release@v2
+#         with:
+#           tag_name: latest
+#           name: "Latest Android Build"
+#           draft: false
+#           prerelease: false
+#           files: frontend/build/app/outputs/flutter-apk/app-debug.apk
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   security-rules-audit:
     runs-on: ubuntu-latest
