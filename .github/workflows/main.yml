@@ -1,4 +1,4 @@
-name: LocalSync3 E2E and Security Tests
+name: LocalSync3 E2E, Security and Deploy Tests
 
 on:
   push:
@@ -9,6 +9,9 @@ on:
     paths:
       - 'frontend/**'
       - 'backend/**'
+
+permissions:
+  contents: write
 
 jobs:
   selenium-tests:
@@ -48,7 +51,7 @@ jobs:
       - name: Build Flutter Web app
         working-directory: frontend
         run: |
-          flutter build web --web-renderer html --release
+          flutter build web --base-href "/LocalSync/" --web-renderer html --release
 
       - name: Run Selenium E2E tests
         working-directory: backend/testing/selenium-tests
@@ -68,6 +71,13 @@ jobs:
           path: |
             backend/testing/selenium-tests/test_report.xlsx
             backend/testing/selenium-tests/manual_web_test_report.xlsx
+
+      - name: Deploy to GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: frontend/build/web
+          branch: gh-pages
 
   appium-tests:
     runs-on: ubuntu-latest
