@@ -486,6 +486,8 @@ class RentalSpacesScreen extends ConsumerWidget {
                     .where('spaceId', isEqualTo: space.id)
                     .snapshots(),
                 builder: (context, snapshot) {
+                  final currentUser = widgetRef.read(authStateProvider).value;
+                  final isOwner = currentUser != null && currentUser.id == space.ownerId;
                   final List<BookingEntity> activeBookings = [];
                   if (snapshot.hasData) {
                     for (var doc in snapshot.data!.docs) {
@@ -640,176 +642,305 @@ class RentalSpacesScreen extends ConsumerWidget {
                                     )),
                               ],
                               const SizedBox(height: 32),
-                              const Divider(color: Colors.white12),
-                              const SizedBox(height: 32),
-                              const Text('Book Your Session',
+                              const Text('Host Information',
                                   style: TextStyle(
-                                      fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white)),
-                              const SizedBox(height: 24),
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.05),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
-                                ),
-                                child: ListTile(
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                                  title: const Text('Select Date',
-                                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                                  subtitle: Text(
-                                      DateFormat('EEEE, MMM dd').format(selectedDate),
-                                      style: const TextStyle(color: Colors.white54)),
-                                  trailing: const Icon(Icons.calendar_today_rounded,
-                                      color: AppColors.neonCyan),
-                                  onTap: () async {
-                                    final d = await showDatePicker(
-                                      context: context,
-                                      initialDate: selectedDate,
-                                      firstDate: DateTime.now(),
-                                      lastDate:
-                                          DateTime.now().add(const Duration(days: 60)),
-                                    );
-                                    if (d != null) setDetailState(() => selectedDate = d);
-                                  },
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        const Text('START TIME',
-                                            style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
-                                        const SizedBox(height: 8),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.05),
-                                            borderRadius: BorderRadius.circular(16),
-                                            border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
-                                          ),
-                                          child: DropdownButtonHideUnderline(
-                                            child: DropdownButton<int>(
-                                              dropdownColor: AppColors.secondaryNavy,
-                                              value: startTime,
-                                              isExpanded: true,
-                                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                                              items: List.generate(24, (i) => i)
-                                                  .map((i) {
-                                                    final isOccupied = isHourOccupied(i, selectedDate);
-                                                    return DropdownMenuItem(
-                                                      value: i,
-                                                      enabled: !isOccupied,
-                                                      child: Text(
-                                                        isOccupied ? '$i:00 (Booked)' : '$i:00',
-                                                        style: TextStyle(
-                                                          color: isOccupied ? Colors.white30 : Colors.white,
-                                                          fontWeight: FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                    );
-                                                  })
-                                                  .toList(),
-                                              onChanged: (v) =>
-                                                  setDetailState(() => startTime = v!),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 24),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        const Text('DURATION (HRS)',
-                                            style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
-                                        const SizedBox(height: 8),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.05),
-                                            borderRadius: BorderRadius.circular(16),
-                                            border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
-                                          ),
-                                          child: DropdownButtonHideUnderline(
-                                            child: DropdownButton<int>(
-                                              dropdownColor: AppColors.secondaryNavy,
-                                              value: duration,
-                                              isExpanded: true,
-                                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                                              items: List.generate(8, (i) => i + 1)
-                                                  .map((i) => DropdownMenuItem(
-                                                      value: i, child: Text('$i hrs', style: const TextStyle(color: Colors.white))))
-                                                  .toList(),
-                                              onChanged: (v) =>
-                                                  setDetailState(() => duration = v!),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 48),
-                              ElevatedButton(
-                                onPressed: () async {
-                                  final user = widgetRef.read(authStateProvider).value;
-                                  if (user == null) return;
-
-                                  // Overlap checks
-                                  if (isSlotOverlapping(startTime, duration, selectedDate)) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Selected slot overlaps with a booked session! Please choose another time.'),
-                                        backgroundColor: AppColors.errorRed,
-                                        behavior: SnackBarBehavior.floating,
+                                      fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white)),
+                              const SizedBox(height: 12),
+                              FutureBuilder<DocumentSnapshot>(
+                                future: FirebaseFirestore.instance.collection('users').doc(space.ownerId).get(),
+                                builder: (context, snapshot) {
+                                  if (!snapshot.hasData || snapshot.data == null) {
+                                    return const Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 8.0),
+                                      child: SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.neonCyan),
                                       ),
                                     );
-                                    return;
                                   }
+                                  final data = snapshot.data!.data() as Map<String, dynamic>?;
+                                  if (data == null) {
+                                    return const Text('Host information unavailable', style: TextStyle(color: Colors.white38, fontSize: 13));
+                                  }
+                                  final hostName = data['name'] ?? 'Neighbor';
+                                  final hostPhone = data['phoneNumber'] ?? 'Not provided';
+                                  final hostAvatar = data['profileImageUrl'];
 
-                                  final booking = BookingEntity(
-                                    id: DateTime.now().millisecondsSinceEpoch.toString(),
-                                    spaceId: space.id,
-                                    spaceName: space.name,
-                                    userId: user.id,
-                                    date: selectedDate,
-                                    startTime: startTime,
-                                    duration: duration,
-                                    totalPrice: space.pricePerHour * duration,
-                                    status: BookingStatus.confirmed,
+                                  return Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.04),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(color: Colors.white.withOpacity(0.08), width: 1.5),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 22,
+                                          backgroundColor: AppColors.neonCyan.withOpacity(0.1),
+                                          backgroundImage: hostAvatar != null ? NetworkImage(hostAvatar) : null,
+                                          child: hostAvatar == null
+                                              ? const Icon(Icons.person_rounded, color: AppColors.neonCyan, size: 20)
+                                              : null,
+                                        ),
+                                        const SizedBox(width: 14),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                hostName,
+                                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                'Phone: $hostPhone',
+                                                style: const TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.w600),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        if (hostPhone != 'Not provided')
+                                          IconButton(
+                                            icon: const Icon(Icons.phone_rounded, color: AppColors.neonCyan, size: 20),
+                                            onPressed: () {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(
+                                                  content: Text('Contacting host at $hostPhone...'),
+                                                  backgroundColor: AppColors.neonCyan,
+                                                  duration: const Duration(seconds: 2),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                      ],
+                                    ),
                                   );
-
-                                  await widgetRef
-                                      .read(spaceRepositoryProvider)
-                                      .bookSpace(booking);
-
-                                  if (!context.mounted) return;
-                                  Navigator.pop(context);
-                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                      content: Text(
-                                          'Booking for ${space.name} confirmed successfully!'),
-                                      backgroundColor: Colors.green));
                                 },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.neonCyan,
-                                  minimumSize: const Size(double.infinity, 64),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20)),
-                                ),
-                                child: Text(
-                                    'CONFIRM BOOKING (₹${(space.pricePerHour * duration).toInt()})',
-                                    style: const TextStyle(
-                                        color: AppColors.primaryNavy,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w900)),
                               ),
-                              const SizedBox(height: 40),
+                              if (isOwner) ...[
+                                const SizedBox(height: 32),
+                                const Divider(color: Colors.white12),
+                                const SizedBox(height: 32),
+                                Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.withOpacity(0.08),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: Colors.orangeAccent.withOpacity(0.25), width: 1.5),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.info_outline_rounded, color: Colors.orangeAccent, size: 28),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: const [
+                                            Text(
+                                              'YOUR LISTED SPACE',
+                                              style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1.5),
+                                            ),
+                                            SizedBox(height: 4),
+                                            Text(
+                                              'This is your listed space. You cannot book your own space.',
+                                              style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4, fontWeight: FontWeight.w600),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                ElevatedButton.icon(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    context.push('/rentals/my-spaces');
+                                  },
+                                  icon: const Icon(Icons.dashboard_customize_rounded, color: AppColors.primaryNavy),
+                                  label: const Text('MANAGE BOOKINGS', style: TextStyle(color: AppColors.primaryNavy, fontWeight: FontWeight.w900)),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.neonCyan,
+                                    minimumSize: const Size(double.infinity, 56),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  ),
+                                ),
+                                const SizedBox(height: 40),
+                              ] else ...[
+                                const SizedBox(height: 32),
+                                const Divider(color: Colors.white12),
+                                const SizedBox(height: 32),
+                                const Text('Book Your Session',
+                                    style: TextStyle(
+                                        fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white)),
+                                const SizedBox(height: 24),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.05),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
+                                  ),
+                                  child: ListTile(
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                                    title: const Text('Select Date',
+                                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                                    subtitle: Text(
+                                        DateFormat('EEEE, MMM dd').format(selectedDate),
+                                        style: const TextStyle(color: Colors.white54)),
+                                    trailing: const Icon(Icons.calendar_today_rounded,
+                                        color: AppColors.neonCyan),
+                                    onTap: () async {
+                                      final d = await showDatePicker(
+                                        context: context,
+                                        initialDate: selectedDate,
+                                        firstDate: DateTime.now(),
+                                        lastDate:
+                                            DateTime.now().add(const Duration(days: 60)),
+                                      );
+                                      if (d != null) setDetailState(() => selectedDate = d);
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Text('START TIME',
+                                              style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
+                                          const SizedBox(height: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withOpacity(0.05),
+                                              borderRadius: BorderRadius.circular(16),
+                                              border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
+                                            ),
+                                            child: DropdownButtonHideUnderline(
+                                              child: DropdownButton<int>(
+                                                dropdownColor: AppColors.secondaryNavy,
+                                                value: startTime,
+                                                isExpanded: true,
+                                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                                items: List.generate(24, (i) => i)
+                                                    .map((i) {
+                                                      final isOccupied = isHourOccupied(i, selectedDate);
+                                                      return DropdownMenuItem(
+                                                        value: i,
+                                                        enabled: !isOccupied,
+                                                        child: Text(
+                                                          isOccupied ? '$i:00 (Booked)' : '$i:00',
+                                                          style: TextStyle(
+                                                            color: isOccupied ? Colors.white30 : Colors.white,
+                                                            fontWeight: FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                      );
+                                                    })
+                                                    .toList(),
+                                                onChanged: (v) =>
+                                                    setDetailState(() => startTime = v!),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 24),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Text('DURATION (HRS)',
+                                              style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
+                                          const SizedBox(height: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withOpacity(0.05),
+                                              borderRadius: BorderRadius.circular(16),
+                                              border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
+                                            ),
+                                            child: DropdownButtonHideUnderline(
+                                              child: DropdownButton<int>(
+                                                dropdownColor: AppColors.secondaryNavy,
+                                                value: duration,
+                                                isExpanded: true,
+                                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                                items: List.generate(8, (i) => i + 1)
+                                                    .map((i) => DropdownMenuItem(
+                                                        value: i, child: Text('$i hrs', style: const TextStyle(color: Colors.white))))
+                                                    .toList(),
+                                                onChanged: (v) =>
+                                                    setDetailState(() => duration = v!),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 48),
+                                ElevatedButton(
+                                  onPressed: () async {
+                                    final user = widgetRef.read(authStateProvider).value;
+                                    if (user == null) return;
+
+                                    // Overlap checks
+                                    if (isSlotOverlapping(startTime, duration, selectedDate)) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Selected slot overlaps with a booked session! Please choose another time.'),
+                                          backgroundColor: AppColors.errorRed,
+                                          behavior: SnackBarBehavior.floating,
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    final booking = BookingEntity(
+                                      id: DateTime.now().millisecondsSinceEpoch.toString(),
+                                      spaceId: space.id,
+                                      spaceName: space.name,
+                                      userId: user.id,
+                                      date: selectedDate,
+                                      startTime: startTime,
+                                      duration: duration,
+                                      totalPrice: space.pricePerHour * duration,
+                                      status: BookingStatus.pending,
+                                    );
+
+                                    await widgetRef
+                                        .read(spaceRepositoryProvider)
+                                        .bookSpace(booking);
+
+                                    if (!context.mounted) return;
+                                    Navigator.pop(context);
+                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                        content: Text(
+                                            'Booking request submitted for host approval.'),
+                                        backgroundColor: Colors.orange));
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.neonCyan,
+                                    minimumSize: const Size(double.infinity, 64),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20)),
+                                  ),
+                                  child: Text(
+                                      'REQUEST BOOKING (₹${(space.pricePerHour * duration).toInt()})',
+                                      style: const TextStyle(
+                                          color: AppColors.primaryNavy,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w900)),
+                                ),
+                                const SizedBox(height: 40),
+                              ],
                             ],
                           ),
                         ),
