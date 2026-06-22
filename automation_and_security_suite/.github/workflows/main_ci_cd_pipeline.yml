@@ -32,7 +32,7 @@ jobs:
       - name: Install Python Load & Vuln Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install aiohttp requests
+          pip install aiohttp requests openpyxl
 
       - name: Start Mock Backend Server
         run: |
@@ -168,12 +168,7 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-window -gpu off -no-audio -no-boot-anim
           disable-animations: true
-          script: |
-            cd automation_and_security_suite/mobile_appium_tests
-            export APPIUM_HOST="127.0.0.1"
-            export APPIUM_PORT="4723"
-            export ANDROID_APK_PATH="../app-release.apk"
-            npm test || true
+          script: cd automation_and_security_suite/mobile_appium_tests && export APPIUM_HOST="127.0.0.1" && export APPIUM_PORT="4723" && export ANDROID_APK_PATH="../app-release.apk" && npm test || true
 
       - name: Upload Mobile Test Result Artifacts
         uses: actions/upload-artifact@v4
