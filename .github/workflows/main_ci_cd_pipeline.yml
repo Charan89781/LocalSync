@@ -142,7 +142,7 @@ jobs:
 
       - name: Start Appium Server (Background)
         run: |
-          appium --log-no-colors-log-level info > appium.log &
+          appium --log-no-colors --log-level info > appium.log &
           echo "Appium server started."
           sleep 5
 
