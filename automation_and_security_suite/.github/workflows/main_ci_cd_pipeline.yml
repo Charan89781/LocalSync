@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Codebase
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js Environment
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
 
@@ -85,19 +85,19 @@ jobs:
           python vuln_scanner.py || true
 
       - name: Upload Web Test Result Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: selenium-web-results
           path: automation_and_security_suite/selenium_web_tests/selenium_results.json
 
       - name: Upload Load Test Result Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: backend-load-results
           path: automation_and_security_suite/backend_load_tests/load_results.json
 
       - name: Upload Security Vuln Result Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: security-vuln-results
           path: automation_and_security_suite/security_vuln_tests/security_results.json
@@ -108,10 +108,10 @@ jobs:
       contents: write
     steps:
       - name: Checkout Codebase
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Java Runtime (Java 17 required for Android SDK)
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
@@ -120,7 +120,7 @@ jobs:
         uses: android-actions/setup-android@v2
 
       - name: Setup Node.js Environment
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
 
@@ -176,7 +176,7 @@ jobs:
             npm test || true
 
       - name: Upload Mobile Test Result Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: mobile-appium-results
           path: automation_and_security_suite/mobile_appium_tests/mobile_results.json
@@ -198,7 +198,7 @@ jobs:
     needs: [web-backend-security, mobile-appium]
     steps:
       - name: Checkout Codebase
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Python Runtime
         uses: actions/setup-python@v4
@@ -209,25 +209,25 @@ jobs:
         run: pip install openpyxl
 
       - name: Download Selenium Web Results
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: selenium-web-results
           path: automation_and_security_suite/selenium_web_tests/
 
       - name: Download Appium Mobile Results
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: mobile-appium-results
           path: automation_and_security_suite/mobile_appium_tests/
 
       - name: Download Backend Load Results
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: backend-load-results
           path: automation_and_security_suite/backend_load_tests/
 
       - name: Download Security Vuln Results
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: security-vuln-results
           path: automation_and_security_suite/security_vuln_tests/
@@ -239,7 +239,7 @@ jobs:
           python generate_master_report.py ../../
 
       - name: Archive Master Excel Report Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: LocalSync-Unified-E2E-Security-Report
           path: "*.xlsx"
