@@ -103,7 +103,7 @@ jobs:
           path: automation_and_security_suite/security_vuln_tests/security_results.json
 
   mobile-appium:
-    runs-on: macos-13
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
