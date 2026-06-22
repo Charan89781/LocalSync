@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +11,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/space_provider.dart';
 import '../../../domain/entities/space_entity.dart';
 import '../../../domain/entities/booking_entity.dart';
+import 'rental_spaces_screen.dart';
 
 class MySpacesScreen extends ConsumerStatefulWidget {
   const MySpacesScreen({super.key});
@@ -22,7 +24,6 @@ class _MySpacesScreenState extends ConsumerState<MySpacesScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String? _selectedSpaceFilterId;
-  String? _selectedSpaceFilterName;
 
   @override
   void initState() {
@@ -113,7 +114,7 @@ class _MySpacesScreenState extends ConsumerState<MySpacesScreen>
             icon: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -122,7 +123,7 @@ class _MySpacesScreenState extends ConsumerState<MySpacesScreen>
           ),
           Expanded(
             child: Text(
-              'My Spaces',
+              'Landlord Dashboard',
               textAlign: TextAlign.center,
               style: GoogleFonts.outfit(
                 color: Colors.white,
@@ -143,9 +144,9 @@ class _MySpacesScreenState extends ConsumerState<MySpacesScreen>
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.03),
+          color: Colors.white.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.06)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
         ),
         child: Row(
           children: [
@@ -153,9 +154,9 @@ class _MySpacesScreenState extends ConsumerState<MySpacesScreen>
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Landlord Dashboard: List your parking spots, terraces, or home event areas to earn rental income from verified neighbors.',
+                'Coordinate visits, leases, security deposits, and receive review feedback directly from your tenants.',
                 style: GoogleFonts.inter(
-                  color: Colors.white.withOpacity(0.6),
+                  color: Colors.white.withValues(alpha: 0.6),
                   fontSize: 11,
                   height: 1.35,
                 ),
@@ -171,11 +172,24 @@ class _MySpacesScreenState extends ConsumerState<MySpacesScreen>
     final mySpaceIds = mySpaces.map((s) => s.id).toSet();
     final myBookings = allBookings.where((b) => mySpaceIds.contains(b.spaceId)).toList();
 
+    // 1. Total earnings sum
     final totalEarnings = myBookings
-        .where((b) => b.status != BookingStatus.canceled)
+        .where((b) => b.status == BookingStatus.confirmed || b.status == BookingStatus.completed)
         .fold<double>(0.0, (sum, b) => sum + b.totalPrice);
 
-    final totalBookings = myBookings.length;
+    // 2. Views counter sum
+    final totalViews = mySpaces.fold<int>(0, (sum, s) => sum + s.viewCount);
+
+    // 3. Average rating calculation
+    double totalRatingSum = 0.0;
+    int ratedCount = 0;
+    for (var s in mySpaces) {
+      if (s.reviewCount > 0) {
+        totalRatingSum += s.avgRating * s.reviewCount;
+        ratedCount += s.reviewCount;
+      }
+    }
+    final avgRating = ratedCount > 0 ? (totalRatingSum / ratedCount) : 0.0;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -188,13 +202,13 @@ class _MySpacesScreenState extends ConsumerState<MySpacesScreen>
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFF00D1FF).withOpacity(0.1),
-                  const Color(0xFF007BFF).withOpacity(0.06),
+                  const Color(0xFF00D1FF).withValues(alpha: 0.1),
+                  const Color(0xFF007BFF).withValues(alpha: 0.06),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: const Color(0xFF00D1FF).withOpacity(0.2),
+                color: const Color(0xFF00D1FF).withValues(alpha: 0.2),
               ),
             ),
             child: Row(
@@ -202,7 +216,7 @@ class _MySpacesScreenState extends ConsumerState<MySpacesScreen>
                 Expanded(
                   child: _buildEarnTile(
                     '₹${totalEarnings.toInt()}',
-                    'Total Earned',
+                    'Earnings',
                     Icons.account_balance_wallet_rounded,
                     const Color(0xFF34C759),
                   ),
@@ -210,25 +224,25 @@ class _MySpacesScreenState extends ConsumerState<MySpacesScreen>
                 Container(
                   width: 1,
                   height: 40,
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                 ),
                 Expanded(
                   child: _buildEarnTile(
-                    '$totalBookings',
-                    'Total Bookings',
-                    Icons.event_available_rounded,
+                    '$totalViews',
+                    'Total Views',
+                    Icons.remove_red_eye_rounded,
                     const Color(0xFF007BFF),
                   ),
                 ),
                 Container(
                   width: 1,
                   height: 40,
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                 ),
                 Expanded(
                   child: _buildEarnTile(
-                    '★ 5.0',
-                    'Avg Rating',
+                    avgRating > 0 ? '★ ${avgRating.toStringAsFixed(1)}' : '★ N/A',
+                    'Rating',
                     Icons.star_rounded,
                     const Color(0xFFFFD700),
                   ),
@@ -266,15 +280,15 @@ class _MySpacesScreenState extends ConsumerState<MySpacesScreen>
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.04),
+          color: Colors.white.withValues(alpha: 0.04),
           borderRadius: BorderRadius.circular(16),
         ),
         child: TabBar(
           controller: _tabController,
           indicator: BoxDecoration(
-            color: const Color(0xFF007BFF).withOpacity(0.2),
+            color: const Color(0xFF007BFF).withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFF007BFF).withOpacity(0.4)),
+            border: Border.all(color: const Color(0xFF007BFF).withValues(alpha: 0.4)),
           ),
           indicatorSize: TabBarIndicatorSize.tab,
           labelColor: const Color(0xFF00D1FF),
@@ -284,7 +298,7 @@ class _MySpacesScreenState extends ConsumerState<MySpacesScreen>
           dividerColor: Colors.transparent,
           tabs: const [
             Tab(text: 'My Listings'),
-            Tab(text: 'Bookings'),
+            Tab(text: 'Incoming Requests'),
           ],
         ),
       ),
@@ -319,7 +333,7 @@ class _MySpacesScreenState extends ConsumerState<MySpacesScreen>
         final spaceBookings = allBookings.where((b) => b.spaceId == space.id).toList();
         final bookingsCount = spaceBookings.length;
         final earnings = spaceBookings
-            .where((b) => b.status != BookingStatus.canceled)
+            .where((b) => b.status == BookingStatus.confirmed || b.status == BookingStatus.completed)
             .fold<double>(0.0, (sum, b) => sum + b.totalPrice);
 
         return Padding(
@@ -373,151 +387,207 @@ class _MySpacesScreenState extends ConsumerState<MySpacesScreen>
     final color = const Color(0xFF007BFF);
     final statusColor = space.isAvailable ? const Color(0xFF34C759) : const Color(0xFFFF9500);
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.04),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withOpacity(0.08)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: color.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(14),
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        RentalSpacesScreen.showSpaceDetail(context, ref, space);
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Icon(
+                          space.isMonthly ? Icons.home_work_rounded : Icons.roofing_rounded,
+                          color: color,
+                          size: 24,
+                        ),
                       ),
-                      child: Icon(Icons.roofing_rounded,
-                          color: color, size: 24),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            space.name,
-                            style: GoogleFonts.outfit(
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              space.name,
+                              style: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Text(space.location,
-                                  style: GoogleFonts.inter(
-                                      color: Colors.white38, fontSize: 12)),
-                              const SizedBox(width: 8),
-                              const Text('·',
-                                  style: TextStyle(color: Colors.white24)),
-                              const SizedBox(width: 8),
-                              Text('★ 5.0',
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Text(
+                                  space.bhkType != 'N/A' ? '${space.bhkType} · ${space.spaceType}' : space.spaceType,
+                                  style: GoogleFonts.inter(color: Colors.white38, fontSize: 11),
+                                ),
+                                const SizedBox(width: 8),
+                                const Text('·', style: TextStyle(color: Colors.white24)),
+                                const SizedBox(width: 8),
+                                Text(
+                                  space.avgRating > 0 ? '★ ${space.avgRating.toStringAsFixed(1)}' : '★ New',
                                   style: GoogleFonts.inter(
                                       color: const Color(0xFFFFD700),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600)),
-                            ],
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: statusColor.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                            ),
+                            child: Text(
+                              space.isAvailable ? 'Available' : 'Rented Out',
+                              style: GoogleFonts.outfit(
+                                color: statusColor,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: statusColor.withOpacity(0.3)),
-                      ),
-                      child: Text(
-                        space.isAvailable ? 'Available' : 'Booked',
-                        style: GoogleFonts.outfit(
-                          color: statusColor,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.03),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withOpacity(0.06)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildSpaceStat('₹${space.pricePerHour.toInt()}/hr',
-                          'Rate', const Color(0xFF34C759)),
-                      _buildSpaceStat('$bookingsCount',
-                          'Bookings', const Color(0xFF007BFF)),
-                      _buildSpaceStat('₹${earnings.toInt()}',
-                          'Earned', const Color(0xFFFF9500)),
                     ],
                   ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => context.push('/rentals/add', extra: space),
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: color.withOpacity(0.4)),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: Text('Edit Space',
-                            style: GoogleFonts.outfit(
-                                color: color, fontSize: 13, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 14),
+
+                  // Display views count
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.remove_red_eye_outlined, size: 14, color: Colors.white38),
+                          const SizedBox(width: 6),
+                          Text('${space.viewCount} views', style: const TextStyle(color: Colors.white38, fontSize: 12)),
+                        ],
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline_rounded, color: AppColors.errorRed),
-                      onPressed: () => _confirmDelete(context, ref, space.id),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            _selectedSpaceFilterId = space.id;
-                            _selectedSpaceFilterName = space.name;
-                          });
-                          _tabController.animateTo(1);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: color.withOpacity(0.2),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: Text('View Bookings',
-                            style: GoogleFonts.outfit(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600)),
+                      Row(
+                        children: [
+                          const Text('LISTING ACTIVE', style: TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold)),
+                          const SizedBox(width: 6),
+                          SizedBox(
+                            height: 24,
+                            child: Switch.adaptive(
+                              value: space.isAvailable,
+                              activeColor: const Color(0xFF00D1FF),
+                              onChanged: (newVal) async {
+                                HapticFeedback.lightImpact();
+                                try {
+                                  final updatedSpace = SpaceEntity(
+                                    id: space.id,
+                                    name: space.name,
+                                    description: space.description,
+                                    pricePerHour: space.pricePerHour,
+                                    location: space.location,
+                                    imageUrl: space.imageUrl,
+                                    amenities: space.amenities,
+                                    houseRules: space.houseRules,
+                                    ownerId: space.ownerId,
+                                    isAvailable: newVal,
+                                    spaceType: space.spaceType,
+                                    bhkType: space.bhkType,
+                                    furnishingStatus: space.furnishingStatus,
+                                    preferredTenants: space.preferredTenants,
+                                    depositAmount: space.depositAmount,
+                                    monthlyRent: space.monthlyRent,
+                                    isMonthly: space.isMonthly,
+                                    availableFrom: space.availableFrom,
+                                    photos: space.photos,
+                                    floorNumber: space.floorNumber,
+                                    totalFloors: space.totalFloors,
+                                    facing: space.facing,
+                                    avgRating: space.avgRating,
+                                    reviewCount: space.reviewCount,
+                                    viewCount: space.viewCount,
+                                    isVerified: space.isVerified,
+                                  );
+                                  await ref.read(spaceRepositoryProvider).updateSpace(updatedSpace);
+                                } catch (e) {
+                                  debugPrint('Error toggling space availability: $e');
+                                }
+                              },
+                            ),
+                          ),
+                        ],
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.03),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
                     ),
-                  ],
-                ),
-              ],
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildSpaceStat(
+                            space.isMonthly ? '₹${space.monthlyRent.toInt()}/mo' : '₹${space.pricePerHour.toInt()}/hr',
+                            'Rent',
+                            const Color(0xFF34C759)),
+                        _buildSpaceStat('$bookingsCount', 'Requests', const Color(0xFF007BFF)),
+                        _buildSpaceStat('₹${earnings.toInt()}', 'Earned', const Color(0xFFFF9500)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => context.push('/rentals/add', extra: space),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: color.withValues(alpha: 0.4)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: Text('Edit Space',
+                              style: GoogleFonts.outfit(
+                                  color: color, fontSize: 13, fontWeight: FontWeight.w600)),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline_rounded, color: AppColors.errorRed),
+                        onPressed: () => _confirmDelete(context, ref, space.id),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -530,12 +600,11 @@ class _MySpacesScreenState extends ConsumerState<MySpacesScreen>
       children: [
         Text(value,
             style: GoogleFonts.outfit(
-              color: color,
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-            )),
+                color: color, fontSize: 14, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 2),
         Text(label,
-            style: GoogleFonts.inter(color: Colors.white38, fontSize: 10)),
+            style: GoogleFonts.inter(
+                color: Colors.white38, fontSize: 9, fontWeight: FontWeight.w500)),
       ],
     );
   }
@@ -551,325 +620,390 @@ class _MySpacesScreenState extends ConsumerState<MySpacesScreen>
           children: [
             const Icon(Icons.receipt_long_rounded, color: Colors.white24, size: 60),
             const SizedBox(height: 16),
-            Text('No bookings yet',
+            Text('No bookings recorded yet',
                 style: GoogleFonts.outfit(
                     color: Colors.white54, fontSize: 18, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-            Text('Booking requests from neighbors will appear here',
-                style: GoogleFonts.inter(color: Colors.white38, fontSize: 13)),
           ],
         ),
       );
     }
 
+    // Space filtering header
+    final filterSelector = SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => setState(() {
+              _selectedSpaceFilterId = null;
+            }),
+            child: Container(
+              margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: _selectedSpaceFilterId == null ? const Color(0xFF00D1FF) : Colors.white.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text('All Spaces',
+                  style: GoogleFonts.outfit(
+                      color: _selectedSpaceFilterId == null ? AppColors.primaryNavy : Colors.white70,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold)),
+            ),
+          ),
+          ...mySpaces.map((s) {
+            final isSel = _selectedSpaceFilterId == s.id;
+            return GestureDetector(
+              onTap: () => setState(() {
+                _selectedSpaceFilterId = s.id;
+              }),
+              child: Container(
+                margin: const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isSel ? const Color(0xFF00D1FF) : Colors.white.withValues(alpha: 0.04),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(s.name,
+                    style: GoogleFonts.outfit(
+                        color: isSel ? AppColors.primaryNavy : Colors.white70,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold)),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+
     final displayBookings = _selectedSpaceFilterId != null
         ? landlordBookings.where((b) => b.spaceId == _selectedSpaceFilterId).toList()
         : landlordBookings;
 
+    // Sort: Pending requests first
+    displayBookings.sort((a, b) {
+      if (a.status == BookingStatus.pending && b.status != BookingStatus.pending) return -1;
+      if (a.status != BookingStatus.pending && b.status == BookingStatus.pending) return 1;
+      return b.date.compareTo(a.date);
+    });
+
     return Column(
       children: [
-        if (_selectedSpaceFilterId != null)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF00D1FF).withOpacity(0.08),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF00D1FF).withOpacity(0.2)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.filter_list_rounded, color: Color(0xFF00D1FF), size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Showing bookings for "${_selectedSpaceFilterName}"',
-                      style: GoogleFonts.inter(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedSpaceFilterId = null;
-                        _selectedSpaceFilterName = null;
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.close_rounded, color: Colors.white, size: 14),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+        filterSelector,
         Expanded(
-          child: displayBookings.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.filter_alt_off_rounded, color: Colors.white24, size: 60),
-                      const SizedBox(height: 16),
-                      Text('No bookings for this space yet',
-                          style: GoogleFonts.outfit(
-                              color: Colors.white54, fontSize: 16, fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                )
-              : ListView.builder(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
-                  itemCount: displayBookings.length,
-                  itemBuilder: (context, index) {
-                    final booking = displayBookings[index];
-                    final dateStr = DateFormat('MMM dd, yyyy').format(booking.date);
+          child: ListView.builder(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 80),
+            itemCount: displayBookings.length,
+            itemBuilder: (context, index) {
+              final booking = displayBookings[index];
+              final dateStr = DateFormat('EEEE, MMM dd, yyyy').format(booking.date);
 
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.04),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: Colors.white.withOpacity(0.08)),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(
-                                        color: booking.status == BookingStatus.confirmed
-                                            ? const Color(0xFF34C759).withOpacity(0.15)
-                                            : booking.status == BookingStatus.completed
-                                                ? const Color(0xFF00D1FF).withOpacity(0.15)
-                                                : booking.status == BookingStatus.pending
-                                                    ? const Color(0xFFFF9500).withOpacity(0.15)
-                                                    : const Color(0xFFFF3B30).withOpacity(0.15),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Icon(
-                                        booking.status == BookingStatus.confirmed
-                                            ? Icons.check_circle_rounded
-                                            : booking.status == BookingStatus.completed
-                                                ? Icons.task_alt_rounded
-                                                : booking.status == BookingStatus.pending
-                                                    ? Icons.calendar_today_rounded
-                                                    : Icons.cancel_rounded,
-                                        color: booking.status == BookingStatus.confirmed
-                                            ? const Color(0xFF34C759)
-                                            : booking.status == BookingStatus.completed
-                                                ? const Color(0xFF00D1FF)
-                                                : booking.status == BookingStatus.pending
-                                                    ? const Color(0xFFFF9500)
-                                                    : const Color(0xFFFF3B30),
-                                        size: 20,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 14),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(booking.spaceName,
-                                              style: GoogleFonts.outfit(
-                                                color: Colors.white,
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                              )),
-                                          Text('$dateStr · ${booking.startTime}:00 (${booking.duration} hrs)',
-                                              style: GoogleFonts.inter(
-                                                  color: Colors.white38, fontSize: 12)),
-                                        ],
-                                      ),
-                                    ),
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: [
-                                        Text('₹${booking.totalPrice.toInt()}',
-                                            style: GoogleFonts.outfit(
-                                              color: const Color(0xFF34C759),
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w800,
-                                            )),
-                                        const SizedBox(height: 4),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8, vertical: 3),
-                                          decoration: BoxDecoration(
-                                            color: booking.status == BookingStatus.pending
-                                                ? const Color(0xFFFF9500).withOpacity(0.15)
-                                                : booking.status == BookingStatus.confirmed
-                                                    ? const Color(0xFF34C759).withOpacity(0.15)
-                                                    : booking.status == BookingStatus.completed
-                                                        ? const Color(0xFF00D1FF).withOpacity(0.15)
-                                                        : const Color(0xFFFF3B30).withOpacity(0.15),
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: Text(
-                                            booking.status.name.toUpperCase(),
-                                            style: GoogleFonts.inter(
-                                              color: booking.status == BookingStatus.pending
-                                                  ? const Color(0xFFFF9500)
-                                                  : booking.status == BookingStatus.confirmed
-                                                      ? const Color(0xFF34C759)
-                                                      : booking.status == BookingStatus.completed
-                                                          ? const Color(0xFF00D1FF)
-                                                          : const Color(0xFFFF3B30),
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 14),
-                                _buildRequesterCard(booking.userId),
-                                if (booking.status == BookingStatus.pending) ...[
-                                  const SizedBox(height: 12),
-                                  const Divider(color: Colors.white10),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      OutlinedButton(
-                                        onPressed: () async {
-                                          try {
-                                            await ref.read(spaceRepositoryProvider).updateBookingStatus(booking.id, BookingStatus.canceled);
-                                            if (context.mounted) {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                const SnackBar(content: Text('Booking declined'), backgroundColor: AppColors.errorRed),
-                                              );
-                                            }
-                                          } catch (e) {
-                                            if (context.mounted) {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.errorRed),
-                                              );
-                                            }
-                                          }
-                                        },
-                                        style: OutlinedButton.styleFrom(
-                                          side: const BorderSide(color: AppColors.errorRed),
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                        ),
-                                        child: Text('Decline', style: GoogleFonts.outfit(color: AppColors.errorRed, fontSize: 12, fontWeight: FontWeight.bold)),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      ElevatedButton(
-                                        onPressed: () async {
-                                          try {
-                                            await ref.read(spaceRepositoryProvider).updateBookingStatus(booking.id, BookingStatus.confirmed);
-                                            if (context.mounted) {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                const SnackBar(content: Text('Booking approved!'), backgroundColor: AppColors.successGreen),
-                                              );
-                                            }
-                                          } catch (e) {
-                                            if (context.mounted) {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.errorRed),
-                                              );
-                                            }
-                                          }
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: AppColors.successGreen,
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                        ),
-                                        child: Text('Approve', style: GoogleFonts.outfit(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                                      ),
-                                    ],
+              Color statusColor;
+              IconData statusIcon;
+              switch (booking.status) {
+                case BookingStatus.pending:
+                  statusColor = const Color(0xFFFF9500);
+                  statusIcon = Icons.hourglass_top_rounded;
+                  break;
+                case BookingStatus.confirmed:
+                  statusColor = const Color(0xFF34C759);
+                  statusIcon = Icons.check_circle_outline_rounded;
+                  break;
+                case BookingStatus.canceled:
+                  statusColor = AppColors.errorRed;
+                  statusIcon = Icons.cancel_outlined;
+                  break;
+                case BookingStatus.completed:
+                  statusColor = Colors.purpleAccent;
+                  statusIcon = Icons.task_alt_rounded;
+                  break;
+              }
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.04),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  booking.spaceName,
+                                  style: GoogleFonts.outfit(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                ] else if (booking.status == BookingStatus.confirmed) ...[
-                                  const SizedBox(height: 12),
-                                  const Divider(color: Colors.white10),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      OutlinedButton(
-                                        onPressed: () async {
-                                          try {
-                                            await ref.read(spaceRepositoryProvider).updateBookingStatus(booking.id, BookingStatus.canceled);
-                                            if (context.mounted) {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                const SnackBar(content: Text('Booking canceled'), backgroundColor: AppColors.errorRed),
-                                              );
-                                            }
-                                          } catch (e) {
-                                            if (context.mounted) {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.errorRed),
-                                              );
-                                            }
-                                          }
-                                        },
-                                        style: OutlinedButton.styleFrom(
-                                          side: const BorderSide(color: AppColors.errorRed),
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                        ),
-                                        child: Text('Cancel', style: GoogleFonts.outfit(color: AppColors.errorRed, fontSize: 12, fontWeight: FontWeight.bold)),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      ElevatedButton(
-                                        onPressed: () async {
-                                          try {
-                                            await ref.read(spaceRepositoryProvider).updateBookingStatus(booking.id, BookingStatus.completed);
-                                            if (context.mounted) {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                const SnackBar(content: Text('Booking completed!'), backgroundColor: AppColors.successGreen),
-                                              );
-                                            }
-                                          } catch (e) {
-                                            if (context.mounted) {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.errorRed),
-                                              );
-                                            }
-                                          }
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.teal,
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                        ),
-                                        child: Text('Complete', style: GoogleFonts.outfit(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                                      ),
-                                    ],
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  Icon(statusIcon, color: statusColor, size: 14),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    booking.status.name.toUpperCase(),
+                                    style: GoogleFonts.outfit(
+                                      color: statusColor,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            booking.leaseDurationMonths > 0
+                                ? '$dateStr · Lease ${booking.leaseDurationMonths} months'
+                                : '$dateStr · Slot: ${booking.startTime}:00 (${booking.duration} hrs)',
+                            style: GoogleFonts.inter(color: Colors.white60, fontSize: 12),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Amount: ₹${booking.totalPrice.toInt()}',
+                            style: GoogleFonts.outfit(color: const Color(0xFF00D1FF), fontSize: 13, fontWeight: FontWeight.bold),
+                          ),
+                          if (booking.message.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              width: double.infinity,
+                              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.02), borderRadius: BorderRadius.circular(10)),
+                              child: Text(
+                                'Applicant Intro: "${booking.message}"',
+                                style: GoogleFonts.inter(color: Colors.white70, fontSize: 11, fontStyle: FontStyle.italic),
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 12),
+                          _buildRequesterCard(booking.userId),
+
+                          // Action Buttons
+                          if (booking.status == BookingStatus.pending) ...[
+                            const SizedBox(height: 12),
+                            const Divider(color: Colors.white10),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                OutlinedButton(
+                                  onPressed: () async {
+                                    final confirm = await _showConfirmDialog(
+                                      title: 'Decline Request?',
+                                      content: 'Are you sure you want to decline this booking request?',
+                                      actionColor: AppColors.errorRed,
+                                      actionLabel: 'Decline',
+                                    );
+                                    if (confirm == true) {
+                                      try {
+                                        await ref.read(spaceRepositoryProvider).updateBookingStatus(booking.id, BookingStatus.canceled);
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Booking request declined'), backgroundColor: AppColors.errorRed),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.errorRed),
+                                          );
+                                        }
+                                      }
+                                    }
+                                  },
+                                  style: OutlinedButton.styleFrom(
+                                    side: const BorderSide(color: AppColors.errorRed),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  ),
+                                  child: Text('Decline', style: GoogleFonts.outfit(color: AppColors.errorRed, fontSize: 12, fontWeight: FontWeight.bold)),
+                                ),
+                                const SizedBox(width: 12),
+                                ElevatedButton(
+                                  onPressed: () async {
+                                    final confirm = await _showConfirmDialog(
+                                      title: 'Approve Request?',
+                                      content: 'Are you sure you want to approve this booking request?',
+                                      actionColor: AppColors.successGreen,
+                                      actionLabel: 'Approve',
+                                    );
+                                    if (confirm == true) {
+                                      try {
+                                        await ref.read(spaceRepositoryProvider).updateBookingStatus(booking.id, BookingStatus.confirmed);
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Booking approved!'), backgroundColor: AppColors.successGreen),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.errorRed),
+                                          );
+                                        }
+                                      }
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.successGreen,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  ),
+                                  child: Text('Approve', style: GoogleFonts.outfit(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                                ),
                               ],
                             ),
-                          ),
-                        ),
+                          ] else if (booking.status == BookingStatus.confirmed) ...[
+                            const SizedBox(height: 12),
+                            const Divider(color: Colors.white10),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                OutlinedButton(
+                                  onPressed: () async {
+                                    final confirm = await _showConfirmDialog(
+                                      title: 'Cancel Booking?',
+                                      content: 'Are you sure you want to cancel this confirmed booking?',
+                                      actionColor: AppColors.errorRed,
+                                      actionLabel: 'Cancel',
+                                    );
+                                    if (confirm == true) {
+                                      try {
+                                        await ref.read(spaceRepositoryProvider).updateBookingStatus(booking.id, BookingStatus.canceled);
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Booking canceled'), backgroundColor: AppColors.errorRed),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.errorRed),
+                                          );
+                                        }
+                                      }
+                                    }
+                                  },
+                                  style: OutlinedButton.styleFrom(
+                                    side: const BorderSide(color: AppColors.errorRed),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  ),
+                                  child: Text('Cancel', style: GoogleFonts.outfit(color: AppColors.errorRed, fontSize: 12, fontWeight: FontWeight.bold)),
+                                ),
+                                const SizedBox(width: 12),
+                                ElevatedButton(
+                                  onPressed: () async {
+                                    final confirm = await _showConfirmDialog(
+                                      title: 'Complete Booking?',
+                                      content: 'Are you sure you want to mark this booking as completed?',
+                                      actionColor: Colors.teal,
+                                      actionLabel: 'Complete',
+                                    );
+                                    if (confirm == true) {
+                                      try {
+                                        await ref.read(spaceRepositoryProvider).updateBookingStatus(booking.id, BookingStatus.completed);
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Booking completed!'), backgroundColor: AppColors.successGreen),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.errorRed),
+                                          );
+                                        }
+                                      }
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.teal,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  ),
+                                  child: Text('Complete', style: GoogleFonts.outfit(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
                       ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
+              );
+            },
+          ),
         ),
       ],
+    );
+  }
+
+  Future<bool?> _showConfirmDialog({
+    required String title,
+    required String content,
+    required Color actionColor,
+    required String actionLabel,
+  }) {
+    HapticFeedback.mediumImpact();
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+        child: AlertDialog(
+          backgroundColor: const Color(0xFF15202B).withValues(alpha: 0.85),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+          ),
+          title: Text(
+            title,
+            style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            content,
+            style: GoogleFonts.inter(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text('Cancel', style: GoogleFonts.outfit(color: Colors.white38)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                Navigator.pop(ctx, true);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: actionColor,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: Text(
+                actionLabel,
+                style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -898,15 +1032,15 @@ class _MySpacesScreenState extends ConsumerState<MySpacesScreen>
         return Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.02),
+            color: Colors.white.withValues(alpha: 0.02),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.white.withOpacity(0.05)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
           ),
           child: Row(
             children: [
               CircleAvatar(
                 radius: 18,
-                backgroundColor: const Color(0xFF00D1FF).withOpacity(0.1),
+                backgroundColor: const Color(0xFF00D1FF).withValues(alpha: 0.1),
                 backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
                 child: avatarUrl == null ? const Icon(Icons.person_rounded, size: 16, color: Color(0xFF00D1FF)) : null,
               ),
@@ -959,7 +1093,7 @@ class _MySpacesScreenState extends ConsumerState<MySpacesScreen>
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF007BFF).withOpacity(0.4),
+              color: const Color(0xFF007BFF).withValues(alpha: 0.4),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),

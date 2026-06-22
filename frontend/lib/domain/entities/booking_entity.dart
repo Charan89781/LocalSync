@@ -13,6 +13,14 @@ class BookingEntity {
   final double totalPrice;
   final BookingStatus status;
 
+  // Extended fields
+  final String tenantName;
+  final String tenantPhone;
+  final String message;
+  final DateTime createdAt;
+  final int leaseDurationMonths;
+  final String rentPaymentStatus;
+
   BookingEntity({
     required this.id,
     required this.spaceId,
@@ -23,7 +31,15 @@ class BookingEntity {
     required this.duration,
     required this.totalPrice,
     this.status = BookingStatus.pending,
-  });
+    
+    // Extended defaults
+    this.tenantName = '',
+    this.tenantPhone = '',
+    this.message = '',
+    DateTime? createdAt,
+    this.leaseDurationMonths = 0,
+    this.rentPaymentStatus = 'pending',
+  }) : createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toMap() {
     return {
@@ -35,6 +51,13 @@ class BookingEntity {
       'duration': duration,
       'totalPrice': totalPrice,
       'status': status.name,
+      // Extended fields
+      'tenantName': tenantName,
+      'tenantPhone': tenantPhone,
+      'message': message,
+      'createdAt': createdAt.toIso8601String(),
+      'leaseDurationMonths': leaseDurationMonths,
+      'rentPaymentStatus': rentPaymentStatus,
     };
   }
 
@@ -56,6 +79,14 @@ class BookingEntity {
       totalPrice: (map['totalPrice'] ?? 0.0).toDouble(),
       status: BookingStatus.values.firstWhere((e) => e.name == map['status'],
           orElse: () => BookingStatus.pending),
+      // Extended fields with fallback defaults
+      tenantName: map['tenantName'] ?? '',
+      tenantPhone: map['tenantPhone'] ?? '',
+      message: map['message'] ?? '',
+      createdAt: parseDate(map['createdAt']),
+      leaseDurationMonths: map['leaseDurationMonths'] ?? 0,
+      rentPaymentStatus: map['rentPaymentStatus'] ?? 'pending',
     );
   }
 }
+

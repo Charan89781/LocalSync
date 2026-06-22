@@ -43,12 +43,12 @@ class GlassCard extends StatelessWidget {
         boxShadow: shadows ??
             [
               BoxShadow(
-                color: Colors.black.withOpacity(0.25),
+                color: Colors.black.withValues(alpha: 0.25),
                 blurRadius: 24,
                 offset: const Offset(0, 8),
               ),
               BoxShadow(
-                color: AppColors.neonCyan.withOpacity(0.04),
+                color: AppColors.neonCyan.withValues(alpha: 0.04),
                 blurRadius: 12,
                 offset: const Offset(0, 0),
               ),
@@ -66,13 +66,13 @@ class GlassCard extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      (backgroundColor ?? Colors.white).withOpacity(0.12),
-                      (backgroundColor ?? Colors.white).withOpacity(0.05),
+                      (backgroundColor ?? Colors.white).withValues(alpha: 0.12),
+                      (backgroundColor ?? Colors.white).withValues(alpha: 0.05),
                     ],
                   ),
               borderRadius: BorderRadius.circular(borderRadius),
               border: Border.all(
-                color: borderColor ?? Colors.white.withOpacity(0.15),
+                color: borderColor ?? Colors.white.withValues(alpha: 0.15),
                 width: borderWidth,
               ),
             ),
@@ -176,7 +176,7 @@ class _GradientButtonState extends State<GradientButton>
                 boxShadow: widget.onPressed != null
                     ? [
                         BoxShadow(
-                          color: colors.first.withOpacity(
+                          color: colors.first.withValues(alpha: 
                               0.35 + _pulseAnimation.value * 0.15),
                           blurRadius: 16 + _pulseAnimation.value * 8,
                           offset: const Offset(0, 4),
@@ -247,15 +247,15 @@ class StatusBadge extends StatelessWidget {
   Color get _bgColor {
     switch (type) {
       case StatusType.success:
-        return AppColors.successGreen.withOpacity(0.15);
+        return AppColors.successGreen.withValues(alpha: 0.15);
       case StatusType.warning:
-        return AppColors.warningOrange.withOpacity(0.15);
+        return AppColors.warningOrange.withValues(alpha: 0.15);
       case StatusType.error:
-        return AppColors.errorRed.withOpacity(0.15);
+        return AppColors.errorRed.withValues(alpha: 0.15);
       case StatusType.info:
-        return AppColors.neonCyan.withOpacity(0.15);
+        return AppColors.neonCyan.withValues(alpha: 0.15);
       case StatusType.neutral:
-        return Colors.grey.withOpacity(0.15);
+        return Colors.grey.withValues(alpha: 0.15);
     }
   }
 
@@ -299,7 +299,7 @@ class StatusBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: _bgColor,
         borderRadius: BorderRadius.circular(50),
-        border: Border.all(color: _fgColor.withOpacity(0.3), width: 1),
+        border: Border.all(color: _fgColor.withValues(alpha: 0.3), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -587,16 +587,16 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
                     gradient: LinearGradient(
                       colors: [
                         (widget.iconColor ?? AppColors.primaryBlue)
-                            .withOpacity(0.15),
+                            .withValues(alpha: 0.15),
                         (widget.iconColor ?? AppColors.neonCyan)
-                            .withOpacity(0.08),
+                            .withValues(alpha: 0.08),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     border: Border.all(
                       color: (widget.iconColor ?? AppColors.primaryBlue)
-                          .withOpacity(0.2),
+                          .withValues(alpha: 0.2),
                       width: 1.5,
                     ),
                   ),

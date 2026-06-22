@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -23,14 +24,14 @@ class PremiumPostCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
+    final cardWidget = Container(
       margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 20,
             offset: const Offset(0, 8),
           )
@@ -48,6 +49,14 @@ class PremiumPostCard extends ConsumerWidget {
         ],
       ),
     );
+
+    if (post.isSending) {
+      return Opacity(
+        opacity: 0.6,
+        child: cardWidget,
+      );
+    }
+    return cardWidget;
   }
 
   Widget _buildPoll(BuildContext context, WidgetRef ref) {
@@ -79,7 +88,7 @@ class PremiumPostCard extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                         color: hasVoted
-                            ? AppColors.primaryBlue.withOpacity(0.3)
+                            ? AppColors.primaryBlue.withValues(alpha: 0.3)
                             : Colors.grey[200]!),
                   ),
                   child: Stack(
@@ -90,7 +99,7 @@ class PremiumPostCard extends ConsumerWidget {
                           child: Container(
                             decoration: BoxDecoration(
                               color:
-                                  AppColors.primaryBlue.withOpacity(0.1),
+                                  AppColors.primaryBlue.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(11),
                             ),
                           ),
@@ -136,7 +145,7 @@ class PremiumPostCard extends ConsumerWidget {
             backgroundImage: post.authorProfileUrl != null
                 ? NetworkImage(post.authorProfileUrl!)
                 : null,
-            backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
+            backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
             child: post.authorProfileUrl == null
                 ? Text(post.authorName.isNotEmpty ? post.authorName[0] : '?',
                     style: const TextStyle(
@@ -152,11 +161,35 @@ class PremiumPostCard extends ConsumerWidget {
                 Text(post.authorName,
                     style: const TextStyle(
                         fontWeight: FontWeight.w800, fontSize: 15)),
-                Text(DateFormat('MMM dd • HH:mm').format(post.createdAt),
-                    style: const TextStyle(
-                        color: AppColors.textGray,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500)),
+                Row(
+                  children: [
+                    Text(DateFormat('MMM dd • HH:mm').format(post.createdAt),
+                        style: const TextStyle(
+                            color: AppColors.textGray,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500)),
+                    if (post.isSending) ...[
+                      const SizedBox(width: 8),
+                      const SizedBox(
+                        width: 10,
+                        height: 10,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 1.5,
+                          color: AppColors.primaryBlue,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Text(
+                        'Sending...',
+                        style: TextStyle(
+                          color: AppColors.primaryBlue,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ],
             ),
           ),
@@ -190,7 +223,7 @@ class PremiumPostCard extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(post.type.name.toUpperCase(),
@@ -228,6 +261,9 @@ class PremiumPostCard extends ConsumerWidget {
       return Image.network(url,
           fit: BoxFit.cover,
           errorBuilder: (c, e, s) => const Icon(Icons.broken_image_outlined));
+    }
+    if (kIsWeb) {
+      return Image.network(url, fit: BoxFit.cover);
     }
     return Image.file(File(url), fit: BoxFit.cover);
   }
@@ -276,7 +312,7 @@ class PremiumPostCard extends ConsumerWidget {
                   '${post.authorName} shared an update on LocalSync:\n\n${post.content}');
             },
             icon: Icon(Icons.share_rounded,
-                size: 20, color: AppColors.textGray.withOpacity(0.6)),
+                size: 20, color: AppColors.textGray.withValues(alpha: 0.6)),
           ),
         ],
       ),
@@ -394,7 +430,7 @@ class PremiumPostCard extends ConsumerWidget {
                 color: Theme.of(context).cardColor,
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, -5))
                 ],

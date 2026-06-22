@@ -50,6 +50,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
   Widget build(BuildContext context) {
     final postsAsync = ref.watch(feedPostsProvider);
     final user = ref.watch(authStateProvider).value;
+    final userCoordsAsync = ref.watch(userCoordinatesProvider);
 
     return Scaffold(
       backgroundColor: AppColors.primaryNavy,
@@ -120,11 +121,25 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
             ),
             postsAsync.when(
               data: (posts) {
+                final userCoords = userCoordsAsync.value;
+                final filteredPosts = posts.where((p) {
+                  if (userCoords != null && p.latitude != null && p.longitude != null) {
+                    final dist = Geolocator.distanceBetween(
+                      userCoords.latitude,
+                      userCoords.longitude,
+                      p.latitude!,
+                      p.longitude!,
+                    );
+                    return dist <= 3000;
+                  }
+                  return true;
+                }).toList();
+
                 final List<PostEntity> helpPosts;
                 
                 if (_showOfferingHelp) {
                   // Show posts where current user is offering help (helperId or willingToHelp) or is author with active helper
-                  helpPosts = posts.where((p) {
+                  helpPosts = filteredPosts.where((p) {
                     final isHelpPost = p.type == PostType.help || p.type == PostType.general;
                     final matchCategory = _filterCategory == null || p.category == _filterCategory;
                     final isHelper = p.helperId == user?.id || p.willingToHelp.contains(user?.id);
@@ -132,7 +147,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                   }).toList();
                 } else {
                   // Needs Help: show all active requests except those completely resolved by someone else
-                  helpPosts = posts.where((p) {
+                  helpPosts = filteredPosts.where((p) {
                     final isHelpPost = p.type == PostType.help || p.type == PostType.general;
                     final matchCategory = _filterCategory == null || p.category == _filterCategory;
                     return isHelpPost && matchCategory;
@@ -214,8 +229,8 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                const Color(0xFF152636).withOpacity(0.8),
-                const Color(0xFF0A121A).withOpacity(0.0),
+                const Color(0xFF152636).withValues(alpha: 0.8),
+                const Color(0xFF0A121A).withValues(alpha: 0.0),
               ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
@@ -238,9 +253,9 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
+                        color: Colors.white.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.white.withOpacity(0.1)),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                       ),
                       child: const Icon(Icons.arrow_back_ios_new_rounded,
                           color: Colors.white, size: 16),
@@ -250,9 +265,9 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppColors.neonCyan.withOpacity(0.1),
+                      color: AppColors.neonCyan.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.neonCyan.withOpacity(0.2)),
+                      border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.2)),
                     ),
                     child: Row(
                       children: [
@@ -286,7 +301,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
               Text(
                 'Coordinate support, volunteer, or request a hand from your neighbors.',
                 style: GoogleFonts.inter(
-                  color: Colors.white.withOpacity(0.6),
+                  color: Colors.white.withValues(alpha: 0.6),
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                   height: 1.35,
@@ -297,9 +312,9 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
               Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.04),
+                  color: Colors.white.withValues(alpha: 0.04),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.white.withOpacity(0.08)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                 ),
                 child: Row(
                   children: [
@@ -429,20 +444,20 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isSelected ? color : Colors.white.withOpacity(0.08),
+                  color: isSelected ? color : Colors.white.withValues(alpha: 0.08),
                   width: isSelected ? 2 : 1,
                 ),
                 gradient: isSelected
                     ? grad
                     : LinearGradient(
-                        colors: [Colors.white.withOpacity(0.05), Colors.white.withOpacity(0.01)],
+                        colors: [Colors.white.withValues(alpha: 0.05), Colors.white.withValues(alpha: 0.01)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: color.withOpacity(0.3),
+                          color: color.withValues(alpha: 0.3),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         )
@@ -456,7 +471,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isSelected ? Colors.white.withOpacity(0.18) : color.withOpacity(0.1),
+                      color: isSelected ? Colors.white.withValues(alpha: 0.18) : color.withValues(alpha: 0.1),
                     ),
                     child: Icon(
                       cat['icon'] as IconData,
@@ -468,7 +483,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                   Text(
                     label,
                     style: GoogleFonts.inter(
-                      color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
+                      color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.7),
                       fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                       fontSize: 11,
                     ),
@@ -488,21 +503,16 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
     final isWilling = user != null && post.willingToHelp.contains(user.id);
     final willingCount = post.willingToHelp.length;
 
-    StatusType statusType;
-    switch (post.helpStatus ?? HelpStatus.open) {
-      case HelpStatus.open:
-        statusType = StatusType.info;
-        break;
-      case HelpStatus.offered:
-        statusType = StatusType.warning;
-        break;
-      case HelpStatus.inProgress:
-        statusType = StatusType.neutral;
-        break;
-      case HelpStatus.completed:
-        statusType = StatusType.success;
-        break;
-    }
+    final userCoords = ref.watch(userCoordinatesProvider).value;
+    final double? distance = (userCoords != null && post.latitude != null && post.longitude != null)
+        ? Geolocator.distanceBetween(
+            userCoords.latitude,
+            userCoords.longitude,
+            post.latitude!,
+            post.longitude!,
+          )
+        : null;
+
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -516,7 +526,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
               children: [
                 CircleAvatar(
                   radius: 20,
-                  backgroundColor: AppColors.neonCyan.withOpacity(0.08),
+                  backgroundColor: AppColors.neonCyan.withValues(alpha: 0.08),
                   child: Text(
                     post.authorName.isNotEmpty ? post.authorName.substring(0, 1).toUpperCase() : 'N',
                     style: GoogleFonts.inter(
@@ -531,30 +541,69 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        post.authorName,
-                        style: GoogleFonts.inter(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            post.authorName,
+                            style: GoogleFonts.inter(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          if (isOwner) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: AppColors.neonCyan.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.3)),
+                              ),
+                              child: Text(
+                                'YOU',
+                                style: GoogleFonts.inter(
+                                  color: AppColors.neonCyan,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        DateFormat('MMM dd • HH:mm').format(post.createdAt).toUpperCase(),
-                        style: GoogleFonts.inter(
-                          color: Colors.white.withOpacity(0.3),
-                          fontSize: 9,
-                          fontWeight: FontWeight.w900,
-                        ),
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(
+                            DateFormat('MMM dd • HH:mm').format(post.createdAt).toUpperCase(),
+                            style: GoogleFonts.inter(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          if (distance != null) ...[
+                            const SizedBox(width: 6),
+                            const Text('•', style: TextStyle(color: Colors.white24, fontSize: 10)),
+                            const SizedBox(width: 6),
+                            const Icon(Icons.location_on_rounded, color: AppColors.neonCyan, size: 10),
+                            const SizedBox(width: 2),
+                            Text(
+                              '${(distance / 1000).toStringAsFixed(1)} KM AWAY',
+                              style: GoogleFonts.inter(
+                                color: AppColors.neonCyan,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ],
                   ),
-                ),
-                StatusBadge(
-                  label: (post.helpStatus ?? HelpStatus.open).name.toUpperCase(),
-                  type: statusType,
-                  compact: true,
                 ),
               ],
             ),
@@ -562,11 +611,32 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
             Text(
               post.content,
               style: GoogleFonts.inter(
-                color: Colors.white.withOpacity(0.85),
+                color: Colors.white.withValues(alpha: 0.85),
                 fontSize: 15,
                 height: 1.4,
               ),
             ),
+            if (post.locationLabel != null && post.locationLabel!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.pin_drop_rounded, color: Colors.white38, size: 12),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      post.locationLabel!,
+                      style: GoogleFonts.inter(
+                        color: Colors.white38,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             if (post.category != null || post.subCategory != null) ...[
               const SizedBox(height: 12),
               Wrap(
@@ -576,7 +646,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppColors.neonCyan.withOpacity(0.08),
+                        color: AppColors.neonCyan.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -592,13 +662,13 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.04),
+                        color: Colors.white.withValues(alpha: 0.04),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         '#${post.subCategory}',
                         style: GoogleFonts.inter(
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                         ),
@@ -637,50 +707,144 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
             const Divider(color: Colors.white10, height: 1),
             const SizedBox(height: 10),
 
-            // Bottom row: Willing / Comments
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TextButton.icon(
-                  onPressed: user == null
-                      ? null
-                      : () {
-                          HapticFeedback.lightImpact();
-                          ref.read(postRepositoryProvider).toggleWillingToHelp(post.id, user.id);
-                        },
-                  style: TextButton.styleFrom(
-                    foregroundColor: isWilling ? AppColors.neonGreen : Colors.white54,
-                  ),
-                  icon: Icon(
-                    isWilling ? Icons.handshake_rounded : Icons.handshake_outlined,
-                    size: 16,
-                  ),
-                  label: Text(
-                    isWilling ? 'WILLING!' : 'WILLING TO HELP',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
+            // Bottom row: Owner sees manage options; others see Willing + Coordinate
+            SizedBox(
+              width: double.infinity,
+              child: isOwner
+                  ? Row(
+                      children: [
+                        // "YOUR REQUEST" badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.neonCyan.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.2)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.star_rounded, color: AppColors.neonCyan, size: 13),
+                              const SizedBox(width: 5),
+                              Text(
+                                'YOUR REQUEST (REQUESTER)',
+                                style: GoogleFonts.inter(
+                                  color: AppColors.neonCyan,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Spacer(),
+                        // Coordinate button (owner can still view coordination)
+                        TextButton.icon(
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            _showCommentsBottomSheet(context, post, user);
+                          },
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.white54,
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
+                          label: Text(
+                            'VIEW (${post.commentsCount})',
+                            style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // Delete button for owner
+                        IconButton(
+                          onPressed: () async {
+                            HapticFeedback.lightImpact();
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                backgroundColor: const Color(0xFF1A2535),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                title: Text('Delete Request?',
+                                    style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w800)),
+                                content: Text('This will remove your help request permanently.',
+                                    style: GoogleFonts.inter(color: Colors.white60)),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, false),
+                                    child: Text('CANCEL', style: GoogleFonts.inter(color: Colors.white38)),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+                                    child: Text('DELETE', style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w900)),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirm == true && mounted) {
+                              await ref.read(postRepositoryProvider).deletePost(post.id);
+                            }
+                          },
+                          style: IconButton.styleFrom(
+                            foregroundColor: Colors.redAccent,
+                            padding: const EdgeInsets.all(8),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                        ),
+                      ],
+                    )
+                  : Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        TextButton.icon(
+                          onPressed: user == null
+                              ? null
+                              : () {
+                                  HapticFeedback.lightImpact();
+                                  ref.read(postRepositoryProvider).toggleWillingToHelp(post.id, user.id);
+                                },
+                          style: TextButton.styleFrom(
+                            foregroundColor: isWilling ? AppColors.neonGreen : Colors.white54,
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          icon: Icon(
+                            isWilling ? Icons.handshake_rounded : Icons.handshake_outlined,
+                            size: 16,
+                          ),
+                          label: Text(
+                            isWilling ? 'WILLING!' : 'OFFER HELP',
+                            style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            _showCommentsBottomSheet(context, post, user);
+                          },
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.white54,
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
+                          label: Text(
+                            'COORDINATE (${post.commentsCount})',
+                            style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: () {
-                    HapticFeedback.lightImpact();
-                    _showCommentsBottomSheet(context, post, user);
-                  },
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.white54,
-                  ),
-                  icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
-                  label: Text(
-                    'COORDINATE (${post.commentsCount})',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ],
             ),
           ],
         ),
@@ -698,9 +862,9 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
       margin: const EdgeInsets.only(top: 16, bottom: 4),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.02),
+        color: Colors.white.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -729,7 +893,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                 child: Container(
                   height: 42,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.04),
+                    color: Colors.white.withValues(alpha: 0.04),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Stack(
@@ -738,7 +902,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                         widthFactor: percent / 100,
                         child: Container(
                           decoration: BoxDecoration(
-                            color: AppColors.neonCyan.withOpacity(0.15),
+                            color: AppColors.neonCyan.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
@@ -751,7 +915,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                             Text(
                               option.text,
                               style: GoogleFonts.inter(
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.white.withValues(alpha: 0.8),
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -777,7 +941,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
           Text(
             '$totalVotes votes • ${hasVoted ? "Voted" : "Vote to see details"}',
             style: GoogleFonts.inter(
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
               fontSize: 10,
               fontWeight: FontWeight.bold,
             ),
@@ -793,9 +957,9 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         decoration: BoxDecoration(
-          color: AppColors.neonGreen.withOpacity(0.08),
+          color: AppColors.neonGreen.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.neonGreen.withOpacity(0.25)),
+          border: Border.all(color: AppColors.neonGreen.withValues(alpha: 0.25)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -816,84 +980,202 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
       );
     }
 
-    return Column(
-      children: [
-        if (post.helpStatus == HelpStatus.open && !isOwner)
-          GradientButton(
-            label: 'OFFER A HAND',
-            gradientColors: const [AppColors.neonCyan, Color(0xFF007BFF)],
-            onPressed: () {
-              HapticFeedback.mediumImpact();
-              _handleOfferHelp(post, user);
-            },
-            borderRadius: 16,
-            height: 48,
-          ),
-        if (post.helpStatus == HelpStatus.offered && isOwner)
-          GradientButton(
-            label: 'ACCEPT NEIGHBOR\'S HELP',
-            gradientColors: const [AppColors.neonGreen, Colors.teal],
-            onPressed: () {
-              HapticFeedback.mediumImpact();
-              ref.read(postRepositoryProvider).updateHelpStatus(post.id, HelpStatus.inProgress);
-            },
-            borderRadius: 16,
-            height: 48,
-          ),
-        if (post.helpStatus == HelpStatus.inProgress && (isOwner || isHelper))
-          GradientButton(
-            label: 'MARK AS COMPLETED',
-            gradientColors: const [Colors.green, AppColors.neonGreen],
-            onPressed: () {
-              HapticFeedback.mediumImpact();
-              ref.read(postRepositoryProvider).updateHelpStatus(post.id, HelpStatus.completed);
-            },
-            borderRadius: 16,
-            height: 48,
-          ),
-        if (post.helpStatus == HelpStatus.offered && !isOwner && !isHelper)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.orange.withOpacity(0.2)),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              'A neighbor has offered help! Pending approval.',
-              style: GoogleFonts.inter(
-                color: Colors.orange,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
+    if (post.helpStatus == HelpStatus.inProgress) {
+      return Column(
+        children: [
+          if (isOwner || isHelper)
+            GradientButton(
+              label: 'MARK AS COMPLETED',
+              gradientColors: const [Colors.green, AppColors.neonGreen],
+              onPressed: () {
+                HapticFeedback.mediumImpact();
+                ref.read(postRepositoryProvider).updateHelpStatus(post.id, HelpStatus.completed);
+              },
+              borderRadius: 16,
+              height: 48,
+            )
+          else
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.neonGreen.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.neonGreen.withValues(alpha: 0.2)),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                'Help is currently in progress by ${post.helperName ?? "a neighbor"}!',
+                style: GoogleFonts.inter(
+                  color: AppColors.neonGreen,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
+        ],
+      );
+    }
+
+    final hasVolunteered = user != null && post.willingToHelp.contains(user.id);
+
+    return Column(
+      children: [
+        if (isOwner) ...[
+          if (post.willingToHelp.isNotEmpty)
+            _buildVolunteersList(post, post.willingToHelp)
+          else
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.02),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+              ),
+              child: Text(
+                'Waiting for volunteers...',
+                style: GoogleFonts.inter(color: Colors.white30, fontSize: 13),
+              ),
+            ),
+        ] else ...[
+          if (hasVolunteered)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange.withValues(alpha: 0.2)),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                'Volunteered! Waiting for requester approval.',
+                style: GoogleFonts.inter(
+                  color: Colors.orange,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            )
+          else
+            GradientButton(
+              label: 'OFFER A HAND',
+              gradientColors: const [AppColors.neonCyan, Color(0xFF007BFF)],
+              onPressed: user == null
+                  ? null
+                  : () {
+                      HapticFeedback.mediumImpact();
+                      ref.read(postRepositoryProvider).toggleWillingToHelp(post.id, user.id);
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        backgroundColor: AppColors.neonGreen,
+                        content: Text('You volunteered to help ${post.authorName}!'),
+                      ));
+                    },
+              borderRadius: 16,
+              height: 48,
+            ),
+        ],
       ],
     );
   }
 
-  void _handleOfferHelp(PostEntity post, dynamic user) {
-    if (user == null) return;
-    ref.read(postRepositoryProvider).updateHelpStatus(
-          post.id,
-          HelpStatus.offered,
-          helperId: user.id,
-          helperName: user.name,
-        );
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      backgroundColor: AppColors.neonGreen,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      content: Text(
-        'Offer sent to ${post.authorName}!',
-        style: GoogleFonts.inter(
-          color: AppColors.primaryNavy,
-          fontWeight: FontWeight.bold,
+  Widget _buildVolunteersList(PostEntity post, List<String> volunteerIds) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 12),
+        Text(
+          'INTERESTED NEIGHBORS (VOLUNTEERS)',
+          style: GoogleFonts.outfit(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            color: Colors.white54,
+            letterSpacing: 1.5,
+          ),
         ),
-      ),
-    ));
+        const SizedBox(height: 10),
+        FutureBuilder<QuerySnapshot>(
+          future: FirebaseFirestore.instance
+              .collection('users')
+              .where(FieldPath.documentId, whereIn: volunteerIds)
+              .get(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator(color: AppColors.neonCyan));
+            }
+            final users = snapshot.data!.docs;
+            return Column(
+              children: users.map((uDoc) {
+                final uData = uDoc.data() as Map<String, dynamic>;
+                final name = uData['name'] as String? ?? 'Neighbor';
+                final avatarUrl = uData['profileImageUrl'] as String?;
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.03),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+                        child: avatarUrl == null || avatarUrl.isEmpty ? const Icon(Icons.person, size: 18) : null,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          name,
+                          style: GoogleFonts.inter(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () async {
+                          HapticFeedback.mediumImpact();
+                          await ref.read(postRepositoryProvider).updateHelpStatus(
+                                post.id,
+                                HelpStatus.inProgress,
+                                helperId: uDoc.id,
+                                helperName: name,
+                              );
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text('Accepted help from $name!'),
+                              backgroundColor: AppColors.neonGreen,
+                            ));
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.neonGreen,
+                          foregroundColor: AppColors.primaryNavy,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          'ACCEPT',
+                          style: GoogleFonts.inter(fontWeight: FontWeight.w900, fontSize: 11),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            );
+          },
+        ),
+      ],
+    );
   }
 
   void _showCommentsBottomSheet(BuildContext context, PostEntity post, dynamic user) {
@@ -985,7 +1267,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                           width: 44,
                           height: 5,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
@@ -997,31 +1279,34 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Coordination Hub',
-                                    style: GoogleFonts.outfit(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w800,
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Coordination Hub',
+                                      style: GoogleFonts.outfit(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w800,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'Sync coordinates and help details below.',
-                                    style: GoogleFonts.inter(color: Colors.white30, fontSize: 11),
-                                  ),
-                                ],
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Sync coordinates and help details below.',
+                                      style: GoogleFonts.inter(color: Colors.white30, fontSize: 11),
+                                    ),
+                                  ],
+                                ),
                               ),
+                              const SizedBox(width: 12),
                               // Live indicator status badge
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                 decoration: BoxDecoration(
-                                  color: _getStatusColor(livePost.helpStatus).withOpacity(0.12),
+                                  color: _getStatusColor(livePost.helpStatus).withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: _getStatusColor(livePost.helpStatus).withOpacity(0.4), width: 1),
+                                  border: Border.all(color: _getStatusColor(livePost.helpStatus).withValues(alpha: 0.4), width: 1),
                                 ),
                                 child: Text(
                                   (livePost.helpStatus?.name ?? 'open').toUpperCase(),
@@ -1046,7 +1331,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                             decoration: BoxDecoration(
                               color: const Color(0xFF15202E),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.white.withOpacity(0.05)),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1078,7 +1363,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
 
                                     return Expanded(
                                       child: GestureDetector(
-                                        onTap: isAuthor ? () => updateStatus(livePost, status) : null,
+                                        onTap: (isAuthor && status != HelpStatus.offered) ? () => updateStatus(livePost, status) : null,
                                         child: Column(
                                           children: [
                                             Row(
@@ -1098,9 +1383,9 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                                                     shape: BoxShape.circle,
                                                     color: isActive 
                                                         ? _getStatusColor(status) 
-                                                        : (isCompletedOrPassed ? _getStatusColor(status).withOpacity(0.2) : Colors.white12),
+                                                        : (isCompletedOrPassed ? _getStatusColor(status).withValues(alpha: 0.2) : Colors.white12),
                                                     border: Border.all(
-                                                      color: isActive ? Colors.white : (isCompletedOrPassed ? _getStatusColor(status).withOpacity(0.5) : Colors.transparent),
+                                                      color: isActive ? Colors.white : (isCompletedOrPassed ? _getStatusColor(status).withValues(alpha: 0.5) : Colors.transparent),
                                                       width: isActive ? 2 : 1,
                                                     ),
                                                   ),
@@ -1187,9 +1472,9 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                                         margin: const EdgeInsets.symmetric(vertical: 8),
                                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.03),
+                                          color: Colors.white.withValues(alpha: 0.03),
                                           borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(color: Colors.white.withOpacity(0.06)),
+                                          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
                                         ),
                                         child: Text(
                                           c.text,
@@ -1217,7 +1502,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                                         if (!isMe) ...[
                                           CircleAvatar(
                                             radius: 14,
-                                            backgroundColor: AppColors.neonCyan.withOpacity(0.1),
+                                            backgroundColor: AppColors.neonCyan.withValues(alpha: 0.1),
                                             child: Text(
                                               c.authorName.substring(0, 1).toUpperCase(),
                                               style: const TextStyle(color: AppColors.neonCyan, fontSize: 10, fontWeight: FontWeight.bold),
@@ -1241,7 +1526,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                                                 bottomLeft: Radius.circular(isMe ? 16 : 4),
                                                 bottomRight: Radius.circular(isMe ? 4 : 16),
                                               ),
-                                              border: isMe ? null : Border.all(color: Colors.white.withOpacity(0.05)),
+                                              border: isMe ? null : Border.all(color: Colors.white.withValues(alpha: 0.05)),
                                             ),
                                             child: Column(
                                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1271,7 +1556,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                                                   child: Text(
                                                     DateFormat('hh:mm a').format(c.createdAt),
                                                     style: TextStyle(
-                                                      color: isMe ? AppColors.primaryNavy.withOpacity(0.5) : Colors.white24,
+                                                      color: isMe ? AppColors.primaryNavy.withValues(alpha: 0.5) : Colors.white24,
                                                       fontSize: 8.5,
                                                     ),
                                                   ),
@@ -1284,7 +1569,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                                           const SizedBox(width: 8),
                                           CircleAvatar(
                                             radius: 14,
-                                            backgroundColor: AppColors.neonGreen.withOpacity(0.1),
+                                            backgroundColor: AppColors.neonGreen.withValues(alpha: 0.1),
                                             child: Text(
                                               c.authorName.substring(0, 1).toUpperCase(),
                                               style: const TextStyle(color: AppColors.neonGreen, fontSize: 10, fontWeight: FontWeight.bold),
@@ -1305,7 +1590,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                           padding: EdgeInsets.fromLTRB(16, 12, 16, MediaQuery.of(context).viewInsets.bottom + 16),
                           decoration: BoxDecoration(
                             color: const Color(0xFF0A121A),
-                            border: Border(top: BorderSide(color: Colors.white.withOpacity(0.06))),
+                            border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.06))),
                           ),
                           child: Row(
                             children: [
@@ -1322,8 +1607,8 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                                   : Container(
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: Colors.white.withOpacity(0.04),
-                                        border: Border.all(color: Colors.white.withOpacity(0.08)),
+                                        color: Colors.white.withValues(alpha: 0.04),
+                                        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                                       ),
                                       child: IconButton(
                                         icon: const Icon(Icons.share_location_rounded, color: AppColors.neonCyan, size: 20),
@@ -1338,7 +1623,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                                   decoration: BoxDecoration(
                                     color: const Color(0xFF151F2E),
                                     borderRadius: BorderRadius.circular(24),
-                                    border: Border.all(color: Colors.white.withOpacity(0.08)),
+                                    border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                                   ),
                                   child: TextField(
                                     controller: commentController,
@@ -1411,7 +1696,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
           if (!isMe) ...[
             CircleAvatar(
               radius: 14,
-              backgroundColor: AppColors.neonCyan.withOpacity(0.1),
+              backgroundColor: AppColors.neonCyan.withValues(alpha: 0.1),
               child: Text(
                 c.authorName.substring(0, 1).toUpperCase(),
                 style: const TextStyle(color: AppColors.neonCyan, fontSize: 10, fontWeight: FontWeight.bold),
@@ -1426,10 +1711,10 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
               decoration: BoxDecoration(
                 color: const Color(0xFF132333),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.neonCyan.withOpacity(0.3), width: 1.5),
+                border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.3), width: 1.5),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.neonCyan.withOpacity(0.08),
+                    color: AppColors.neonCyan.withValues(alpha: 0.08),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -1491,7 +1776,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
             const SizedBox(width: 8),
             CircleAvatar(
               radius: 14,
-              backgroundColor: AppColors.neonGreen.withOpacity(0.1),
+              backgroundColor: AppColors.neonGreen.withValues(alpha: 0.1),
               child: Text(
                 c.authorName.substring(0, 1).toUpperCase(),
                 style: const TextStyle(color: AppColors.neonGreen, fontSize: 10, fontWeight: FontWeight.bold),
@@ -1569,7 +1854,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
             decoration: BoxDecoration(
               color: const Color(0xFF0F1521),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-              border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
             ),
             padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
             child: SingleChildScrollView(
@@ -1582,7 +1867,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                       width: 44,
                       height: 5,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
@@ -1622,12 +1907,12 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                                 selectedSubCategory = null;
                               });
                             },
-                            selectedColor: AppColors.neonCyan.withOpacity(0.2),
-                            backgroundColor: Colors.white.withOpacity(0.04),
+                            selectedColor: AppColors.neonCyan.withValues(alpha: 0.2),
+                            backgroundColor: Colors.white.withValues(alpha: 0.04),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                               side: BorderSide(
-                                color: isSelected ? AppColors.neonCyan : Colors.white.withOpacity(0.08),
+                                color: isSelected ? AppColors.neonCyan : Colors.white.withValues(alpha: 0.08),
                               ),
                             ),
                           ),
@@ -1657,12 +1942,12 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                                 HapticFeedback.selectionClick();
                                 setSheetState(() => selectedSubCategory = val ? scat : null);
                               },
-                              selectedColor: AppColors.neonCyan.withOpacity(0.15),
-                              backgroundColor: Colors.white.withOpacity(0.03),
+                              selectedColor: AppColors.neonCyan.withValues(alpha: 0.15),
+                              backgroundColor: Colors.white.withValues(alpha: 0.03),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                                 side: BorderSide(
-                                  color: isSelected ? AppColors.neonCyan : Colors.white.withOpacity(0.05),
+                                  color: isSelected ? AppColors.neonCyan : Colors.white.withValues(alpha: 0.05),
                                 ),
                               ),
                             ),
@@ -1697,10 +1982,20 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                   GradientButton(
                     label: 'POST REQUEST',
                     gradientColors: const [AppColors.neonCyan, Color(0xFF007BFF)],
-                    onPressed: () {
+                    onPressed: () async {
                       if (titleController.text.trim().isEmpty) return;
                       HapticFeedback.mediumImpact();
                       final user = ref.read(authStateProvider).value;
+
+                      Position? position;
+                      String? address;
+                      try {
+                        position = await ref.read(locationServiceProvider).getCurrentLocation();
+                        address = await ref.read(locationServiceProvider).getAddressFromLatLng(position);
+                      } catch (e) {
+                        debugPrint('Location capture failed: $e');
+                      }
+
                       final newPost = PostEntity(
                         id: DateTime.now().millisecondsSinceEpoch.toString(),
                         authorId: user?.id ?? 'user',
@@ -1721,6 +2016,9 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                                 votedUserIds: [],
                               )
                             : null,
+                        latitude: position?.latitude,
+                        longitude: position?.longitude,
+                        locationLabel: address,
                       );
                       ref.read(postRepositoryProvider).createPost(newPost);
                       if (Navigator.of(context).canPop()) {
@@ -1756,14 +2054,14 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
     return GlassCard(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       borderRadius: 16,
-      borderColor: Colors.white.withOpacity(0.08),
+      borderColor: Colors.white.withValues(alpha: 0.08),
       child: TextField(
         controller: controller,
         maxLines: maxLines,
         style: const TextStyle(color: Colors.white, fontSize: 14),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(color: Colors.white.withOpacity(0.25), fontSize: 13),
+          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.25), fontSize: 13),
           prefixIcon: Icon(icon, color: AppColors.neonCyan, size: 20),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(vertical: 12),

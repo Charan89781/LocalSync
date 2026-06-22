@@ -70,6 +70,12 @@ async function runSeleniumTests() {
         const a = (e.getAttribute('aria-label') || '').toLowerCase();
         const p = (e.getAttribute('placeholder') || '').toLowerCase();
         const t = (e.innerText || e.textContent || '').trim().toLowerCase();
+        if (l === 'password' && (a.includes('forgot') || t.includes('forgot'))) {
+          continue;
+        }
+        if (l.includes('email') && (t.includes('empty') || t.includes('valid') || t.includes('enter') || a.includes('empty') || a.includes('valid') || a.includes('enter'))) {
+          continue;
+        }
         if (a === l || p === l || t === l) return e;
       }
       for (let i = els.length - 1; i >= 0; i--) {
@@ -77,6 +83,12 @@ async function runSeleniumTests() {
         const a = (e.getAttribute('aria-label') || '').toLowerCase();
         const p = (e.getAttribute('placeholder') || '').toLowerCase();
         const t = (e.innerText || e.textContent || '').trim().toLowerCase();
+        if (l === 'password' && (a.includes('forgot') || t.includes('forgot'))) {
+          continue;
+        }
+        if (l.includes('email') && (t.includes('empty') || t.includes('valid') || t.includes('enter') || a.includes('empty') || a.includes('valid') || a.includes('enter'))) {
+          continue;
+        }
         if (a.includes(l) || p.includes(l) || (t.includes(l) && e.tagName !== 'FLT-SEMANTICS-HOST')) return e;
       }
       return null;
@@ -94,40 +106,23 @@ async function runSeleniumTests() {
   }
 
   async function clickEl(lbl) {
-    const ok = await driver.executeScript((l) => {
-      const els = document.querySelectorAll('flt-semantics, span, input, button, [aria-label]');
-      for (let i = els.length - 1; i >= 0; i--) {
-        const e = els[i];
-        const a = (e.getAttribute('aria-label') || '').toLowerCase();
-        const t = (e.innerText || e.textContent || '').trim().toLowerCase();
-        if (a.includes(l) || t === l) { e.click(); return true; }
-      }
-      return false;
-    }, lbl.toLowerCase());
-    if (!ok) throw new Error(`Cannot click: "${lbl}"`);
+    const el = await waitEl(lbl, 8000);
+    if (!el) throw new Error(`Cannot click: "${lbl}" - element not found`);
+    await el.click();
   }
 
   async function typeEl(lbl, val) {
-    const ok = await driver.executeScript((l, v) => {
-      const els = document.querySelectorAll('input, [contenteditable], flt-semantics');
-      for (let i = els.length - 1; i >= 0; i--) {
-        const e = els[i];
-        const a = (e.getAttribute('aria-label') || '').toLowerCase();
-        const p = (e.getAttribute('placeholder') || '').toLowerCase();
-        if (a.includes(l) || p.includes(l)) {
-          if (e.tagName === 'INPUT') {
-            e.value = v;
-            e.dispatchEvent(new Event('input', { bubbles: true }));
-            return true;
-          }
-          e.innerText = v;
-          e.dispatchEvent(new Event('input', { bubbles: true }));
-          return true;
-        }
-      }
-      return false;
-    }, lbl.toLowerCase(), val);
-    if (!ok) throw new Error(`Cannot type into: "${lbl}"`);
+    const el = await waitEl(lbl, 8000);
+    if (!el) throw new Error(`TextField with label "${lbl}" not found`);
+    await driver.executeScript((e) => {
+      if (e.focus) e.focus();
+      if (e.click) e.click();
+    }, el);
+    await driver.sleep(500);
+
+    const activeEl = await driver.switchTo().activeElement();
+    await activeEl.sendKeys(val);
+    await driver.sleep(500);
   }
 
   // ── Define 15 live test steps ──
@@ -180,10 +175,10 @@ async function runSeleniumTests() {
         return 'Invalid email format injected';
     }},
     { id: 'SEL-014', name: 'Type Valid Credentials & Submit',         fn: async () => {
-        await typeEl('email', 'test@localsync.app');
-        await typeEl('password', 'Test@1234');
+        await typeEl('email', 'test_resident@localsync.com');
+        await typeEl('password', 'Resident123');
         await clickEl('Sign In');
-        await driver.sleep(3000);
+        await driver.sleep(4000);
         return 'Valid credentials submitted to Firebase Auth';
     }},
     { id: 'SEL-015', name: 'Shutdown Driver & Kill Server',           fn: async () => {
@@ -297,7 +292,7 @@ async function runFlutterTests() {
   try {
     const cmd = process.platform === 'win32' ? 'flutter' : 'flutter';
     output = execSync(`${cmd} test --reporter compact`, {
-      cwd: ROOT,
+      cwd: path.join(ROOT, '..', 'frontend'),
       timeout: 120000,
       encoding: 'utf8',
       stdio: ['pipe', 'pipe', 'pipe']
@@ -306,7 +301,7 @@ async function runFlutterTests() {
     if (process.platform === 'win32') {
       try {
         output = execSync(`"D:\\flutter\\bin\\flutter.bat" test --reporter compact`, {
-          cwd: ROOT,
+          cwd: path.join(ROOT, '..', 'frontend'),
           timeout: 120000,
           encoding: 'utf8',
           stdio: ['pipe', 'pipe', 'pipe']

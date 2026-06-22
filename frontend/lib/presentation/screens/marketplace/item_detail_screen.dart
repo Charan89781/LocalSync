@@ -5,11 +5,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../domain/entities/listing_entity.dart';
 import '../../../domain/entities/borrow_request_entity.dart';
+import '../../../domain/entities/chat_entity.dart';
 import '../../providers/listing_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/chat_provider.dart';
 import '../../common_widgets/premium_widgets.dart';
 
 class ItemDetailScreen extends ConsumerStatefulWidget {
@@ -30,6 +34,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
   Widget build(BuildContext context) {
     final listingsAsync = ref.watch(listingsProvider);
     final user = ref.watch(authStateProvider).value;
+    final requestsAsync = ref.watch(listingRequestsProvider(widget.itemId ?? ''));
 
     return listingsAsync.when(
       data: (listings) {
@@ -52,6 +57,12 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
             ],
           ),
         );
+
+        final isOwner = user?.id == item.ownerId;
+        final requests = requestsAsync.value ?? [];
+        final hasPendingRequest = requests.any((r) => r.requesterId == user?.id && r.status == RequestStatus.pending);
+        final hasAcceptedRequest = requests.any((r) => r.requesterId == user?.id && r.status == RequestStatus.accepted);
+        final hasRejectedRequest = requests.any((r) => r.requesterId == user?.id && r.status == RequestStatus.rejected);
 
         final images = item.imageUrls.isNotEmpty
             ? item.imageUrls
@@ -79,9 +90,9 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
-                                  color: AppColors.neonCyan.withOpacity(0.08),
+                                  color: AppColors.neonCyan.withValues(alpha: 0.08),
                                   borderRadius: BorderRadius.circular(50),
-                                  border: Border.all(color: AppColors.neonCyan.withOpacity(0.2)),
+                                  border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.2)),
                                 ),
                                 child: Text(
                                   item.category.toUpperCase(),
@@ -97,8 +108,8 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: item.isAvailable 
-                                      ? Colors.greenAccent.withOpacity(0.08)
-                                      : Colors.redAccent.withOpacity(0.08),
+                                      ? Colors.greenAccent.withValues(alpha: 0.08)
+                                      : Colors.redAccent.withValues(alpha: 0.08),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
@@ -150,7 +161,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                             ],
                           ),
                           const SizedBox(height: 24),
-                          _buildOwnerCard(item),
+                          _buildOwnerCard(item, isOwner),
                           const SizedBox(height: 28),
                           Text(
                             'DESCRIPTION',
@@ -165,7 +176,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                           Text(
                             item.description,
                             style: GoogleFonts.inter(
-                              color: Colors.white.withOpacity(0.65),
+                              color: Colors.white.withValues(alpha: 0.65),
                               fontSize: 14,
                               height: 1.6,
                             ),
@@ -183,20 +194,94 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                           const SizedBox(height: 12),
                           _buildMiniMapPlaceholder(),
                           const SizedBox(height: 28),
-                          _isRequesting
-                              ? const Center(child: CircularProgressIndicator(color: AppColors.neonCyan))
-                              : GradientButton(
-                                  label: item.isAvailable ? 'Request to Borrow' : 'Currently Unavailable',
-                                  gradientColors: item.isAvailable 
-                                      ? [AppColors.neonCyan, Color(0xFF007BFF)]
-                                      : [Colors.grey, Colors.black26],
-                                  onPressed: item.isAvailable 
-                                      ? () {
-                                          HapticFeedback.mediumImpact();
-                                          _handleRequestBorrow(item, user);
-                                        }
-                                      : null,
-                                ),
+                          if (isOwner) ...[
+                            Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.only(bottom: 24),
+                              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                              decoration: BoxDecoration(
+                                color: AppColors.neonCyan.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.25), width: 1.5),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.star_rounded, color: AppColors.neonCyan, size: 18),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'YOUR LISTING (LENDER)',
+                                    style: GoogleFonts.inter(
+                                      color: AppColors.neonCyan,
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 12,
+                                      letterSpacing: 0.8,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            _buildBorrowRequestsSection(item),
+                          ] else ...[
+                            Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.03),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.08), width: 1),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.person_outline_rounded, color: Colors.white60, size: 16),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'YOUR ROLE: BORROWER',
+                                    style: GoogleFonts.inter(
+                                      color: Colors.white70,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            hasAcceptedRequest
+                                ? const GradientButton(
+                                    label: 'Currently Borrowing',
+                                    gradientColors: [Colors.green, Colors.greenAccent],
+                                    onPressed: null,
+                                  )
+                                : hasPendingRequest
+                                    ? const GradientButton(
+                                        label: 'Request Pending',
+                                        gradientColors: [Colors.grey, Colors.black38],
+                                        onPressed: null,
+                                      )
+                                    : hasRejectedRequest
+                                        ? const GradientButton(
+                                            label: 'Request Rejected',
+                                            gradientColors: [AppColors.errorRed, Colors.black38],
+                                            onPressed: null,
+                                          )
+                                        : _isRequesting
+                                            ? const Center(child: CircularProgressIndicator(color: AppColors.neonCyan))
+                                            : GradientButton(
+                                                label: item.isAvailable ? 'Request to Borrow' : 'Currently Unavailable',
+                                                gradientColors: item.isAvailable 
+                                                    ? [AppColors.neonCyan, Color(0xFF007BFF)]
+                                                    : [Colors.grey, Colors.black26],
+                                                onPressed: item.isAvailable 
+                                                    ? () {
+                                                        HapticFeedback.mediumImpact();
+                                                        _handleRequestBorrow(item, user);
+                                                      }
+                                                    : null,
+                                              ),
+                          ],
                           const SizedBox(height: 16),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -239,9 +324,9 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryNavy.withOpacity(0.7),
+                          color: AppColors.primaryNavy.withValues(alpha: 0.7),
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white.withOpacity(0.12)),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
                         ),
                         child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 16),
                       ),
@@ -254,9 +339,9 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryNavy.withOpacity(0.7),
+                          color: AppColors.primaryNavy.withValues(alpha: 0.7),
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white.withOpacity(0.12)),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
                         ),
                         child: Icon(
                           _isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
@@ -320,7 +405,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                 gradient: LinearGradient(
                   colors: [
                     AppColors.primaryNavy,
-                    AppColors.primaryNavy.withOpacity(0),
+                    AppColors.primaryNavy.withValues(alpha: 0),
                   ],
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
@@ -334,7 +419,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.4),
+                color: Colors.black.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -348,7 +433,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
     );
   }
 
-  Widget _buildOwnerCard(ListingEntity item) {
+  Widget _buildOwnerCard(ListingEntity item, bool isOwner) {
     return GlassCard(
       borderRadius: 24,
       padding: const EdgeInsets.all(16),
@@ -356,7 +441,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
         children: [
           CircleAvatar(
             radius: 24,
-            backgroundColor: AppColors.neonCyan.withOpacity(0.1),
+            backgroundColor: AppColors.neonCyan.withValues(alpha: 0.1),
             child: Text(
               item.ownerName.isNotEmpty ? item.ownerName.substring(0, 1).toUpperCase() : 'N',
               style: GoogleFonts.inter(color: AppColors.neonCyan, fontWeight: FontWeight.bold, fontSize: 16),
@@ -367,13 +452,41 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  item.ownerName,
-                  style: GoogleFonts.outfit(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      item.ownerName,
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: isOwner 
+                            ? AppColors.neonCyan.withValues(alpha: 0.15)
+                            : AppColors.neonGreen.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: isOwner 
+                              ? AppColors.neonCyan.withValues(alpha: 0.3)
+                              : AppColors.neonGreen.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        isOwner ? 'LENDER (YOU)' : 'LENDER',
+                        style: GoogleFonts.inter(
+                          color: isOwner ? AppColors.neonCyan : AppColors.neonGreen,
+                          fontSize: 8,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 2),
                 Row(
@@ -395,15 +508,18 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
           ),
           Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.04),
+              color: Colors.white.withValues(alpha: 0.04),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withOpacity(0.08)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
             ),
             child: IconButton(
               icon: const Icon(Icons.chat_bubble_outline_rounded, color: Colors.white, size: 18),
-              onPressed: () {
+              onPressed: () async {
                 HapticFeedback.lightImpact();
-                context.push('/chat/room/${item.ownerId}');
+                final currentUser = ref.read(authStateProvider).value;
+                if (currentUser == null) return;
+                final templateMsg = "Hi! I am a neighbor interested in your item \"${item.title}\". My name is ${currentUser.name ?? 'Neighbor'} and my phone number is ${currentUser.phoneNumber ?? 'not provided'}.";
+                await _navigateToDirectChat(context, ref, item.ownerId, templateMsg);
               },
             ),
           ),
@@ -419,7 +535,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
         height: 140,
         decoration: BoxDecoration(
           color: AppColors.surfaceNavy,
-          border: Border.all(color: Colors.white.withOpacity(0.08)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         ),
         child: Stack(
           alignment: Alignment.center,
@@ -438,7 +554,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
               height: 50,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.neonCyan.withOpacity(0.12),
+                color: AppColors.neonCyan.withValues(alpha: 0.12),
               ),
             ),
             const Icon(Icons.location_on_rounded, color: AppColors.neonCyan, size: 28),
@@ -447,7 +563,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.6),
+                  color: Colors.black.withValues(alpha: 0.6),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -484,6 +600,13 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
               onSurface: Colors.white,
             ),
             dialogBackgroundColor: const Color(0xFF0A121A),
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.08),
+              border: const OutlineInputBorder(),
+              labelStyle: const TextStyle(color: Colors.white70),
+              hintStyle: const TextStyle(color: Colors.white30),
+            ),
           ),
           child: child!,
         );
@@ -505,6 +628,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
         ownerId: item.ownerId,
         listingTitle: item.title,
         status: RequestStatus.pending,
+        price: item.price,
       );
 
       await ref.read(listingRepositoryProvider).requestBorrow(request);
@@ -534,6 +658,281 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
       }
     } finally {
       if (mounted) setState(() => _isRequesting = false);
+    }
+  }
+
+  Widget _buildBorrowRequestsSection(ListingEntity item) {
+    final requestsAsync = ref.watch(listingRequestsProvider(item.id));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'BORROW REQUESTS',
+          style: GoogleFonts.outfit(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            color: Colors.white54,
+            letterSpacing: 1.5,
+          ),
+        ),
+        const SizedBox(height: 12),
+        requestsAsync.when(
+          data: (requests) {
+            if (requests.isEmpty) {
+              return Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.02),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(Icons.handshake_outlined, color: Colors.white24, size: 36),
+                    const SizedBox(height: 10),
+                    Text(
+                      'No borrow requests yet',
+                      style: GoogleFonts.inter(color: Colors.white38, fontSize: 13, fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            final sortedReqs = List<BorrowRequestEntity>.from(requests)
+              ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+            return Column(
+              children: sortedReqs.map((req) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: GlassCard(
+                    borderRadius: 16,
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 18,
+                              backgroundColor: AppColors.neonCyan.withValues(alpha: 0.1),
+                              child: Text(
+                                req.requesterName.isNotEmpty ? req.requesterName.substring(0, 1).toUpperCase() : 'N',
+                                style: GoogleFonts.inter(color: AppColors.neonCyan, fontWeight: FontWeight.bold, fontSize: 13),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    req.requesterName,
+                                    style: GoogleFonts.outfit(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Requested: ${DateFormat('MMM dd').format(req.startDate)} - ${DateFormat('MMM dd').format(req.endDate)}',
+                                    style: GoogleFonts.inter(color: Colors.white38, fontSize: 11),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            _buildStatusBadge(req.status),
+                          ],
+                        ),
+                        if (req.status == RequestStatus.pending) ...[
+                          const SizedBox(height: 12),
+                          const Divider(color: Colors.white10, height: 1),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              OutlinedButton(
+                                onPressed: () async {
+                                  HapticFeedback.lightImpact();
+                                  try {
+                                    await ref.read(listingRepositoryProvider).updateRequestStatus(req.id, RequestStatus.rejected);
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Borrow request declined'), backgroundColor: AppColors.errorRed),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.errorRed),
+                                      );
+                                    }
+                                  }
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(color: AppColors.errorRed),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: Text('Decline', style: GoogleFonts.outfit(color: AppColors.errorRed, fontSize: 11, fontWeight: FontWeight.bold)),
+                              ),
+                              const SizedBox(width: 10),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  HapticFeedback.mediumImpact();
+                                  try {
+                                    await ref.read(listingRepositoryProvider).updateRequestStatus(req.id, RequestStatus.accepted);
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Borrow request approved!'), backgroundColor: AppColors.successGreen),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.errorRed),
+                                      );
+                                    }
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.successGreen,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: Text('Approve', style: GoogleFonts.outfit(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            );
+          },
+          loading: () => const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: CircularProgressIndicator(color: AppColors.neonCyan),
+            ),
+          ),
+          error: (err, _) => Text(
+            'Error loading requests: $err',
+            style: GoogleFonts.inter(color: AppColors.errorRed, fontSize: 12),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatusBadge(RequestStatus status) {
+    Color color;
+    switch (status) {
+      case RequestStatus.pending:
+        color = Colors.amber;
+        break;
+      case RequestStatus.accepted:
+        color = AppColors.successGreen;
+        break;
+      case RequestStatus.rejected:
+        color = AppColors.errorRed;
+        break;
+      case RequestStatus.completed:
+        color = Colors.blueAccent;
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        status.name.toUpperCase(),
+        style: GoogleFonts.inter(
+          color: color,
+          fontSize: 9,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _navigateToDirectChat(BuildContext context, WidgetRef ref, String targetUserId, String templateMessage) async {
+    final currentUser = ref.read(authStateProvider).value;
+    if (currentUser == null) return;
+    if (currentUser.id == targetUserId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("You cannot chat with yourself!"), backgroundColor: AppColors.errorRed),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const Center(child: CircularProgressIndicator(color: AppColors.neonCyan)),
+    );
+
+    try {
+      final db = FirebaseFirestore.instance;
+      final chatRoomsSnap = await db
+          .collection('chatRooms')
+          .where('isGroup', isEqualTo: false)
+          .where('isChannel', isEqualTo: false)
+          .where('participants', arrayContains: currentUser.id)
+          .get();
+
+      String? roomId;
+      for (var doc in chatRoomsSnap.docs) {
+        final participants = List<String>.from(doc.data()['participants'] ?? []);
+        if (participants.contains(targetUserId)) {
+          roomId = doc.id;
+          break;
+        }
+      }
+
+      if (roomId == null) {
+        roomId = await ref.read(chatRepositoryProvider).createChatRoom(
+          [currentUser.id, targetUserId],
+          name: 'Private Chat',
+        );
+        
+        final message = MessageEntity(
+          id: '',
+          senderId: currentUser.id,
+          senderName: currentUser.name ?? 'Neighbor',
+          text: templateMessage,
+          timestamp: DateTime.now(),
+        );
+        await ref.read(chatRepositoryProvider).sendMessage(roomId, message);
+      }
+
+      if (context.mounted) {
+        Navigator.pop(context);
+        context.push('/chat/$roomId');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error creating chat: $e'), backgroundColor: AppColors.errorRed),
+        );
+      }
     }
   }
 }

@@ -3,18 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/services/gemini_service.dart';
 import '../../common_widgets/app_bottom_nav.dart';
 import '../../providers/business_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../../domain/entities/business_entity.dart';
 import '../../../domain/entities/inquiry_entity.dart';
-import '../../../firebase_options.dart';
 
 class BusinessDirectoryScreen extends ConsumerWidget {
   const BusinessDirectoryScreen({super.key});
@@ -27,9 +26,9 @@ class BusinessDirectoryScreen extends ConsumerWidget {
         child: Container(
           padding: EdgeInsets.all(padding),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.06),
+            color: Colors.white.withValues(alpha: 0.06),
             borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
           ),
           child: child,
         ),
@@ -135,7 +134,7 @@ class BusinessDirectoryScreen extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [AppColors.primaryBlue.withOpacity(0.85), AppColors.secondaryBlue.withOpacity(0.85)],
+            colors: [AppColors.primaryBlue.withValues(alpha: 0.85), AppColors.secondaryBlue.withValues(alpha: 0.85)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -176,9 +175,9 @@ class BusinessDirectoryScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.15), width: 1.5),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1.5),
       ),
       child: TextField(
         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
@@ -186,6 +185,8 @@ class BusinessDirectoryScreen extends ConsumerWidget {
           hintText: 'Search services, food, retail...',
           hintStyle: const TextStyle(color: Colors.white30, fontSize: 14),
           border: InputBorder.none,
+          filled: false,
+          fillColor: Colors.transparent,
           icon: Icon(Icons.search_rounded, color: accentColor),
         ),
       ),
@@ -212,8 +213,8 @@ class BusinessDirectoryScreen extends ConsumerWidget {
           child: Container(
             height: MediaQuery.of(context).size.height * 0.85,
             decoration: BoxDecoration(
-                color: AppColors.primaryNavy.withOpacity(0.92),
-                border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
+                color: AppColors.primaryNavy.withValues(alpha: 0.92),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(40))),
             padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
             child: SingleChildScrollView(
@@ -301,9 +302,9 @@ class BusinessDirectoryScreen extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
+            color: Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
           ),
           child: TextField(
             controller: controller,
@@ -314,6 +315,8 @@ class BusinessDirectoryScreen extends ConsumerWidget {
               hintText: hint,
               hintStyle: const TextStyle(color: Colors.white24, fontSize: 14),
               border: InputBorder.none,
+              filled: false,
+              fillColor: Colors.transparent,
             ),
           ),
         ),
@@ -330,9 +333,9 @@ class BusinessDirectoryScreen extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
+            color: Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
           ),
           child: DropdownButtonFormField<String>(
             dropdownColor: AppColors.secondaryNavy,
@@ -376,7 +379,7 @@ class BusinessDirectoryScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                          color: accentColor.withOpacity(0.15),
+                          color: accentColor.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12)),
                       child: Icon(Icons.storefront_rounded,
                           color: accentColor, size: 20),
@@ -414,7 +417,7 @@ class BusinessDirectoryScreen extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _BusinessProfileSheet(business: biz),
+      builder: (context) => BusinessProfileSheet(business: biz),
     );
   }
 
@@ -435,9 +438,9 @@ class BusinessDirectoryScreen extends ConsumerWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
+                  color: Colors.white.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
                 ),
                 child: Text(c,
                     style: const TextStyle(
@@ -450,16 +453,16 @@ class BusinessDirectoryScreen extends ConsumerWidget {
   }
 }
 
-class _BusinessProfileSheet extends ConsumerStatefulWidget {
+class BusinessProfileSheet extends ConsumerStatefulWidget {
   final BusinessEntity business;
 
-  const _BusinessProfileSheet({required this.business});
+  const BusinessProfileSheet({required this.business});
 
   @override
-  ConsumerState<_BusinessProfileSheet> createState() => _BusinessProfileSheetState();
+  ConsumerState<BusinessProfileSheet> createState() => BusinessProfileSheetState();
 }
 
-class _BusinessProfileSheetState extends ConsumerState<_BusinessProfileSheet> {
+class BusinessProfileSheetState extends ConsumerState<BusinessProfileSheet> {
   int _activeTab = 0; // 0 for Info, 1 for AI Chat
   final _inquiryC = TextEditingController();
   final _chatC = TextEditingController();
@@ -467,8 +470,7 @@ class _BusinessProfileSheetState extends ConsumerState<_BusinessProfileSheet> {
   
   final List<Map<String, dynamic>> _chatHistory = [];
   bool _isTyping = false;
-  String _geminiKey = '';
-  bool _keyLoaded = false;
+  bool? _isServerConnected;
 
   final List<Map<String, String>> _suggestions = [
     {'icon': '⏰', 'label': 'Opening hours'},
@@ -476,16 +478,6 @@ class _BusinessProfileSheetState extends ConsumerState<_BusinessProfileSheet> {
     {'icon': '🏷️', 'label': 'Active deals'},
     {'icon': '📞', 'label': 'Contact info'},
     {'icon': '💼', 'label': 'Services offered'},
-  ];
-
-  // Model fallback chain: try newest first, fall back automatically
-  final List<String> _kModelChain = [
-    'gemini-2.0-flash',
-    'gemini-2.0-flash-lite',
-    'gemini-1.5-flash',
-    'gemini-1.5-flash-8b',
-    'gemini-1.5-pro',
-    'gemini-2.5-flash',
   ];
 
   @override
@@ -496,31 +488,22 @@ class _BusinessProfileSheetState extends ConsumerState<_BusinessProfileSheet> {
       'message': 'Hi! I\'m the Official AI Assistant for ${widget.business.name}. How can I assist you today? You can ask me about our hours, location, active deals, or services! 🤖✨',
       'isStreaming': false,
     });
-    _loadKey();
+    // Auto-connect via GeminiService
+    _isServerConnected = GeminiService.instance.isConnected;
+    GeminiService.instance.addListener(_onServiceUpdate);
   }
 
-  Future<void> _loadKey() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final saved = prefs.getString('localsync_gemini_api_key') ?? '';
-      if (mounted) {
-        setState(() {
-          _geminiKey = saved.isNotEmpty ? saved : 'AQ.Ab8RN6L1ROXgp_mTR29HzKH_71IwThA_VXl9Ojw2nN6GP4a74g';
-          _keyLoaded = true;
-        });
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() {
-          _geminiKey = 'AQ.Ab8RN6L1ROXgp_mTR29HzKH_71IwThA_VXl9Ojw2nN6GP4a74g';
-          _keyLoaded = true;
-        });
-      }
+  void _onServiceUpdate() {
+    if (mounted) {
+      setState(() {
+        _isServerConnected = GeminiService.instance.isConnected;
+      });
     }
   }
 
   @override
   void dispose() {
+    GeminiService.instance.removeListener(_onServiceUpdate);
     _inquiryC.dispose();
     _chatC.dispose();
     _scrollC.dispose();
@@ -557,13 +540,8 @@ class _BusinessProfileSheetState extends ConsumerState<_BusinessProfileSheet> {
     
     _scrollToBottom();
     
-    // Call Gemini or fallback offline engine
-    String reply;
-    if (_geminiKey.isNotEmpty) {
-      reply = await _callGemini(text);
-    } else {
-      reply = _generateAIResponse(text);
-    }
+    // Call GeminiService with business context
+    final reply = await _callGemini(text);
     
     if (!mounted) return;
     
@@ -641,35 +619,25 @@ INSTRUCTIONS:
       }
     }
 
-    for (final modelName in _kModelChain) {
-      try {
-        final useV1Beta = modelName.contains('2.0') || modelName.contains('2.5') || modelName.contains('3.');
-        final requestOptions = useV1Beta
-            ? const RequestOptions(apiVersion: 'v1beta')
-            : const RequestOptions(apiVersion: 'v1');
-
-        final model = GenerativeModel(
-          model: modelName,
-          apiKey: _geminiKey,
-          requestOptions: requestOptions,
-          systemInstruction: Content.system(systemPrompt),
-        );
-
-        final chat = model.startChat(history: historyContents);
-        final response = await chat.sendMessage(Content.text(userQuery)).timeout(const Duration(seconds: 15));
-        final text = response.text ?? '';
-        if (text.isNotEmpty) {
-          debugPrint('[BusinessAI] Success with model: $modelName');
-          return text;
-        }
-      } catch (e) {
-        debugPrint('[BusinessAI] $modelName failed: $e');
-        continue; // Try next model silently
+    try {
+      // Route through GeminiService — handles retry, model fallback, caching, heartbeat
+      final response = await GeminiService.instance.generateResponse(
+        prompt: userQuery,
+        history: historyContents,
+        systemInstruction: systemPrompt,
+      );
+      if (mounted && _isServerConnected != true) {
+        setState(() => _isServerConnected = true);
       }
+      return response;
+    } catch (e) {
+      debugPrint('[BusinessAI] GeminiService failed: $e');
+      if (mounted && _isServerConnected != false) {
+        setState(() => _isServerConnected = false);
+      }
+      // Smart local fallback
+      return _generateAIResponse(userQuery);
     }
-
-    // All models failed — silently use smart local response
-    return _generateAIResponse(userQuery);
   }
 
   String _generateAIResponse(String query) {
@@ -710,8 +678,8 @@ INSTRUCTIONS:
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: BoxDecoration(
-        color: AppColors.primaryNavy.withOpacity(0.95),
-        border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
+        color: AppColors.primaryNavy.withValues(alpha: 0.95),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
       ),
       child: Column(
@@ -737,7 +705,7 @@ INSTRUCTIONS:
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: accentColor.withOpacity(0.15),
+                    color: accentColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(18),
                   ),
                   child: Icon(Icons.storefront_rounded,
@@ -783,9 +751,9 @@ INSTRUCTIONS:
             child: Container(
               height: 50,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(25),
-                border: Border.all(color: Colors.white.withOpacity(0.08)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
               ),
               child: Row(
                 children: [
@@ -804,7 +772,7 @@ INSTRUCTIONS:
                             style: TextStyle(
                               color: _activeTab == 0 ? AppColors.primaryNavy : Colors.white70,
                               fontWeight: FontWeight.w800,
-                              fontSize: 14,
+                              fontSize: 13,
                             ),
                           ),
                         ),
@@ -821,12 +789,34 @@ INSTRUCTIONS:
                           borderRadius: BorderRadius.circular(25),
                         ),
                         child: Center(
-                          child: Text(
-                            'AI Assistant',
+                           child: Text(
+                            'Inquiries',
                             style: TextStyle(
                               color: _activeTab == 1 ? AppColors.primaryNavy : Colors.white70,
                               fontWeight: FontWeight.w800,
-                              fontSize: 14,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _activeTab = 2),
+                      child: Container(
+                        height: double.infinity,
+                        decoration: BoxDecoration(
+                          color: _activeTab == 2 ? accentColor : Colors.transparent,
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'AI Assistant',
+                            style: TextStyle(
+                              color: _activeTab == 2 ? AppColors.primaryNavy : Colors.white70,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 13,
                             ),
                           ),
                         ),
@@ -843,7 +833,9 @@ INSTRUCTIONS:
           Expanded(
             child: _activeTab == 0 
                 ? _buildOverviewTab(accentColor)
-                : _buildAIChatTab(accentColor),
+                : (_activeTab == 1 
+                    ? _buildInquiriesTab(accentColor)
+                    : _buildAIChatTab(accentColor)),
           ),
         ],
       ),
@@ -852,6 +844,7 @@ INSTRUCTIONS:
 
   Widget _buildOverviewTab(Color accentColor) {
     final biz = widget.business;
+    final user = ref.watch(authStateProvider).value;
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 28),
@@ -871,66 +864,319 @@ INSTRUCTIONS:
           const SizedBox(height: 8),
           Text(biz.description,
               style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 14,
                   height: 1.5)),
           const SizedBox(height: 24),
           _buildPromoTicketCard(),
           const SizedBox(height: 24),
-          const Text('Send a Direct Inquiry to Owner',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Colors.white)),
-          const SizedBox(height: 12),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextField(
-              controller: _inquiryC,
-              maxLines: 3,
-              style: const TextStyle(color: Colors.white, fontSize: 13),
-              decoration: const InputDecoration(
-                hintText: 'Ask the owner about services, prices, or availability...',
-                hintStyle: TextStyle(color: Colors.white24, fontSize: 13),
-                border: InputBorder.none,
+          if (user?.id == biz.ownerId) ...[
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.orangeAccent.withValues(alpha: 0.25), width: 1.5),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.storefront_rounded, color: Colors.orangeAccent, size: 28),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text(
+                          'YOUR BUSINESS LISTING',
+                          style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1.5),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'This is your business listing. You can view direct inquiries sent by customers in the "Inquiries" tab.',
+                          style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
+          ] else ...[
+            const Text('Send a Direct Inquiry to Owner',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Colors.white)),
+            const SizedBox(height: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: TextField(
+                controller: _inquiryC,
+                maxLines: 3,
+                style: const TextStyle(color: Colors.white, fontSize: 13),
+                decoration: const InputDecoration(
+                  hintText: 'Ask the owner about services, prices, or availability...',
+                  hintStyle: TextStyle(color: Colors.white24, fontSize: 13),
+                  border: InputBorder.none,
+                  filled: false,
+                  fillColor: Colors.transparent,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () async {
+                final user = ref.read(authStateProvider).value;
+                if (user == null) return;
+
+                final inq = InquiryEntity(
+                  id: '',
+                  businessId: biz.id,
+                  businessName: biz.name,
+                  requesterId: user.id,
+                  requesterName: user.name ?? 'Neighbor',
+                  message: _inquiryC.text,
+                  createdAt: DateTime.now(),
+                );
+
+                await ref.read(businessRepositoryProvider).submitInquiry(inq);
+
+                if (!mounted) return;
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Inquiry sent to business owner!'),
+                    backgroundColor: Colors.green));
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: accentColor,
+                minimumSize: const Size(double.infinity, 55),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              ),
+              child: Text('SEND DIRECT INQUIRY',
+                  style: TextStyle(color: AppColors.primaryNavy, fontWeight: FontWeight.w900)),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _showReplyDialog(BuildContext context, String inquiryId, String customerName) {
+    final replyController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.secondaryNavy,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: AppColors.primaryBlue.withValues(alpha: 0.2)),
+        ),
+        title: Text(
+          'Reply to $customerName',
+          style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        content: Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
           ),
-          const SizedBox(height: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          child: TextField(
+            controller: replyController,
+            maxLines: 4,
+            style: const TextStyle(color: Colors.white, fontSize: 14),
+            decoration: const InputDecoration(
+              hintText: 'Enter your response...',
+              hintStyle: TextStyle(color: Colors.white24, fontSize: 14),
+              border: InputBorder.none,
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('CANCEL', style: TextStyle(color: Colors.white54)),
+          ),
           ElevatedButton(
             onPressed: () async {
-              final user = ref.read(authStateProvider).value;
-              if (user == null) return;
-
-              final inq = InquiryEntity(
-                id: '',
-                businessId: biz.id,
-                businessName: biz.name,
-                requesterId: user.id,
-                requesterName: user.name ?? 'Neighbor',
-                message: _inquiryC.text,
-                createdAt: DateTime.now(),
-              );
-
-              await ref.read(businessRepositoryProvider).submitInquiry(inq);
-
-              if (!mounted) return;
+              if (replyController.text.trim().isEmpty) return;
+              await ref.read(businessRepositoryProvider)
+                  .respondToInquiry(inquiryId, replyController.text.trim());
+              if (!context.mounted) return;
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('Inquiry sent to business owner!'),
-                  backgroundColor: Colors.green));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Response sent successfully!'),
+                  backgroundColor: Colors.green,
+                ),
+              );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: accentColor,
-              minimumSize: const Size(double.infinity, 55),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              backgroundColor: AppColors.neonCyan,
+              foregroundColor: AppColors.primaryNavy,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: Text('SEND DIRECT INQUIRY',
-                style: TextStyle(color: AppColors.primaryNavy, fontWeight: FontWeight.w900)),
+            child: const Text('SEND REPLY', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildInquiriesTab(Color accentColor) {
+    final user = ref.watch(authStateProvider).value;
+    final inquiriesAsync = ref.watch(inquiriesForBusinessProvider(widget.business.id));
+
+    return inquiriesAsync.when(
+      data: (inquiries) {
+        final isOwner = user?.id == widget.business.ownerId;
+        final displayInquiries = inquiries.where((inq) => isOwner ? true : (inq.requesterId == user?.id)).toList();
+
+        if (displayInquiries.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.forum_outlined, size: 60, color: Colors.white24),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No inquiries yet',
+                    style: GoogleFonts.outfit(color: Colors.white54, fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    isOwner 
+                        ? 'Customers\' direct inquiries will appear here.'
+                        : 'Have a question? Send an inquiry in the Overview tab!',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(color: Colors.white38, fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return ListView.builder(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          itemCount: displayInquiries.length,
+          itemBuilder: (context, index) {
+            final inq = displayInquiries[index];
+            final dateStr = DateFormat('MMM dd • HH:mm').format(inq.createdAt);
+            
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        isOwner ? 'From: ${inq.requesterName}' : 'Sent by You',
+                        style: GoogleFonts.outfit(
+                          color: isOwner ? accentColor : AppColors.neonCyan,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                      Text(
+                        dateStr,
+                        style: GoogleFonts.inter(
+                          color: Colors.white38,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    inq.message,
+                    style: GoogleFonts.inter(
+                      color: Colors.white.withValues(alpha: 0.85),
+                      fontSize: 13,
+                      height: 1.45,
+                    ),
+                  ),
+                  if (inq.isResponded && inq.responseMessage != null) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryBlue.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.2)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.reply_rounded, color: AppColors.primaryBlue, size: 16),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Owner Response',
+                                style: GoogleFonts.outfit(
+                                  color: AppColors.primaryBlue,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            inq.responseMessage!,
+                            style: GoogleFonts.inter(
+                              color: Colors.white70,
+                              fontSize: 12,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  if (isOwner && !inq.isResponded) ...[
+                    const SizedBox(height: 12),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        _showReplyDialog(context, inq.id, inq.requesterName);
+                      },
+                      icon: const Icon(Icons.reply_rounded, size: 16),
+                      label: const Text('REPLY TO CUSTOMER', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: accentColor,
+                        foregroundColor: AppColors.primaryNavy,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        minimumSize: Size.zero,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          },
+        );
+      },
+      loading: () => Center(child: CircularProgressIndicator(color: accentColor)),
+      error: (err, _) => Center(
+        child: Text('Error: $err', style: const TextStyle(color: Colors.white38)),
       ),
     );
   }
@@ -954,9 +1200,9 @@ INSTRUCTIONS:
   Widget _buildPromoTicketCard() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.amber.withOpacity(0.1),
+        color: Colors.amber.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.amber.withOpacity(0.35), width: 1.5),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.35), width: 1.5),
       ),
       child: Column(
         children: [
@@ -983,7 +1229,7 @@ INSTRUCTIONS:
           ),
           Container(
             height: 1,
-            color: Colors.amber.withOpacity(0.25),
+            color: Colors.amber.withValues(alpha: 0.25),
           ),
           Padding(
             padding: const EdgeInsets.all(20),
@@ -1039,7 +1285,7 @@ INSTRUCTIONS:
                 decoration: BoxDecoration(
                   color: const Color(0xFF151F2E),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withOpacity(0.1)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -1067,6 +1313,44 @@ INSTRUCTIONS:
   Widget _buildAIChatTab(Color accentColor) {
     return Column(
       children: [
+        if (_isServerConnected == false)
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.amber.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.amber.withValues(alpha: 0.3), width: 1),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.cloud_off_rounded, color: Colors.amber, size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'AI Server Not Connected. Running locally.',
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 11),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    Navigator.pop(context); // Close sheet
+                    await context.push('/settings');
+                  },
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text(
+                    'Configure',
+                    style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 11),
+                  ),
+                ),
+              ],
+            ),
+          ),
         Expanded(
           child: ListView.builder(
             controller: _scrollC,
@@ -1087,8 +1371,8 @@ INSTRUCTIONS:
         Container(
           padding: EdgeInsets.fromLTRB(24, 10, 24, 28 + MediaQuery.of(context).viewInsets.bottom),
           decoration: BoxDecoration(
-            color: AppColors.secondaryNavy.withOpacity(0.5),
-            border: Border(top: BorderSide(color: Colors.white.withOpacity(0.08))),
+            color: AppColors.secondaryNavy.withValues(alpha: 0.5),
+            border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
           ),
           child: Row(
             children: [
@@ -1096,9 +1380,9 @@ INSTRUCTIONS:
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
+                    color: Colors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.2),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.2),
                   ),
                   child: TextField(
                     controller: _chatC,
@@ -1109,6 +1393,7 @@ INSTRUCTIONS:
                       hintStyle: TextStyle(color: Colors.white30, fontSize: 14),
                       border: InputBorder.none,
                       filled: false,
+                      fillColor: Colors.transparent,
                     ),
                   ),
                 ),
@@ -1124,7 +1409,7 @@ INSTRUCTIONS:
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: accentColor.withOpacity(0.3),
+                        color: accentColor.withValues(alpha: 0.3),
                         blurRadius: 10,
                         spreadRadius: 2,
                       )
@@ -1170,7 +1455,7 @@ INSTRUCTIONS:
           decoration: BoxDecoration(
             gradient: isUser
                 ? LinearGradient(
-                    colors: [accentColor, accentColor.withOpacity(0.8)],
+                    colors: [accentColor, accentColor.withValues(alpha: 0.8)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   )
@@ -1185,13 +1470,13 @@ INSTRUCTIONS:
             border: isUser
                 ? null
                 : Border.all(
-                    color: Colors.white.withOpacity(0.08),
+                    color: Colors.white.withValues(alpha: 0.08),
                     width: 1,
                   ),
             boxShadow: isUser
                 ? [
                     BoxShadow(
-                      color: accentColor.withOpacity(0.2),
+                      color: accentColor.withValues(alpha: 0.2),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     )
@@ -1209,7 +1494,7 @@ INSTRUCTIONS:
                   Text(
                     DateFormat('hh:mm a').format(DateTime.now()),
                     style: TextStyle(
-                      color: isUser ? AppColors.primaryNavy.withOpacity(0.5) : Colors.white24,
+                      color: isUser ? AppColors.primaryNavy.withValues(alpha: 0.5) : Colors.white24,
                       fontSize: 9,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1220,7 +1505,7 @@ INSTRUCTIONS:
                       width: 10, height: 10,
                       child: CircularProgressIndicator(
                         strokeWidth: 1.5,
-                        color: isUser ? AppColors.primaryNavy.withOpacity(0.6) : accentColor.withOpacity(0.6),
+                        color: isUser ? AppColors.primaryNavy.withValues(alpha: 0.6) : accentColor.withValues(alpha: 0.6),
                       ),
                     ),
                   ],
@@ -1234,7 +1519,7 @@ INSTRUCTIONS:
   }
 
   Widget _buildRichText(String text, bool isUser, Color accentColor) {
-    final textColor = isUser ? AppColors.primaryNavy : Colors.white.withOpacity(0.95);
+    final textColor = isUser ? AppColors.primaryNavy : Colors.white.withValues(alpha: 0.95);
     final boldColor = isUser ? AppColors.primaryNavy : accentColor;
     final lines = text.split('\n');
     final List<Widget> children = [];
@@ -1316,7 +1601,7 @@ INSTRUCTIONS:
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.06),
+          color: Colors.white.withValues(alpha: 0.06),
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(20),
             topRight: Radius.circular(20),
@@ -1324,7 +1609,7 @@ INSTRUCTIONS:
             bottomRight: Radius.circular(20),
           ),
           border: Border.all(
-            color: Colors.white.withOpacity(0.12),
+            color: Colors.white.withValues(alpha: 0.12),
             width: 1,
           ),
         ),

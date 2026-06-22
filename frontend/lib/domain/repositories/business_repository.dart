@@ -8,4 +8,5 @@ abstract class BusinessRepository {
   Future<void> deleteBusiness(String id);
   Future<void> submitInquiry(InquiryEntity inquiry);
   Stream<List<InquiryEntity>> getBusinessInquiries(String ownerId);
+  Future<void> respondToInquiry(String inquiryId, String responseMessage);
 }

@@ -114,7 +114,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               height: 280,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primaryBlue.withOpacity(0.06),
+                color: AppColors.primaryBlue.withValues(alpha: 0.06),
               ),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 75, sigmaY: 75),
@@ -130,7 +130,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               height: 250,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.neonCyan.withOpacity(0.05),
+                color: AppColors.neonCyan.withValues(alpha: 0.05),
               ),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
@@ -156,7 +156,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           color: Colors.white,
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.neonCyan.withOpacity(0.25),
+                              color: AppColors.neonCyan.withValues(alpha: 0.25),
                               blurRadius: 16,
                               spreadRadius: 2,
                             ),
@@ -184,7 +184,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     Text(
                       'BUILDING STRONGER COMMUNITY CONNECTIONS',
                       style: GoogleFonts.inter(
-                        color: AppColors.neonCyan.withOpacity(0.85),
+                        color: AppColors.neonCyan.withValues(alpha: 0.85),
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 1.2,
@@ -298,7 +298,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             decoration: BoxDecoration(
                               color: AppColors.surfaceNavy,
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: Colors.white.withOpacity(0.08)),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                             ),
                             child: DropdownButtonHideUnderline(
                               child: DropdownButtonFormField<String>(
@@ -393,7 +393,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         color: AppColors.surfaceNavy,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: focused ? AppColors.neonCyan : Colors.white.withOpacity(0.08),
+          color: focused ? AppColors.neonCyan : Colors.white.withValues(alpha: 0.08),
           width: 1.5,
         ),
       ),

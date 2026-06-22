@@ -9,6 +9,7 @@ class InquiryEntity {
   final String message;
   final DateTime createdAt;
   final bool isResponded;
+  final String? responseMessage;
 
   InquiryEntity({
     required this.id,
@@ -19,7 +20,32 @@ class InquiryEntity {
     required this.message,
     required this.createdAt,
     this.isResponded = false,
+    this.responseMessage,
   });
+
+  InquiryEntity copyWith({
+    String? id,
+    String? businessId,
+    String? businessName,
+    String? requesterId,
+    String? requesterName,
+    String? message,
+    DateTime? createdAt,
+    bool? isResponded,
+    String? responseMessage,
+  }) {
+    return InquiryEntity(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      businessName: businessName ?? this.businessName,
+      requesterId: requesterId ?? this.requesterId,
+      requesterName: requesterName ?? this.requesterName,
+      message: message ?? this.message,
+      createdAt: createdAt ?? this.createdAt,
+      isResponded: isResponded ?? this.isResponded,
+      responseMessage: responseMessage ?? this.responseMessage,
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -30,6 +56,7 @@ class InquiryEntity {
       'message': message,
       'createdAt': createdAt.toIso8601String(),
       'isResponded': isResponded,
+      'responseMessage': responseMessage,
     };
   }
 
@@ -49,6 +76,7 @@ class InquiryEntity {
       message: map['message'] ?? '',
       createdAt: parseDate(map['createdAt']),
       isResponded: map['isResponded'] ?? false,
+      responseMessage: map['responseMessage'],
     );
   }
 }

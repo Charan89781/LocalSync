@@ -13,6 +13,7 @@ class BorrowRequestEntity {
   final DateTime createdAt;
   final String ownerId;
   final String listingTitle;
+  final double price;
 
   BorrowRequestEntity({
     required this.id,
@@ -25,6 +26,7 @@ class BorrowRequestEntity {
     required this.createdAt,
     this.ownerId = 'unknown',
     this.listingTitle = 'Item',
+    this.price = 0.0,
   });
 
   Map<String, dynamic> toMap() {
@@ -38,6 +40,7 @@ class BorrowRequestEntity {
       'createdAt': createdAt.toIso8601String(),
       'ownerId': ownerId,
       'listingTitle': listingTitle,
+      'price': price,
     };
   }
 
@@ -60,6 +63,7 @@ class BorrowRequestEntity {
       createdAt: parseDate(map['createdAt']),
       ownerId: map['ownerId'] ?? 'unknown',
       listingTitle: map['listingTitle'] ?? 'Item',
+      price: (map['price'] ?? 0.0).toDouble(),
     );
   }
 }

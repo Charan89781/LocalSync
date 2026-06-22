@@ -11,4 +11,5 @@ abstract class PostRepository {
   Future<void> updateHelpStatus(String postId, HelpStatus status,
       {String? helperId, String? helperName});
   Future<void> toggleWillingToHelp(String postId, String userId);
+  Future<void> deletePost(String postId);
 }

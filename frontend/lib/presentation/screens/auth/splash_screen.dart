@@ -92,8 +92,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _navigateToNext() async {
-    // Go directly into the app after a premium 4.0-second brand hold!
-    await Future.delayed(const Duration(milliseconds: 4000));
+    // Go directly into the app after a premium 1.0-second brand hold!
+    await Future.delayed(const Duration(milliseconds: 1000));
     if (!mounted) return;
 
     final authState = ref.read(authStateProvider);
@@ -126,7 +126,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.neonCyan.withOpacity(0.08),
+                color: AppColors.neonCyan.withValues(alpha: 0.08),
                 backgroundBlendMode: BlendMode.screen,
               ),
               child: BackdropFilter(
@@ -143,7 +143,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               height: 250,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primaryBlue.withOpacity(0.08),
+                color: AppColors.primaryBlue.withValues(alpha: 0.08),
                 backgroundBlendMode: BlendMode.screen,
               ),
               child: BackdropFilter(
@@ -172,13 +172,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         borderRadius: BorderRadius.circular(36),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.55),
+                            color: Colors.black.withValues(alpha: 0.55),
                             blurRadius: 28,
                             spreadRadius: 4,
                             offset: const Offset(0, 12),
                           ),
                           BoxShadow(
-                            color: AppColors.neonCyan.withOpacity(0.25),
+                            color: AppColors.neonCyan.withValues(alpha: 0.25),
                             blurRadius: 40,
                             spreadRadius: 2,
                           ),
@@ -204,7 +204,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         letterSpacing: -0.5,
                         shadows: [
                           Shadow(
-                            color: AppColors.neonCyan.withOpacity(0.4),
+                            color: AppColors.neonCyan.withValues(alpha: 0.4),
                             blurRadius: 15,
                           ),
                         ],
@@ -224,7 +224,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           letterSpacing: 1.5,
                           shadows: [
                             Shadow(
-                              color: AppColors.neonCyan.withOpacity(0.6),
+                              color: AppColors.neonCyan.withValues(alpha: 0.6),
                               blurRadius: 8,
                             ),
                           ],
@@ -241,7 +241,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       child: CircularProgressIndicator(
                         strokeWidth: 2.5,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.neonCyan.withOpacity(0.8),
+                          AppColors.neonCyan.withValues(alpha: 0.8),
                         ),
                       ),
                     ),
@@ -268,8 +268,8 @@ class HexagonPainter extends CustomPainter {
     final paint = Paint()
       ..shader = RadialGradient(
         colors: [
-          color.withOpacity(0.2),
-          AppColors.primaryNavy.withOpacity(0.8),
+          color.withValues(alpha: 0.2),
+          AppColors.primaryNavy.withValues(alpha: 0.8),
         ],
         radius: 0.8,
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))

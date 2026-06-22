@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../domain/entities/listing_entity.dart';
+import '../../../core/services/storage_service.dart';
 import '../../providers/listing_provider.dart';
 import '../../providers/auth_provider.dart';
 
@@ -146,8 +148,8 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF007BFF).withOpacity(0.8),
-            const Color(0xFF00D1FF).withOpacity(0.6),
+            const Color(0xFF007BFF).withValues(alpha: 0.8),
+            const Color(0xFF00D1FF).withValues(alpha: 0.6),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -170,7 +172,7 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
               Text(
                 'Share with Community',
                 style: GoogleFonts.inter(
-                  color: Colors.white.withOpacity(0.75),
+                  color: Colors.white.withValues(alpha: 0.75),
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -214,7 +216,7 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
                 Text(
                   '${_localImages.length}/5',
                   style: GoogleFonts.inter(
-                    color: Colors.white.withOpacity(0.4),
+                    color: Colors.white.withValues(alpha: 0.4),
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
@@ -237,10 +239,15 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
                           margin: const EdgeInsets.only(right: 12),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(16),
-                            child: Image.file(
-                              File(entry.value.path),
-                              fit: BoxFit.cover,
-                            ),
+                            child: kIsWeb
+                                ? Image.network(
+                                    entry.value.path,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Image.file(
+                                    File(entry.value.path),
+                                    fit: BoxFit.cover,
+                                  ),
                           ),
                         ),
                         Positioned(
@@ -251,7 +258,7 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
                             child: Container(
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.7),
+                                color: Colors.black.withValues(alpha: 0.7),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.close_rounded, size: 13, color: Colors.white),
@@ -265,7 +272,7 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF007BFF).withOpacity(0.9),
+                                color: const Color(0xFF007BFF).withValues(alpha: 0.9),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
@@ -288,10 +295,10 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
                         width: 95,
                         height: 95,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: const Color(0xFF00D1FF).withOpacity(0.4),
+                            color: const Color(0xFF00D1FF).withValues(alpha: 0.4),
                             width: 1.5,
                             style: BorderStyle.solid,
                           ),
@@ -385,17 +392,17 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
                                   colors: [Color(0xFF007BFF), Color(0xFF00D1FF)],
                                 )
                               : null,
-                          color: isSelected ? null : Colors.white.withOpacity(0.05),
+                          color: isSelected ? null : Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: isSelected
                                 ? Colors.transparent
-                                : Colors.white.withOpacity(0.1),
+                                : Colors.white.withValues(alpha: 0.1),
                           ),
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
-                                    color: const Color(0xFF007BFF).withOpacity(0.3),
+                                    color: const Color(0xFF007BFF).withValues(alpha: 0.3),
                                     blurRadius: 8,
                                   )
                                 ]
@@ -407,13 +414,13 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
                             Icon(
                               _categoryIcons[cat] ?? Icons.category_rounded,
                               size: 14,
-                              color: isSelected ? Colors.white : Colors.white.withOpacity(0.5),
+                              color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.5),
                             ),
                             const SizedBox(width: 6),
                             Text(
                               cat,
                               style: GoogleFonts.inter(
-                                color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
+                                color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.6),
                                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
                                 fontSize: 13,
                               ),
@@ -449,10 +456,10 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
                           margin: const EdgeInsets.only(right: 8),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
-                            color: isSelected ? color.withOpacity(0.15) : Colors.white.withOpacity(0.04),
+                            color: isSelected ? color.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.04),
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
-                              color: isSelected ? color : Colors.white.withOpacity(0.1),
+                              color: isSelected ? color : Colors.white.withValues(alpha: 0.1),
                               width: isSelected ? 1.5 : 1,
                             ),
                           ),
@@ -462,7 +469,7 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
                                 width: 10,
                                 height: 10,
                                 decoration: BoxDecoration(
-                                  color: isSelected ? color : Colors.white.withOpacity(0.2),
+                                  color: isSelected ? color : Colors.white.withValues(alpha: 0.2),
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -471,7 +478,7 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
                                 cond,
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.inter(
-                                  color: isSelected ? color : Colors.white.withOpacity(0.4),
+                                  color: isSelected ? color : Colors.white.withValues(alpha: 0.4),
                                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
                                   fontSize: 10,
                                 ),
@@ -514,17 +521,17 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
                                     end: Alignment.bottomRight,
                                   )
                                 : null,
-                            color: isSelected ? null : Colors.white.withOpacity(0.05),
+                            color: isSelected ? null : Colors.white.withValues(alpha: 0.05),
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
                               color: isSelected
                                   ? Colors.transparent
-                                  : Colors.white.withOpacity(0.1),
+                                  : Colors.white.withValues(alpha: 0.1),
                             ),
                             boxShadow: isSelected
                                 ? [
                                     BoxShadow(
-                                      color: const Color(0xFF007BFF).withOpacity(0.3),
+                                      color: const Color(0xFF007BFF).withValues(alpha: 0.3),
                                       blurRadius: 8,
                                     )
                                   ]
@@ -534,7 +541,7 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
                             dur,
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
-                              color: isSelected ? Colors.white : Colors.white.withOpacity(0.5),
+                              color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.5),
                               fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
                               fontSize: 11,
                             ),
@@ -558,10 +565,10 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF007BFF).withOpacity(0.08),
+                  color: const Color(0xFF007BFF).withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: const Color(0xFF007BFF).withOpacity(0.2),
+                    color: const Color(0xFF007BFF).withValues(alpha: 0.2),
                     width: 1.5,
                   ),
                 ),
@@ -570,7 +577,7 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF007BFF).withOpacity(0.15),
+                        color: const Color(0xFF007BFF).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.location_on_rounded,
@@ -583,7 +590,7 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
                         Text(
                           'Location',
                           style: GoogleFonts.inter(
-                            color: Colors.white.withOpacity(0.5),
+                            color: Colors.white.withValues(alpha: 0.5),
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                           ),
@@ -601,7 +608,7 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
                     const Spacer(),
                     Icon(
                       Icons.check_circle_rounded,
-                      color: Colors.greenAccent.withOpacity(0.8),
+                      color: Colors.greenAccent.withValues(alpha: 0.8),
                       size: 20,
                     ),
                   ],
@@ -626,8 +633,8 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
             gradient: _isSubmitting
                 ? LinearGradient(
                     colors: [
-                      const Color(0xFF007BFF).withOpacity(0.4),
-                      const Color(0xFF00D1FF).withOpacity(0.4),
+                      const Color(0xFF007BFF).withValues(alpha: 0.4),
+                      const Color(0xFF00D1FF).withValues(alpha: 0.4),
                     ],
                   )
                 : const LinearGradient(
@@ -640,7 +647,7 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
                 ? []
                 : [
                     BoxShadow(
-                      color: const Color(0xFF007BFF).withOpacity(0.4),
+                      color: const Color(0xFF007BFF).withValues(alpha: 0.4),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -692,6 +699,16 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
 
     setState(() => _isSubmitting = true);
     try {
+      final List<String> imageUrls = [];
+      final storage = ref.read(storageServiceProvider);
+      
+      for (final image in _localImages) {
+        final fileName = '${DateTime.now().millisecondsSinceEpoch}_${image.name}';
+        final storagePath = 'listings/${user.id}/$fileName';
+        final url = await storage.uploadFile(storagePath, image);
+        imageUrls.add(url);
+      }
+
       final newListing = ListingEntity(
         id: '',
         ownerId: user.id,
@@ -702,10 +719,11 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
         type: ListingType.resource,
         category: _selectedCategory,
         createdAt: DateTime.now(),
-        imageUrls: _localImages.map((e) => e.path).toList(),
+        imageUrls: imageUrls,
         rules: [_selectedCondition, _selectedDuration],
       );
 
+      print('DEBUG: AddItemScreen - Submitting new listing: ownerId=${user.id}, title=${newListing.title}, price=${newListing.price}, category=${newListing.category}');
       await ref.read(listingRepositoryProvider).createListing(newListing);
 
       if (mounted) {
@@ -746,9 +764,9 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
+            color: Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
           ),
           child: child,
         ),
@@ -788,7 +806,7 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
         Text(
           label,
           style: GoogleFonts.inter(
-            color: Colors.white.withOpacity(0.6),
+            color: Colors.white.withValues(alpha: 0.6),
             fontSize: 12,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.3,
@@ -797,9 +815,9 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.04),
+            color: Colors.white.withValues(alpha: 0.04),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
           ),
           child: TextFormField(
             controller: controller,
@@ -814,13 +832,13 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen>
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: GoogleFonts.inter(
-                color: Colors.white.withOpacity(0.25),
+                color: Colors.white.withValues(alpha: 0.25),
                 fontSize: 14,
               ),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               border: InputBorder.none,
               prefixIcon: prefixIcon != null
-                  ? Icon(prefixIcon, color: const Color(0xFF00D1FF).withOpacity(0.6), size: 18)
+                  ? Icon(prefixIcon, color: const Color(0xFF00D1FF).withValues(alpha: 0.6), size: 18)
                   : null,
               filled: false,
             ),

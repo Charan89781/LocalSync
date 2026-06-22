@@ -30,7 +30,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     ),
     OnboardingSlide(
       title: 'AI Neighborhood Guide',
-      subtitle: 'EcoSync tracking, sustainable recycling, local solar analytics, and your own smart assistant.',
+      subtitle: 'Your own neighborhood smart assistant to answer local questions, find rules, and get instant guidance.',
       icon: Icons.psychology_outlined,
       color: AppColors.neonPurple,
     ),
@@ -58,7 +58,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               height: 350,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _slides[_currentPage].color.withOpacity(0.08),
+                color: _slides[_currentPage].color.withValues(alpha: 0.08),
               ),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 90, sigmaY: 90),
@@ -86,7 +86,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               borderRadius: BorderRadius.circular(8),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.neonCyan.withOpacity(0.3),
+                                  color: AppColors.neonCyan.withValues(alpha: 0.3),
                                   blurRadius: 10,
                                 ),
                               ],
@@ -119,7 +119,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           child: Text(
                             'Skip',
                             style: GoogleFonts.inter(
-                              color: Colors.white.withOpacity(0.6),
+                              color: Colors.white.withValues(alpha: 0.6),
                               fontWeight: FontWeight.w600,
                               fontSize: 14,
                             ),
@@ -155,14 +155,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   height: 180,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: Colors.white.withOpacity(0.02),
+                                    color: Colors.white.withValues(alpha: 0.02),
                                     border: Border.all(
-                                      color: slide.color.withOpacity(0.2),
+                                      color: slide.color.withValues(alpha: 0.2),
                                       width: 1.5,
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: slide.color.withOpacity(0.1),
+                                        color: slide.color.withValues(alpha: 0.1),
                                         blurRadius: 30,
                                         spreadRadius: 2,
                                       ),
@@ -198,7 +198,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   textAlign: TextAlign.center,
                                   style: GoogleFonts.inter(
                                     fontSize: 16,
-                                    color: const Color(0xFF9DECFF).withOpacity(0.7),
+                                    color: const Color(0xFF9DECFF).withValues(alpha: 0.7),
                                     height: 1.6,
                                   ),
                                 ),
@@ -228,7 +228,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             decoration: BoxDecoration(
                               color: _currentPage == index
                                   ? _slides[index].color
-                                  : Colors.white.withOpacity(0.15),
+                                  : Colors.white.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
@@ -248,7 +248,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.neonCyan.withOpacity(0.3),
+                                      color: AppColors.neonCyan.withValues(alpha: 0.3),
                                       blurRadius: 16,
                                       offset: const Offset(0, 6),
                                     ),
@@ -279,9 +279,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 width: double.infinity,
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(18),
-                                  color: Colors.white.withOpacity(0.04),
+                                  color: Colors.white.withValues(alpha: 0.04),
                                   border: Border.all(
-                                    color: Colors.white.withOpacity(0.08),
+                                    color: Colors.white.withValues(alpha: 0.08),
                                   ),
                                 ),
                                 child: ElevatedButton(

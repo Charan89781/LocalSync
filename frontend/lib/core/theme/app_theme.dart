@@ -139,7 +139,7 @@ class AppTheme {
         backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 2,
-        shadowColor: Colors.black.withOpacity(0.08),
+        shadowColor: Colors.black.withValues(alpha: 0.08),
         centerTitle: true,
         surfaceTintColor: Colors.transparent,
         iconTheme: const IconThemeData(color: AppColors.textDark, size: 24),
@@ -157,7 +157,7 @@ class AppTheme {
           side: BorderSide(color: Colors.grey.shade100, width: 1),
         ),
         color: Colors.white,
-        shadowColor: AppColors.primaryBlue.withOpacity(0.08),
+        shadowColor: AppColors.primaryBlue.withValues(alpha: 0.08),
         margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
         clipBehavior: Clip.antiAlias,
       ),
@@ -184,7 +184,7 @@ class AppTheme {
             return 4;
           }),
           shadowColor:
-              WidgetStatePropertyAll(AppColors.primaryBlue.withOpacity(0.35)),
+              WidgetStatePropertyAll(AppColors.primaryBlue.withValues(alpha: 0.35)),
           textStyle: WidgetStatePropertyAll(
             GoogleFonts.inter(
               fontWeight: FontWeight.w700,
@@ -193,7 +193,7 @@ class AppTheme {
             ),
           ),
           overlayColor:
-              WidgetStatePropertyAll(Colors.white.withOpacity(0.15)),
+              WidgetStatePropertyAll(Colors.white.withValues(alpha: 0.15)),
           padding: const WidgetStatePropertyAll(
             EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           ),
@@ -270,7 +270,7 @@ class AppTheme {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: Colors.grey.shade100,
-        selectedColor: AppColors.primaryBlue.withOpacity(0.12),
+        selectedColor: AppColors.primaryBlue.withValues(alpha: 0.12),
         disabledColor: Colors.grey.shade200,
         labelStyle:
             GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
@@ -436,7 +436,7 @@ class AppTheme {
         backgroundColor: AppColors.secondaryNavy,
         elevation: 0,
         scrolledUnderElevation: 2,
-        shadowColor: Colors.black.withOpacity(0.3),
+        shadowColor: Colors.black.withValues(alpha: 0.3),
         centerTitle: true,
         surfaceTintColor: Colors.transparent,
         iconTheme: const IconThemeData(color: Colors.white, size: 24),
@@ -452,10 +452,10 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: BorderSide(
-              color: Colors.white.withOpacity(0.08), width: 1),
+              color: Colors.white.withValues(alpha: 0.08), width: 1),
         ),
         color: AppColors.secondaryNavy,
-        shadowColor: Colors.black.withOpacity(0.4),
+        shadowColor: Colors.black.withValues(alpha: 0.4),
         clipBehavior: Clip.antiAlias,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -481,7 +481,7 @@ class AppTheme {
             return 4;
           }),
           shadowColor:
-              WidgetStatePropertyAll(AppColors.neonCyan.withOpacity(0.4)),
+              WidgetStatePropertyAll(AppColors.neonCyan.withValues(alpha: 0.4)),
           textStyle: WidgetStatePropertyAll(
             GoogleFonts.inter(
               fontWeight: FontWeight.w700,
@@ -490,7 +490,7 @@ class AppTheme {
             ),
           ),
           overlayColor: WidgetStatePropertyAll(
-              AppColors.primaryNavy.withOpacity(0.1)),
+              AppColors.primaryNavy.withValues(alpha: 0.1)),
           padding: const WidgetStatePropertyAll(
             EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           ),
@@ -504,12 +504,12 @@ class AppTheme {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(
-              color: Colors.white.withOpacity(0.08), width: 1),
+              color: Colors.white.withValues(alpha: 0.08), width: 1),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(
-              color: Colors.white.withOpacity(0.08), width: 1),
+              color: Colors.white.withValues(alpha: 0.08), width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -541,7 +541,7 @@ class AppTheme {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surfaceNavy,
-        selectedColor: AppColors.neonCyan.withOpacity(0.2),
+        selectedColor: AppColors.neonCyan.withValues(alpha: 0.2),
         labelStyle: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: FontWeight.w500,
@@ -554,7 +554,7 @@ class AppTheme {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(50),
-          side: BorderSide(color: Colors.white.withOpacity(0.1)),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
         ),
         elevation: 0,
         checkmarkColor: AppColors.neonCyan,
@@ -572,7 +572,7 @@ class AppTheme {
         dragHandleSize: const Size(40, 4),
       ),
       dividerTheme: DividerThemeData(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         thickness: 1,
         space: 1,
       ),
@@ -638,8 +638,8 @@ class AppTheme {
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
         color: AppColors.neonCyan,
-        linearTrackColor: AppColors.neonCyan.withOpacity(0.15),
-        circularTrackColor: AppColors.neonCyan.withOpacity(0.15),
+        linearTrackColor: AppColors.neonCyan.withValues(alpha: 0.15),
+        circularTrackColor: AppColors.neonCyan.withValues(alpha: 0.15),
       ),
     );
   }

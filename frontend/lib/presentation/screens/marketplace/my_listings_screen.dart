@@ -35,7 +35,7 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
   @override
   Widget build(BuildContext context) {
     final listingsAsync = ref.watch(listingsProvider);
-    final user = ref.watch(authStateProvider).value;
+    final authStateAsync = ref.watch(authStateProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A121A),
@@ -49,41 +49,50 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
           ),
         ),
         child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(context),
-              _buildTabBar(),
-              Expanded(
-                child: listingsAsync.when(
-                  data: (allListings) {
-                    final myListings = allListings
-                        .where((l) => l.ownerId == user?.id)
-                        .toList();
+          child: authStateAsync.when(
+            data: (user) {
+              if (user == null) {
+                return const Center(child: Text('Please log in to view your postings', style: TextStyle(color: Colors.white70)));
+              }
+              return Column(
+                children: [
+                  _buildHeader(context),
+                  _buildTabBar(),
+                  Expanded(
+                    child: listingsAsync.when(
+                      data: (allListings) {
+                        final myListings = allListings
+                            .where((l) => l.ownerId == user.id)
+                            .toList();
 
-                    final active = myListings
-                        .where((l) => l.rules.isEmpty || l.rules.first != 'Completed')
-                        .toList();
-                    final pending = myListings
-                        .where((l) => l.rules.isNotEmpty && l.rules.first == 'Pending')
-                        .toList();
-                    final completed = myListings
-                        .where((l) => l.rules.isNotEmpty && l.rules.first == 'Completed')
-                        .toList();
+                        final active = myListings
+                            .where((l) => l.rules.isEmpty || l.rules.first != 'Completed')
+                            .toList();
+                        final pending = myListings
+                            .where((l) => l.rules.isNotEmpty && l.rules.first == 'Pending')
+                            .toList();
+                        final completed = myListings
+                            .where((l) => l.rules.isNotEmpty && l.rules.first == 'Completed')
+                            .toList();
 
-                    return TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _buildListingsTab(active, 'active', context),
-                        _buildListingsTab(pending, 'pending', context),
-                        _buildListingsTab(completed, 'completed', context),
-                      ],
-                    );
-                  },
-                  loading: () => _buildShimmerLoading(),
-                  error: (err, _) => _buildError(),
-                ),
-              ),
-            ],
+                        return TabBarView(
+                          controller: _tabController,
+                          children: [
+                            _buildListingsTab(active, 'active', context),
+                            _buildListingsTab(pending, 'pending', context),
+                            _buildListingsTab(completed, 'completed', context),
+                          ],
+                        );
+                      },
+                      loading: () => _buildShimmerLoading(),
+                      error: (err, _) => _buildError(),
+                    ),
+                  ),
+                ],
+              );
+            },
+            loading: () => _buildShimmerLoading(),
+            error: (err, _) => _buildError(),
           ),
         ),
       ),
@@ -108,8 +117,8 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF007BFF).withOpacity(0.85),
-            const Color(0xFF00D1FF).withOpacity(0.65),
+            const Color(0xFF007BFF).withValues(alpha: 0.85),
+            const Color(0xFF00D1FF).withValues(alpha: 0.65),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -132,7 +141,7 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
               Text(
                 'Marketplace',
                 style: GoogleFonts.inter(
-                  color: Colors.white.withOpacity(0.75),
+                  color: Colors.white.withValues(alpha: 0.75),
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -163,9 +172,9 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
           child: Container(
             height: 46,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
             ),
             child: TabBar(
               controller: _tabController,
@@ -179,14 +188,14 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF007BFF).withOpacity(0.4),
+                    color: const Color(0xFF007BFF).withValues(alpha: 0.4),
                     blurRadius: 10,
                   ),
                 ],
               ),
               dividerColor: Colors.transparent,
               labelColor: Colors.white,
-              unselectedLabelColor: Colors.white.withOpacity(0.4),
+              unselectedLabelColor: Colors.white.withValues(alpha: 0.4),
               labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 12),
               tabs: const [
                 Tab(text: 'Active'),
@@ -217,7 +226,7 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
           background: Container(
             margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
-              color: AppColors.errorRed.withOpacity(0.85),
+              color: AppColors.errorRed.withValues(alpha: 0.85),
               borderRadius: BorderRadius.circular(20),
             ),
             alignment: Alignment.centerRight,
@@ -270,9 +279,9 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: const Color(0xFF15202B).withOpacity(0.95),
+                color: const Color(0xFF15202B).withValues(alpha: 0.95),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -280,7 +289,7 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.errorRed.withOpacity(0.1),
+                      color: AppColors.errorRed.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.delete_outline_rounded,
@@ -300,7 +309,7 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
                     'This will permanently remove "${item.title}" from listings.',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                       fontSize: 14,
                       height: 1.5,
                     ),
@@ -314,15 +323,15 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.06),
+                              color: Colors.white.withValues(alpha: 0.06),
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: Colors.white.withOpacity(0.1)),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                             ),
                             child: Text(
                               'Cancel',
                               textAlign: TextAlign.center,
                               style: GoogleFonts.inter(
-                                color: Colors.white.withOpacity(0.7),
+                                color: Colors.white.withValues(alpha: 0.7),
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -336,7 +345,7 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             decoration: BoxDecoration(
-                              color: AppColors.errorRed.withOpacity(0.85),
+                              color: AppColors.errorRed.withValues(alpha: 0.85),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Text(
@@ -388,9 +397,9 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
             ),
             child: Column(
               children: [
@@ -406,13 +415,13 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
                                 imageUrl: item.imageUrls.first,
                                 fit: BoxFit.cover,
                                 errorWidget: (_, __, ___) => Container(
-                                  color: Colors.white.withOpacity(0.05),
+                                  color: Colors.white.withValues(alpha: 0.05),
                                   child: const Icon(Icons.inventory_2_outlined,
                                       color: Color(0xFF00D1FF), size: 30),
                                 ),
                               )
                             : Container(
-                                color: Colors.white.withOpacity(0.05),
+                                color: Colors.white.withValues(alpha: 0.05),
                                 child: const Icon(Icons.inventory_2_outlined,
                                     color: Color(0xFF00D1FF), size: 30),
                               ),
@@ -440,9 +449,9 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: statusColor.withOpacity(0.12),
+                                  color: statusColor.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: statusColor.withOpacity(0.3)),
+                                  border: Border.all(color: statusColor.withValues(alpha: 0.3)),
                                 ),
                                 child: Text(
                                   statusLabel,
@@ -486,20 +495,20 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.05),
+                            color: Colors.white.withValues(alpha: 0.05),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.white.withOpacity(0.1)),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(Icons.visibility_rounded,
-                                  size: 15, color: Colors.white.withOpacity(0.6)),
+                                  size: 15, color: Colors.white.withValues(alpha: 0.6)),
                               const SizedBox(width: 6),
                               Text(
                                 'View',
                                 style: GoogleFonts.inter(
-                                  color: Colors.white.withOpacity(0.6),
+                                  color: Colors.white.withValues(alpha: 0.6),
                                   fontWeight: FontWeight.w700,
                                   fontSize: 13,
                                 ),
@@ -562,9 +571,9 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.errorRed.withOpacity(0.1),
+                          color: AppColors.errorRed.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.errorRed.withOpacity(0.2)),
+                          border: Border.all(color: AppColors.errorRed.withValues(alpha: 0.2)),
                         ),
                         child: const Icon(Icons.delete_outline_rounded,
                             color: AppColors.errorRed, size: 18),
@@ -583,12 +592,12 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
   Widget _buildStatChip(IconData icon, String label) {
     return Row(
       children: [
-        Icon(icon, size: 12, color: Colors.white.withOpacity(0.4)),
+        Icon(icon, size: 12, color: Colors.white.withValues(alpha: 0.4)),
         const SizedBox(width: 4),
         Text(
           label,
           style: GoogleFonts.inter(
-            color: Colors.white.withOpacity(0.4),
+            color: Colors.white.withValues(alpha: 0.4),
             fontSize: 11,
             fontWeight: FontWeight.w500,
           ),
@@ -617,17 +626,17 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              color: const Color(0xFF00D1FF).withOpacity(0.08),
+              color: const Color(0xFF00D1FF).withValues(alpha: 0.08),
               shape: BoxShape.circle,
               border: Border.all(
-                color: const Color(0xFF00D1FF).withOpacity(0.2),
+                color: const Color(0xFF00D1FF).withValues(alpha: 0.2),
                 width: 2,
               ),
             ),
             child: Icon(
               icons[status] ?? Icons.inventory_2_outlined,
               size: 44,
-              color: const Color(0xFF00D1FF).withOpacity(0.5),
+              color: const Color(0xFF00D1FF).withValues(alpha: 0.5),
             ),
           ),
           const SizedBox(height: 20),
@@ -643,7 +652,7 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
           Text(
             'Tap the button below to create your first listing',
             style: GoogleFonts.inter(
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withValues(alpha: 0.4),
               fontSize: 14,
             ),
           ),
@@ -660,7 +669,7 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF007BFF).withOpacity(0.35),
+                      color: const Color(0xFF007BFF).withValues(alpha: 0.35),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),
@@ -689,7 +698,7 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
         margin: const EdgeInsets.only(bottom: 16),
         height: 130,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.04),
+          color: Colors.white.withValues(alpha: 0.04),
           borderRadius: BorderRadius.circular(20),
         ),
       ),
@@ -701,7 +710,7 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.wifi_off_rounded, size: 56, color: Colors.white.withOpacity(0.2)),
+          Icon(Icons.wifi_off_rounded, size: 56, color: Colors.white.withValues(alpha: 0.2)),
           const SizedBox(height: 16),
           Text(
             'Could not load listings',

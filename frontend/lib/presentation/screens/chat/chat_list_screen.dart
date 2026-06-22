@@ -25,6 +25,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen>
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   bool _showSearch = false;
+  String? _selectedCategoryFilter;
 
   @override
   void initState() {
@@ -120,178 +121,23 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen>
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.75,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        builder: (context, scrollController) => ClipRRect(
-          borderRadius:
-              const BorderRadius.vertical(top: Radius.circular(32)),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.primaryNavy.withOpacity(0.95),
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(32)),
-                border: Border.all(
-                    color: Colors.white.withOpacity(0.12), width: 1.5),
-              ),
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.white24,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Select Neighbor',
-                    style: GoogleFonts.inter(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Start a secure conversation with a resident',
-                    style: GoogleFonts.inter(
-                        color: Colors.white38, fontSize: 12),
-                  ),
-                  const SizedBox(height: 20),
-                  Expanded(
-                    child: FutureBuilder<QuerySnapshot>(
-                      future: FirebaseFirestore.instance
-                          .collection('users')
-                          .get(),
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData) {
-                          return const Center(
-                              child: CircularProgressIndicator(
-                                  color: AppColors.neonCyan));
-                        }
-                        final currentUser =
-                            ref.read(authStateProvider).value;
-                        final users = snapshot.data!.docs
-                            .where((doc) => doc.id != currentUser?.id)
-                            .toList();
-                        if (users.isEmpty) {
-                          return Center(
-                            child: Text(
-                              'No other neighbors registered yet.',
-                              style: GoogleFonts.inter(
-                                  color: Colors.white30),
-                            ),
-                          );
-                        }
-                        return ListView.builder(
-                          controller: scrollController,
-                          itemCount: users.length,
-                          itemBuilder: (context, index) {
-                            final uDoc = users[index];
-                            final uData =
-                                uDoc.data() as Map<String, dynamic>;
-                            final name = uData['name'] ??
-                                uData['email'] ??
-                                'Neighbor';
-                            final address =
-                                uData['address'] ?? 'Resident';
-                            final avatarUrl = uData['profileImageUrl'];
-                            final isOnline =
-                                uData['isOnline'] as bool? ?? false;
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              child: GlassCard(
-                                borderRadius: 16,
-                                padding: const EdgeInsets.all(8),
-                                child: ListTile(
-                                  leading: Stack(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(2),
-                                        decoration: const BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            gradient:
-                                                AppColors.neonGradient),
-                                        child: CircleAvatar(
-                                          radius: 20,
-                                          backgroundColor:
-                                              AppColors.surfaceNavy,
-                                          backgroundImage: avatarUrl !=
-                                                  null
-                                              ? NetworkImage(avatarUrl)
-                                              : null,
-                                          child: avatarUrl == null
-                                              ? const Icon(
-                                                  Icons.person_rounded,
-                                                  color: AppColors.neonCyan,
-                                                  size: 20)
-                                              : null,
-                                        ),
-                                      ),
-                                      if (isOnline)
-                                        Positioned(
-                                          right: 0,
-                                          bottom: 0,
-                                          child: Container(
-                                            width: 10,
-                                            height: 10,
-                                            decoration: BoxDecoration(
-                                              color: AppColors.neonGreen,
-                                              shape: BoxShape.circle,
-                                              border: Border.all(
-                                                  color:
-                                                      AppColors.primaryNavy,
-                                                  width: 2),
-                                            ),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                  title: Text(name,
-                                      style: GoogleFonts.inter(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14)),
-                                  subtitle: Text(address,
-                                      style: GoogleFonts.inter(
-                                          color: Colors.white30,
-                                          fontSize: 12)),
-                                  trailing: const Icon(
-                                      Icons.chat_bubble_outline_rounded,
-                                      color: AppColors.neonCyan,
-                                      size: 20),
-                                  onTap: () async {
-                                    final roomId = await ref
-                                        .read(chatRepositoryProvider)
-                                        .createChatRoom(
-                                          [currentUser!.id, uDoc.id],
-                                          name: 'Private Chat',
-                                        );
-                                    if (context.mounted) {
-                                      Navigator.pop(context);
-                                      context.push('/chat/$roomId');
-                                    }
-                                  },
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                ],
+      builder: (sheetContext) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.75,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          builder: (scrollContext, scrollController) => ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: _NewChatSheetContent(
+                scrollController: scrollController,
+                parentContext: context,
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -334,9 +180,9 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen>
                                           _searchQuery.toLowerCase()))
                               .toList();
                       final channels =
-                          filtered.where((r) => r.isChannel).toList();
+                          filtered.where((r) => r.isChannel || r.isGroup).toList();
                       final directMsgs =
-                          filtered.where((r) => !r.isChannel).toList();
+                          filtered.where((r) => !r.isChannel && !r.isGroup).toList();
                       return TabBarView(
                         controller: _tabController,
                         children: [
@@ -412,10 +258,10 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen>
                 child: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.08),
+                    color: Colors.white.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                        color: Colors.white.withOpacity(0.12), width: 1),
+                        color: Colors.white.withValues(alpha: 0.12), width: 1),
                   ),
                   child: Icon(
                     _showSearch
@@ -444,10 +290,10 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen>
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.06),
+              color: Colors.white.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                  color: AppColors.neonCyan.withOpacity(0.3), width: 1.5),
+                  color: AppColors.neonCyan.withValues(alpha: 0.3), width: 1.5),
             ),
             child: TextField(
               controller: _searchController,
@@ -474,7 +320,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen>
       margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
       ),
       child: TabBar(
@@ -485,7 +331,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen>
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: AppColors.neonCyan.withOpacity(0.3),
+              color: AppColors.neonCyan.withValues(alpha: 0.3),
               blurRadius: 12,
               spreadRadius: 0,
             ),
@@ -557,7 +403,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen>
               background: Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.8),
+                  color: Colors.red.withValues(alpha: 0.8),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 alignment: Alignment.centerRight,
@@ -587,12 +433,12 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen>
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.06),
+                        color: Colors.white.withValues(alpha: 0.06),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                             color: unreadCount > 0
-                                ? AppColors.neonCyan.withOpacity(0.3)
-                                : Colors.white.withOpacity(0.08),
+                                ? AppColors.neonCyan.withValues(alpha: 0.3)
+                                : Colors.white.withValues(alpha: 0.08),
                             width: 1.5),
                       ),
                       child: InkWell(
@@ -753,10 +599,10 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen>
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.neonCyan.withOpacity(0.07),
+              color: AppColors.neonCyan.withValues(alpha: 0.07),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                  color: AppColors.neonCyan.withOpacity(0.25), width: 1.5),
+                  color: AppColors.neonCyan.withValues(alpha: 0.25), width: 1.5),
             ),
             child: InkWell(
               onTap: () => context.push('/ai-assistant'),
@@ -795,7 +641,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen>
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 7, vertical: 3),
                               decoration: BoxDecoration(
-                                color: AppColors.neonCyan.withOpacity(0.15),
+                                color: AppColors.neonCyan.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
@@ -853,8 +699,17 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen>
       },
     ];
 
+    // Filter rooms by category if a filter is active
+    final filteredRooms = _selectedCategoryFilter == null
+        ? rooms
+        : rooms
+            .where((r) =>
+                (r.category ?? 'Community').toLowerCase() ==
+                _selectedCategoryFilter!.toLowerCase())
+            .toList();
+
     final Map<String, List<ChatRoomEntity>> grouped = {};
-    for (var r in rooms) {
+    for (var r in filteredRooms) {
       final cat = r.category ?? 'Community';
       grouped.putIfAbsent(cat, () => []).add(r);
     }
@@ -887,41 +742,69 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen>
               const SizedBox(height: 12),
               Row(
                 children: groupSections.map((sec) {
+                  final title = sec['title'] as String;
+                  final isFilterSelected = _selectedCategoryFilter == title;
+                  final secColor = sec['color'] as Color;
+
                   return Expanded(
                     child: Container(
                       margin: const EdgeInsets.only(right: 8),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: BackdropFilter(
-                          filter:
-                              ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color:
-                                  (sec['color'] as Color).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                  color: (sec['color'] as Color)
-                                      .withOpacity(0.2),
-                                  width: 1.5),
-                            ),
-                            child: Column(
-                              children: [
-                                Text(sec['emoji'] as String,
-                                    style:
-                                        const TextStyle(fontSize: 24)),
-                                const SizedBox(height: 4),
-                                Text(
-                                  sec['title'] as String,
-                                  style: GoogleFonts.inter(
-                                    color: sec['color'] as Color,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w900,
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            if (isFilterSelected) {
+                              _selectedCategoryFilter = null;
+                            } else {
+                              _selectedCategoryFilter = title;
+                            }
+                          });
+                          HapticFeedback.lightImpact();
+                        },
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: isFilterSelected
+                                    ? secColor.withValues(alpha: 0.2)
+                                    : secColor.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                    color: isFilterSelected
+                                        ? secColor
+                                        : secColor.withValues(alpha: 0.18),
+                                    width: 1.5),
+                                boxShadow: isFilterSelected
+                                    ? [
+                                        BoxShadow(
+                                          color: secColor.withValues(alpha: 0.25),
+                                          blurRadius: 8,
+                                          spreadRadius: 0,
+                                        )
+                                      ]
+                                    : [],
+                              ),
+                              child: Column(
+                                children: [
+                                  Text(sec['emoji'] as String,
+                                      style: const TextStyle(fontSize: 24)),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    title,
+                                    style: GoogleFonts.inter(
+                                      color: isFilterSelected
+                                          ? Colors.white
+                                          : secColor,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                    textAlign: TextAlign.center,
                                   ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -934,24 +817,36 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen>
           ),
         ),
         // Actual channels
-        ...grouped.entries.map((entry) => Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 8, 4, 10),
-                  child: Text(
-                    entry.key.toUpperCase(),
-                    style: GoogleFonts.inter(
-                      color: Colors.white38,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2,
+        if (filteredRooms.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 40),
+            child: Center(
+              child: Text(
+                'No channels in this category.',
+                style: GoogleFonts.inter(
+                    color: Colors.white30, fontSize: 13),
+              ),
+            ),
+          )
+        else
+          ...grouped.entries.map((entry) => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 8, 4, 10),
+                    child: Text(
+                      entry.key.toUpperCase(),
+                      style: GoogleFonts.inter(
+                        color: Colors.white38,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 2,
+                      ),
                     ),
                   ),
-                ),
-                ...entry.value.map((room) => _buildChannelItem(room)),
-              ],
-            )),
+                  ...entry.value.map((room) => _buildChannelItem(room)),
+                ],
+              )),
       ],
     );
   }
@@ -973,10 +868,10 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen>
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.06),
+              color: Colors.white.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                  color: Colors.white.withOpacity(0.08), width: 1),
+                  color: Colors.white.withValues(alpha: 0.08), width: 1),
             ),
             child: InkWell(
               onTap: () => context.push('/chat/${room.id}'),
@@ -986,10 +881,10 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen>
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.12),
+                      color: color.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                       border: Border.all(
-                          color: color.withOpacity(0.3), width: 1.5),
+                          color: color.withValues(alpha: 0.3), width: 1.5),
                     ),
                     child: Center(
                       child: Text(
@@ -1063,6 +958,407 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen>
                 textAlign: TextAlign.center,
                 style:
                     const TextStyle(color: Colors.redAccent, fontSize: 10)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NewChatSheetContent extends ConsumerStatefulWidget {
+  final ScrollController scrollController;
+  final BuildContext parentContext;
+
+  const _NewChatSheetContent({
+    required this.scrollController,
+    required this.parentContext,
+  });
+
+  @override
+  ConsumerState<_NewChatSheetContent> createState() => _NewChatSheetContentState();
+}
+
+class _NewChatSheetContentState extends ConsumerState<_NewChatSheetContent> {
+  int _activeMode = 0; // 0 for Private Chat, 1 for Create Group
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.primaryNavy.withValues(alpha: 0.95),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Segmented control toggle
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _activeMode = 0),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: _activeMode == 0 ? AppColors.neonCyan : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'PRIVATE CHAT',
+                          style: GoogleFonts.inter(
+                            color: _activeMode == 0 ? AppColors.primaryNavy : Colors.white60,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _activeMode = 1),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: _activeMode == 1 ? AppColors.neonCyan : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'CREATE GROUP',
+                          style: GoogleFonts.inter(
+                            color: _activeMode == 1 ? AppColors.primaryNavy : Colors.white60,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Expanded(
+            child: _activeMode == 0
+                ? _buildNeighborSelector(context, widget.scrollController)
+                : _GroupCreatorForm(parentContext: widget.parentContext),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNeighborSelector(BuildContext sheetContext, ScrollController scrollController) {
+    return FutureBuilder<QuerySnapshot>(
+      future: FirebaseFirestore.instance.collection('users').get(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator(color: AppColors.neonCyan));
+        }
+        final currentUser = ref.read(authStateProvider).value;
+        final users = snapshot.data!.docs
+            .where((doc) => doc.id != currentUser?.id)
+            .toList();
+        if (users.isEmpty) {
+          return Center(
+            child: Text(
+              'No other neighbors registered yet.',
+              style: GoogleFonts.inter(color: Colors.white30),
+            ),
+          );
+        }
+        return ListView.builder(
+          controller: scrollController,
+          itemCount: users.length,
+          itemBuilder: (context, index) {
+            final uDoc = users[index];
+            final uData = uDoc.data() as Map<String, dynamic>;
+            final name = uData['name'] as String? ?? uData['email'].toString().split('@').first;
+            final address = uData['address'] as String? ?? 'Resident';
+            final avatarUrl = uData['profileImageUrl'] as String?;
+            final isOnline = uData['isOnline'] as bool? ?? false;
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: GlassCard(
+                borderRadius: 16,
+                padding: const EdgeInsets.all(8),
+                child: ListTile(
+                  leading: Stack(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: const BoxDecoration(
+                            shape: BoxShape.circle, gradient: AppColors.neonGradient),
+                        child: CircleAvatar(
+                          radius: 20,
+                          backgroundColor: AppColors.surfaceNavy,
+                          backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+                          child: avatarUrl == null || avatarUrl.isEmpty
+                              ? const Icon(Icons.person_rounded, color: AppColors.neonCyan, size: 20)
+                              : null,
+                        ),
+                      ),
+                      if (isOnline)
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: AppColors.neonGreen,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: AppColors.primaryNavy, width: 2),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  title: Text(name,
+                      style: GoogleFonts.inter(
+                          color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                  subtitle: Text(address,
+                      style: GoogleFonts.inter(color: Colors.white30, fontSize: 12)),
+                  trailing: const Icon(Icons.chat_bubble_outline_rounded,
+                      color: AppColors.neonCyan, size: 20),
+                  onTap: () async {
+                    final roomId = await ref
+                        .read(chatRepositoryProvider)
+                        .createChatRoom(
+                          [currentUser!.id, uDoc.id],
+                          name: 'Private Chat',
+                        );
+                    if (sheetContext.mounted) {
+                      Navigator.pop(sheetContext);
+                      sheetContext.push('/chat/$roomId');
+                    }
+                  },
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _GroupCreatorForm extends ConsumerStatefulWidget {
+  final BuildContext parentContext;
+
+  const _GroupCreatorForm({required this.parentContext});
+
+  @override
+  ConsumerState<_GroupCreatorForm> createState() => _GroupCreatorFormState();
+}
+
+class _GroupCreatorFormState extends ConsumerState<_GroupCreatorForm> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _descController = TextEditingController();
+  String _selectedCategory = 'Community';
+  bool _isCreatingGroup = false;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: _formKey,
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 12),
+            Text(
+              'GROUP CHANNEL NAME',
+              style: GoogleFonts.inter(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.5,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
+              ),
+              child: TextFormField(
+                controller: _nameController,
+                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                validator: (v) => v!.isEmpty ? 'Group name required' : null,
+                decoration: const InputDecoration(
+                  hintText: 'e.g. #running-club',
+                  hintStyle: TextStyle(color: Colors.white24, fontSize: 14),
+                  border: InputBorder.none,
+                  filled: false,
+                  fillColor: Colors.transparent,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'CATEGORY',
+              style: GoogleFonts.inter(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.5,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButtonFormField<String>(
+                  dropdownColor: AppColors.surfaceNavy,
+                  value: _selectedCategory,
+                  items: ['Community', 'Alerts', 'Events'].map((cat) {
+                    return DropdownMenuItem(
+                      value: cat,
+                      child: Text(cat, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                    );
+                  }).toList(),
+                  onChanged: (v) {
+                    if (v != null) {
+                      setState(() {
+                        _selectedCategory = v;
+                      });
+                    }
+                  },
+                  decoration: const InputDecoration(border: InputBorder.none),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'DESCRIPTION',
+              style: GoogleFonts.inter(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.5,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
+              ),
+              child: TextFormField(
+                controller: _descController,
+                maxLines: 3,
+                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                decoration: const InputDecoration(
+                  hintText: 'What is this community group about?',
+                  hintStyle: TextStyle(color: Colors.white24, fontSize: 14),
+                  border: InputBorder.none,
+                  filled: false,
+                  fillColor: Colors.transparent,
+                ),
+              ),
+            ),
+            const SizedBox(height: 36),
+            ElevatedButton(
+              onPressed: _isCreatingGroup
+                  ? null
+                  : () async {
+                      if (!_formKey.currentState!.validate()) return;
+                      final user = ref.read(authStateProvider).value;
+                      if (user == null) return;
+                      
+                      setState(() => _isCreatingGroup = true);
+
+                      try {
+                        String rawName = _nameController.text.trim();
+                        final String displayName = rawName.startsWith('#') ? rawName : '#$rawName';
+
+                        final roomId = await ref.read(chatRepositoryProvider).createChatRoom(
+                          [user.id],
+                          name: displayName,
+                          isGroup: true,
+                          isChannel: false,
+                          category: _selectedCategory,
+                          description: _descController.text.trim(),
+                          createdBy: user.id,
+                        );
+
+                        if (mounted) {
+                          // Dismiss the bottom sheet using the parent navigator
+                          // so we stay on the correct navigator stack.
+                          Navigator.of(widget.parentContext).pop();
+                        }
+                        if (widget.parentContext.mounted) {
+                          widget.parentContext.push('/chat/$roomId');
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.errorRed),
+                          );
+                        }
+                      } finally {
+                        if (mounted) {
+                          setState(() => _isCreatingGroup = false);
+                        }
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.neonCyan,
+                minimumSize: const Size(double.infinity, 56),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              child: _isCreatingGroup
+                  ? const CircularProgressIndicator(color: AppColors.primaryNavy)
+                  : Text(
+                      'CREATE GROUP CHANNEL',
+                      style: GoogleFonts.inter(
+                        color: AppColors.primaryNavy,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
+                        letterSpacing: 1,
+                      ),
+                    ),
+            ),
           ],
         ),
       ),

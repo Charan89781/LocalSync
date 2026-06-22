@@ -61,9 +61,9 @@ class _RegisterBusinessScreenState extends ConsumerState<RegisterBusinessScreen>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
+            color: Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
           ),
           child: TextFormField(
             controller: controller,
@@ -145,9 +145,9 @@ class _RegisterBusinessScreenState extends ConsumerState<RegisterBusinessScreen>
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
+                      color: Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
@@ -246,7 +246,7 @@ class _RegisterBusinessScreenState extends ConsumerState<RegisterBusinessScreen>
                       minimumSize: const Size(double.infinity, 60),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                       elevation: 8,
-                      shadowColor: AppColors.neonCyan.withOpacity(0.3),
+                      shadowColor: AppColors.neonCyan.withValues(alpha: 0.3),
                     ),
                     child: _isSubmitting
                         ? const CircularProgressIndicator(color: AppColors.primaryNavy)

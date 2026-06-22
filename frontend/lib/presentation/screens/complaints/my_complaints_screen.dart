@@ -130,7 +130,7 @@ class _MyComplaintsScreenState extends ConsumerState<MyComplaintsScreen>
             icon: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -153,7 +153,7 @@ class _MyComplaintsScreenState extends ConsumerState<MyComplaintsScreen>
             icon: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF007BFF).withOpacity(0.15),
+                color: const Color(0xFF007BFF).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(Icons.add_rounded,
@@ -189,9 +189,9 @@ class _MyComplaintsScreenState extends ConsumerState<MyComplaintsScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
         text,
@@ -209,15 +209,15 @@ class _MyComplaintsScreenState extends ConsumerState<MyComplaintsScreen>
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.04),
+          color: Colors.white.withValues(alpha: 0.04),
           borderRadius: BorderRadius.circular(16),
         ),
         child: TabBar(
           controller: _tabController,
           indicator: BoxDecoration(
-            color: const Color(0xFF007BFF).withOpacity(0.2),
+            color: const Color(0xFF007BFF).withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFF007BFF).withOpacity(0.4)),
+            border: Border.all(color: const Color(0xFF007BFF).withValues(alpha: 0.4)),
           ),
           indicatorSize: TabBarIndicatorSize.tab,
           labelColor: const Color(0xFF00D1FF),
@@ -281,9 +281,9 @@ class _MyComplaintsScreenState extends ConsumerState<MyComplaintsScreen>
         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.04),
+            color: Colors.white.withValues(alpha: 0.04),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withOpacity(0.08)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
           ),
           child: InkWell(
             borderRadius: BorderRadius.circular(20),
@@ -299,7 +299,7 @@ class _MyComplaintsScreenState extends ConsumerState<MyComplaintsScreen>
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: color.withOpacity(0.15),
+                          color: color.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Icon(item['icon'] as IconData,
@@ -350,10 +350,10 @@ class _MyComplaintsScreenState extends ConsumerState<MyComplaintsScreen>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.15),
+                          color: statusColor.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                              color: statusColor.withOpacity(0.3)),
+                              color: statusColor.withValues(alpha: 0.3)),
                         ),
                         child: Text(
                           item['status'],
@@ -396,7 +396,7 @@ class _MyComplaintsScreenState extends ConsumerState<MyComplaintsScreen>
                         borderRadius: BorderRadius.circular(4),
                         child: LinearProgressIndicator(
                           value: progress,
-                          backgroundColor: Colors.white.withOpacity(0.06),
+                          backgroundColor: Colors.white.withValues(alpha: 0.06),
                           valueColor: AlwaysStoppedAnimation<Color>(statusColor),
                           minHeight: 6,
                         ),
@@ -448,7 +448,7 @@ class _MyComplaintsScreenState extends ConsumerState<MyComplaintsScreen>
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF007BFF).withOpacity(0.4),
+              color: const Color(0xFF007BFF).withValues(alpha: 0.4),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),

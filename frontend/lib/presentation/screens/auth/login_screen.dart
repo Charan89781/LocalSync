@@ -204,7 +204,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                      Container(
                        padding: const EdgeInsets.all(10),
                        decoration: BoxDecoration(
-                         color: AppColors.neonCyan.withOpacity(0.12),
+                         color: AppColors.neonCyan.withValues(alpha: 0.12),
                          shape: BoxShape.circle,
                        ),
                        child: const Icon(Icons.lock_reset_rounded, color: AppColors.neonCyan, size: 24),
@@ -233,7 +233,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                      color: AppColors.surfaceNavy,
                      borderRadius: BorderRadius.circular(16),
                      border: Border.all(
-                       color: resetError != null ? AppColors.errorRed : Colors.white.withOpacity(0.08),
+                       color: resetError != null ? AppColors.errorRed : Colors.white.withValues(alpha: 0.08),
                        width: 1.5,
                      ),
                    ),
@@ -349,7 +349,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                height: 260,
                decoration: BoxDecoration(
                  shape: BoxShape.circle,
-                 color: AppColors.neonCyan.withOpacity(0.06),
+                 color: AppColors.neonCyan.withValues(alpha: 0.06),
                ),
                child: BackdropFilter(
                  filter: ImageFilter.blur(sigmaX: 70, sigmaY: 70),
@@ -365,7 +365,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                height: 300,
                decoration: BoxDecoration(
                  shape: BoxShape.circle,
-                 color: AppColors.primaryBlue.withOpacity(0.06),
+                 color: AppColors.primaryBlue.withValues(alpha: 0.06),
                ),
                child: BackdropFilter(
                  filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
@@ -394,7 +394,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                color: Colors.white,
                                boxShadow: [
                                  BoxShadow(
-                                   color: AppColors.neonCyan.withOpacity(0.25),
+                                   color: AppColors.neonCyan.withValues(alpha: 0.25),
                                    blurRadius: 20,
                                    spreadRadius: 2,
                                  ),
@@ -420,8 +420,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                            ),
                            Text(
                              'BUILDING STRONGER COMMUNITY CONNECTIONS',
+                             textAlign: TextAlign.center,
                              style: GoogleFonts.inter(
-                               color: AppColors.neonCyan.withOpacity(0.85),
+                               color: AppColors.neonCyan.withValues(alpha: 0.85),
                                fontSize: 11,
                                fontWeight: FontWeight.w800,
                                letterSpacing: 1.2,
@@ -644,9 +645,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                      // Google Sign In
                      Container(
                        decoration: BoxDecoration(
-                         color: Colors.white.withOpacity(0.04),
+                         color: Colors.white.withValues(alpha: 0.04),
                          borderRadius: BorderRadius.circular(16),
-                         border: Border.all(color: Colors.white.withOpacity(0.08)),
+                         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                        ),
                        child: TextButton(
                          onPressed: _isLoading ? null : _handleGoogleSignIn,
@@ -724,7 +725,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
          border: Border.all(
            color: error 
                ? AppColors.errorRed 
-               : (focused ? AppColors.neonCyan : Colors.white.withOpacity(0.08)),
+               : (focused ? AppColors.neonCyan : Colors.white.withValues(alpha: 0.08)),
            width: 1.5,
          ),
        ),

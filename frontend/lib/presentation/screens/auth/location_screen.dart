@@ -118,7 +118,7 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
 
           if (_isLoading)
             Container(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
               child: const Center(
                 child: CircularProgressIndicator(color: AppColors.neonCyan),
               ),
@@ -153,7 +153,7 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
             'LocalSync establishes a localized community portal within a 2km radius of your neighborhood.',
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
               fontSize: 14,
               height: 1.5,
             ),
@@ -171,10 +171,10 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
               ),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.neonCyan.withOpacity(0.08),
+              backgroundColor: AppColors.neonCyan.withValues(alpha: 0.08),
               foregroundColor: AppColors.neonCyan,
               elevation: 0,
-              side: BorderSide(color: AppColors.neonCyan.withOpacity(0.4), width: 1.5),
+              side: BorderSide(color: AppColors.neonCyan.withValues(alpha: 0.4), width: 1.5),
               minimumSize: const Size(double.infinity, 56),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),

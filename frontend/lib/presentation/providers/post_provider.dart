@@ -8,7 +8,7 @@ final postRepositoryProvider = Provider<PostRepository>((ref) {
   return PostRepositoryImpl();
 });
 
-final feedPostsProvider = StreamProvider<List<PostEntity>>((ref) {
+final feedPostsProvider = StreamProvider.autoDispose<List<PostEntity>>((ref) {
   return ref.watch(postRepositoryProvider).getFeedPosts();
 });
 

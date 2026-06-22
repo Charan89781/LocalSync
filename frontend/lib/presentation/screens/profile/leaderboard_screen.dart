@@ -154,7 +154,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.07),
+                color: Colors.white.withValues(alpha: 0.07),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: Colors.white12),
               ),
@@ -188,7 +188,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
     final third = topThree.length > 2 ? topThree[2] : null;
 
     return SizedBox(
-      height: 220,
+      height: 250,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
@@ -234,11 +234,11 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
-                colors: [color.withOpacity(0.8), color],
+                colors: [color.withValues(alpha: 0.8), color],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              boxShadow: [BoxShadow(color: color.withOpacity(0.5), blurRadius: 16, spreadRadius: 2)],
+              boxShadow: [BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 16, spreadRadius: 2)],
               border: Border.all(color: AppColors.primaryNavy, width: 3),
             ),
             child: Center(
@@ -254,6 +254,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
             displayName.split(' ').first,
             style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 11),
             overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
           Text(
             user.trustScore.toStringAsFixed(1),
@@ -265,15 +266,15 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
             margin: const EdgeInsets.symmetric(horizontal: 8),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [color.withOpacity(0.15), color.withOpacity(0.05)],
+                colors: [color.withValues(alpha: 0.15), color.withValues(alpha: 0.05)],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
               border: Border(
-                top: BorderSide(color: color.withOpacity(0.4), width: 1.5),
-                left: BorderSide(color: color.withOpacity(0.2), width: 1),
-                right: BorderSide(color: color.withOpacity(0.2), width: 1),
+                top: BorderSide(color: color.withValues(alpha: 0.4), width: 1.5),
+                left: BorderSide(color: color.withValues(alpha: 0.2), width: 1),
+                right: BorderSide(color: color.withValues(alpha: 0.2), width: 1),
               ),
             ),
             child: Center(
@@ -313,11 +314,11 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: isMe
-                    ? AppColors.neonCyan.withOpacity(0.08)
-                    : Colors.white.withOpacity(0.04),
+                    ? AppColors.neonCyan.withValues(alpha: 0.08)
+                    : Colors.white.withValues(alpha: 0.04),
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
-                  color: isMe ? AppColors.neonCyan.withOpacity(0.4) : Colors.white.withOpacity(0.08),
+                  color: isMe ? AppColors.neonCyan.withValues(alpha: 0.4) : Colors.white.withValues(alpha: 0.08),
                   width: 1.5,
                 ),
               ),
@@ -328,9 +329,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: _rankColor(rank).withOpacity(0.15),
+                      color: _rankColor(rank).withValues(alpha: 0.15),
                       shape: BoxShape.circle,
-                      border: Border.all(color: _rankColor(rank).withOpacity(0.5), width: 1.5),
+                      border: Border.all(color: _rankColor(rank).withValues(alpha: 0.5), width: 1.5),
                     ),
                     child: Center(
                       child: Text(
@@ -351,7 +352,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: LinearGradient(
-                        colors: [AppColors.primaryBlue.withOpacity(0.7), AppColors.neonCyan.withOpacity(0.7)],
+                        colors: [AppColors.primaryBlue.withValues(alpha: 0.7), AppColors.neonCyan.withValues(alpha: 0.7)],
                       ),
                     ),
                     child: Center(
@@ -369,12 +370,16 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
                       children: [
                         Row(
                           children: [
-                            Text(
-                              displayName,
-                              style: GoogleFonts.inter(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 14,
+                            Flexible(
+                              child: Text(
+                                displayName,
+                                style: GoogleFonts.inter(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 14,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
                               ),
                             ),
                             if (isMe) ...[
@@ -382,9 +387,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: AppColors.neonCyan.withOpacity(0.2),
+                                  color: AppColors.neonCyan.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: AppColors.neonCyan.withOpacity(0.5)),
+                                  border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.5)),
                                 ),
                                 child: Text('You',
                                     style: GoogleFonts.inter(

@@ -133,7 +133,7 @@ class _CreateComplaintScreenState extends ConsumerState<CreateComplaintScreen> {
                           minimumSize: const Size(double.infinity, 60),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                           elevation: 5,
-                          shadowColor: AppColors.neonCyan.withOpacity(0.2),
+                          shadowColor: AppColors.neonCyan.withValues(alpha: 0.2),
                         ),
                         child: _isLoading
                             ? const CircularProgressIndicator(color: AppColors.primaryNavy)
@@ -170,9 +170,9 @@ class _CreateComplaintScreenState extends ConsumerState<CreateComplaintScreen> {
   Widget _buildDropdown() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.15), width: 1.5),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1.5),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: DropdownButtonHideUnderline(
@@ -205,9 +205,9 @@ class _CreateComplaintScreenState extends ConsumerState<CreateComplaintScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.15), width: 1.5),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1.5),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: TextFormField(

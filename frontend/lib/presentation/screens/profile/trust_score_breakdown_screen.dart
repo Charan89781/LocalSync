@@ -115,9 +115,9 @@ class TrustScoreBreakdownScreen extends ConsumerWidget {
                 child: Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
+                    color: Colors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(28),
-                    border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
                   ),
                   child: Row(
                     children: [
@@ -190,9 +190,9 @@ class TrustScoreBreakdownScreen extends ConsumerWidget {
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
+                        color: Colors.white.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.white.withOpacity(0.05), width: 1),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.05), width: 1),
                       ),
                       child: Row(
                         children: [

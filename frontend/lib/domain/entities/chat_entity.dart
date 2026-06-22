@@ -52,6 +52,8 @@ class MessageEntity {
 class ChatRoomEntity {
   final String id;
   final List<String> participants;
+  final List<String> pendingRequests;
+  final Map<String, String> kickedMembers;
   final String? lastMessage;
   final DateTime? lastMessageTime;
   final String? roomName;
@@ -60,10 +62,13 @@ class ChatRoomEntity {
   final bool isChannel;
   final String? category;
   final String? description;
+  final String? createdBy;
 
   ChatRoomEntity({
     required this.id,
     required this.participants,
+    this.pendingRequests = const [],
+    this.kickedMembers = const {},
     this.lastMessage,
     this.lastMessageTime,
     this.roomName,
@@ -72,11 +77,14 @@ class ChatRoomEntity {
     this.isChannel = false,
     this.category,
     this.description,
+    this.createdBy,
   });
 
   Map<String, dynamic> toMap() {
     return {
       'participants': participants,
+      'pendingRequests': pendingRequests,
+      'kickedMembers': kickedMembers,
       'lastMessage': lastMessage,
       'lastMessageTime': lastMessageTime?.toIso8601String(),
       'roomName': roomName,
@@ -85,6 +93,7 @@ class ChatRoomEntity {
       'isChannel': isChannel,
       'category': category,
       'description': description,
+      'createdBy': createdBy,
     };
   }
 
@@ -95,9 +104,19 @@ class ChatRoomEntity {
       return null;
     }
 
+    Map<String, String> parseKickedMembers(dynamic value) {
+      if (value == null) return {};
+      if (value is Map) {
+        return value.map((k, v) => MapEntry(k.toString(), v.toString()));
+      }
+      return {};
+    }
+
     return ChatRoomEntity(
       id: id,
       participants: List<String>.from(map['participants'] ?? []),
+      pendingRequests: List<String>.from(map['pendingRequests'] ?? []),
+      kickedMembers: parseKickedMembers(map['kickedMembers']),
       lastMessage: map['lastMessage'],
       lastMessageTime: parseDate(map['lastMessageTime']),
       roomName: map['roomName'],
@@ -106,6 +125,7 @@ class ChatRoomEntity {
       isChannel: map['isChannel'] ?? false,
       category: map['category'],
       description: map['description'],
+      createdBy: map['createdBy'],
     );
   }
 }

@@ -8,6 +8,7 @@ import '../../presentation/screens/chat/chat_list_screen.dart';
 import '../../presentation/screens/chat/chat_room_screen.dart';
 import '../../presentation/screens/chat/ai_assistant_screen.dart';
 import '../../presentation/screens/emergency/emergency_screen.dart';
+import '../../presentation/screens/dashboard/safety_check_screen.dart';
 import '../../presentation/screens/complaints/complaint_list_screen.dart';
 import '../../presentation/screens/complaints/create_complaint_screen.dart';
 import '../../presentation/screens/events/event_list_screen.dart';
@@ -28,25 +29,20 @@ import '../../presentation/screens/profile/support_screen.dart';
 import '../../presentation/providers/auth_provider.dart';
 import '../../presentation/screens/dashboard/weather_screen.dart';
 import '../../presentation/screens/dashboard/weather_alerts_screen.dart';
-import '../../presentation/screens/events/ridesync_screen.dart';
-import '../../presentation/screens/dashboard/ecosync_screen.dart';
 import '../../presentation/screens/dashboard/ar_screen.dart';
 import '../../presentation/screens/profile/leaderboard_screen.dart';
 import '../../presentation/screens/marketplace/add_item_screen.dart';
 import '../../presentation/screens/marketplace/my_listings_screen.dart';
 import '../../presentation/screens/marketplace/marketplace_requests_screen.dart';
 import '../../presentation/screens/marketplace/marketplace_history_screen.dart';
+import '../../presentation/screens/marketplace/marketplace_ledger_screen.dart';
 import '../../presentation/screens/rentals/add_space_screen.dart';
 import '../../presentation/screens/rentals/my_spaces_screen.dart';
 import '../../presentation/screens/rentals/space_bookings_screen.dart';
-import '../../presentation/screens/events/offer_ride_screen.dart';
-import '../../presentation/screens/events/my_rides_screen.dart';
-import '../../presentation/screens/events/ridesync_history_screen.dart';
-import '../../presentation/screens/dashboard/recycle_guide_screen.dart';
-import '../../presentation/screens/dashboard/solar_analytics_screen.dart';
 import '../../presentation/screens/help/create_help_request_screen.dart';
 import '../../presentation/screens/help/volunteer_history_screen.dart';
 import '../../presentation/screens/notice_board/create_notice_screen.dart';
+import '../../domain/entities/space_entity.dart';
 import '../../presentation/screens/complaints/my_complaints_screen.dart';
 import '../../presentation/screens/business/register_business_screen.dart';
 import '../../presentation/screens/profile/badge_details_screen.dart';
@@ -120,6 +116,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'trust-breakdown',
             builder: (context, state) => const TrustScoreBreakdownScreen(),
           ),
+          GoRoute(
+            path: 'trust-score',
+            builder: (context, state) => const TrustScoreBreakdownScreen(),
+          ),
+          GoRoute(
+            path: 'leaderboard',
+            builder: (context, state) => const LeaderboardScreen(),
+          ),
         ],
       ),
       GoRoute(
@@ -151,6 +155,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const EmergencyScreen(),
       ),
       GoRoute(
+        path: '/safety-check',
+        builder: (context, state) => const SafetyCheckScreen(),
+      ),
+      GoRoute(
         path: '/help',
         builder: (context, state) => const HelpRequestScreen(),
         routes: [
@@ -174,7 +182,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: 'add',
-            builder: (context, state) => const AddSpaceScreen(),
+            builder: (context, state) {
+              final space = state.extra as SpaceEntity?;
+              return AddSpaceScreen(space: space);
+            },
           ),
           GoRoute(
             path: 'my-spaces',
@@ -195,6 +206,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const MyComplaintsScreen(),
           ),
           GoRoute(
+            path: 'new',
+            builder: (context, state) => const CreateComplaintScreen(),
+          ),
+          GoRoute(
             path: ':complaintId',
             builder: (context, state) {
               final complaintId = state.pathParameters['complaintId'];
@@ -202,10 +217,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             },
           ),
         ],
-      ),
-      GoRoute(
-        path: '/complaints/new',
-        builder: (context, state) => const CreateComplaintScreen(),
       ),
       GoRoute(
         path: '/events',
@@ -230,7 +241,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: 'my-listings',
-            builder: (context, state) => const MyListingsScreen(),
+            builder: (context, state) => const MarketplaceLedgerScreen(initialTab: 0),
           ),
           GoRoute(
             path: 'requests',
@@ -239,6 +250,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'history',
             builder: (context, state) => const MarketplaceHistoryScreen(),
+          ),
+          GoRoute(
+            path: 'ledger',
+            builder: (context, state) {
+              final tabStr = state.uri.queryParameters['tab'];
+              final tab = tabStr != null ? int.tryParse(tabStr) ?? 0 : 0;
+              return MarketplaceLedgerScreen(initialTab: tab);
+            },
           ),
           GoRoute(
             path: ':itemId',
@@ -276,38 +295,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      GoRoute(
-        path: '/ridesync',
-        builder: (context, state) => const RideSyncScreen(),
-        routes: [
-          GoRoute(
-            path: 'offer',
-            builder: (context, state) => const OfferRideScreen(),
-          ),
-          GoRoute(
-            path: 'my-rides',
-            builder: (context, state) => const MyRidesScreen(),
-          ),
-          GoRoute(
-            path: 'history',
-            builder: (context, state) => const RideSyncHistoryScreen(),
-          ),
-        ],
-      ),
-      GoRoute(
-        path: '/ecosync',
-        builder: (context, state) => const EcoSyncScreen(),
-        routes: [
-          GoRoute(
-            path: 'recycle-guide',
-            builder: (context, state) => const RecycleGuideScreen(),
-          ),
-          GoRoute(
-            path: 'solar-analytics',
-            builder: (context, state) => const SolarAnalyticsScreen(),
-          ),
-        ],
-      ),
+
       GoRoute(
         path: '/ar',
         builder: (context, state) => const ArScreen(),

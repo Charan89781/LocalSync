@@ -49,4 +49,12 @@ class BusinessRepositoryImpl implements BusinessRepository {
         .map((doc) => InquiryEntity.fromMap(doc.data(), doc.id))
         .toList());
   }
+
+  @override
+  Future<void> respondToInquiry(String inquiryId, String responseMessage) async {
+    await _db.collection('businessInquiries').doc(inquiryId).update({
+      'responseMessage': responseMessage,
+      'isResponded': true,
+    });
+  }
 }

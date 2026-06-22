@@ -12,7 +12,7 @@ class ChatRepositoryImpl implements ChatRepository {
           .map((doc) => ChatRoomEntity.fromMap(doc.data(), doc.id))
           .toList();
 
-      final rooms = list.where((room) => room.participants.contains(userId) || room.isChannel).toList();
+      final rooms = list.where((room) => room.participants.contains(userId) || room.isChannel || room.isGroup).toList();
 
       // Sort in memory: most recent first
       rooms.sort((a, b) {
@@ -57,13 +57,25 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Future<String> createChatRoom(List<String> participants,
-      {String? name, bool isGroup = false}) async {
+  Future<String> createChatRoom(
+    List<String> participants, {
+    String? name,
+    bool isGroup = false,
+    String? category,
+    String? description,
+    bool isChannel = false,
+    String? createdBy,
+  }) async {
     final doc = await _db.collection('chatRooms').add({
       'participants': participants,
       'roomName': name,
       'isGroup': isGroup,
+      'isChannel': isChannel,
+      'category': category ?? 'Community',
+      'description': description ?? 'Tap to chat with neighbors',
+      'lastMessage': 'Welcome to the room!',
       'lastMessageTime': FieldValue.serverTimestamp(),
+      'createdBy': createdBy,
     });
     return doc.id;
   }

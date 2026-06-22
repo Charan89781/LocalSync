@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../domain/entities/post_entity.dart';
+import '../../../core/services/location_service.dart';
 import '../../providers/post_provider.dart';
 import '../../providers/auth_provider.dart';
 
@@ -94,7 +96,7 @@ class _CreateHelpRequestScreenState
                             icon: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.08),
+                                color: Colors.white.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -182,13 +184,13 @@ class _CreateHelpRequestScreenState
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                const Color(0xFFFF9500).withOpacity(0.12),
-                const Color(0xFFFF6B35).withOpacity(0.06),
+                const Color(0xFFFF9500).withValues(alpha: 0.12),
+                const Color(0xFFFF6B35).withValues(alpha: 0.06),
               ],
             ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: const Color(0xFFFF9500).withOpacity(0.25),
+              color: const Color(0xFFFF9500).withValues(alpha: 0.25),
               width: 1.5,
             ),
           ),
@@ -197,7 +199,7 @@ class _CreateHelpRequestScreenState
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFF9500).withOpacity(0.15),
+                  color: const Color(0xFFFF9500).withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.volunteer_activism_rounded,
@@ -262,13 +264,13 @@ class _CreateHelpRequestScreenState
             duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(
               color: isSelected
-                  ? (cat['color'] as Color).withOpacity(0.18)
-                  : Colors.white.withOpacity(0.04),
+                  ? (cat['color'] as Color).withValues(alpha: 0.18)
+                  : Colors.white.withValues(alpha: 0.04),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isSelected
-                    ? (cat['color'] as Color).withOpacity(0.6)
-                    : Colors.white.withOpacity(0.08),
+                    ? (cat['color'] as Color).withValues(alpha: 0.6)
+                    : Colors.white.withValues(alpha: 0.08),
                 width: isSelected ? 2 : 1,
               ),
             ),
@@ -313,13 +315,13 @@ class _CreateHelpRequestScreenState
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? (level['color'] as Color).withOpacity(0.18)
-                    : Colors.white.withOpacity(0.04),
+                    ? (level['color'] as Color).withValues(alpha: 0.18)
+                    : Colors.white.withValues(alpha: 0.04),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isSelected
                       ? (level['color'] as Color)
-                      : Colors.white.withOpacity(0.08),
+                      : Colors.white.withValues(alpha: 0.08),
                   width: isSelected ? 1.5 : 1,
                 ),
               ),
@@ -354,9 +356,9 @@ class _CreateHelpRequestScreenState
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
       ),
       child: TextFormField(
         controller: controller,
@@ -387,7 +389,7 @@ class _CreateHelpRequestScreenState
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFF9500).withOpacity(0.3),
+              color: const Color(0xFFFF9500).withValues(alpha: 0.3),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -425,6 +427,15 @@ class _CreateHelpRequestScreenState
     if (user == null) return;
     setState(() => _isSubmitting = true);
 
+    Position? position;
+    String? address;
+    try {
+      position = await ref.read(locationServiceProvider).getCurrentLocation();
+      address = await ref.read(locationServiceProvider).getAddressFromLatLng(position);
+    } catch (e) {
+      debugPrint('Location capture failed: $e');
+    }
+
     try {
       final newPost = PostEntity(
         id: '',
@@ -439,6 +450,9 @@ class _CreateHelpRequestScreenState
         commentsCount: 0,
         likedBy: [],
         helpStatus: HelpStatus.open,
+        latitude: position?.latitude,
+        longitude: position?.longitude,
+        locationLabel: address,
       );
 
       await ref.read(postRepositoryProvider).createPost(newPost);

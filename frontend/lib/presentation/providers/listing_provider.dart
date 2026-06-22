@@ -25,3 +25,8 @@ final incomingRequestsProvider = StreamProvider<List<BorrowRequestEntity>>((ref)
   if (user == null) return Stream.value([]);
   return ref.watch(listingRepositoryProvider).getIncomingRequests(user.id);
 });
+
+// Streams all borrow requests for a specific listing (owner view)
+final listingRequestsProvider = StreamProvider.family<List<BorrowRequestEntity>, String>((ref, listingId) {
+  return ref.watch(listingRepositoryProvider).getRequestsForListing(listingId);
+});

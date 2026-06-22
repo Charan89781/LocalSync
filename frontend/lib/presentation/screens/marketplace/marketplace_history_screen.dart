@@ -93,12 +93,12 @@ class MarketplaceHistoryScreen extends ConsumerWidget {
                           margin: const EdgeInsets.only(bottom: 16),
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.05),
+                            color: Colors.white.withValues(alpha: 0.05),
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(
                               color: isAccepted
-                                  ? AppColors.successGreen.withOpacity(0.15)
-                                  : AppColors.errorRed.withOpacity(0.15),
+                                  ? AppColors.successGreen.withValues(alpha: 0.15)
+                                  : AppColors.errorRed.withValues(alpha: 0.15),
                               width: 1.5,
                             ),
                           ),
@@ -109,8 +109,8 @@ class MarketplaceHistoryScreen extends ConsumerWidget {
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
                                   color: isIncoming
-                                      ? AppColors.neonCyan.withOpacity(0.1)
-                                      : Colors.purple.withOpacity(0.1),
+                                      ? AppColors.neonCyan.withValues(alpha: 0.1)
+                                      : Colors.purple.withValues(alpha: 0.1),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(

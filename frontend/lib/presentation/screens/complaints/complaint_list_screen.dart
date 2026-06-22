@@ -136,16 +136,14 @@ class _MyTrackerTab extends ConsumerWidget {
 
     return complaintsAsync.when(
       data: (complaints) {
-        final myComplaints =
-            complaints.where((c) => c.userId == user.id).toList();
-        return myComplaints.isEmpty
+        return complaints.isEmpty
             ? _buildEmptyState('You haven\'t raised any issues yet.')
             : ListView.builder(
                 padding: const EdgeInsets.all(24),
                 physics: const BouncingScrollPhysics(),
-                itemCount: myComplaints.length,
+                itemCount: complaints.length,
                 itemBuilder: (context, index) => _ComplaintCard(
-                    complaint: myComplaints[index],
+                    complaint: complaints[index],
                     currentUserId: user.id,
                     isTracker: true),
               );
@@ -215,9 +213,9 @@ class _ComplaintCard extends ConsumerWidget {
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.06),
+                color: Colors.white.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -252,7 +250,7 @@ class _ComplaintCard extends ConsumerWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                          color: Colors.white.withOpacity(0.65),
+                          color: Colors.white.withValues(alpha: 0.65),
                           fontSize: 14)),
                   const SizedBox(height: 20),
                   Row(
@@ -317,7 +315,7 @@ class _ComplaintCard extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(label,
@@ -345,9 +343,9 @@ class _ComplaintCard extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-          color: color.withOpacity(0.15),
+          color: color.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3), width: 1)),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1)),
       child: Text(status.name.toUpperCase(),
           style: TextStyle(
               color: color, fontSize: 10, fontWeight: FontWeight.w900)),
@@ -367,8 +365,8 @@ class _ComplaintCard extends ConsumerWidget {
           child: Container(
             height: MediaQuery.of(context).size.height * 0.85,
             decoration: BoxDecoration(
-                color: AppColors.primaryNavy.withOpacity(0.9),
-                border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
+                color: AppColors.primaryNavy.withValues(alpha: 0.9),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(40))),
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -404,7 +402,7 @@ class _ComplaintCard extends ConsumerWidget {
                   Text(complaint.description,
                       style: TextStyle(
                           fontSize: 16,
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                           height: 1.6)),
                   const SizedBox(height: 32),
                   const Text('Resolution Timeline',
@@ -426,7 +424,7 @@ class _ComplaintCard extends ConsumerWidget {
                             backgroundColor: Colors.green));
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.greenAccent.withOpacity(0.1),
+                        backgroundColor: Colors.greenAccent.withValues(alpha: 0.1),
                         foregroundColor: Colors.greenAccent,
                         minimumSize: const Size(double.infinity, 64),
                         shape: RoundedRectangleBorder(
@@ -482,7 +480,7 @@ class _ComplaintCard extends ConsumerWidget {
                 const SizedBox(height: 6),
                 Text(update.message,
                     style: TextStyle(
-                        fontSize: 14, color: Colors.white.withOpacity(0.9), height: 1.4)),
+                        fontSize: 14, color: Colors.white.withValues(alpha: 0.9), height: 1.4)),
               ],
             ),
           ),
@@ -508,9 +506,9 @@ class _VerificationCard extends ConsumerWidget {
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.06),
+              color: Colors.white.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -518,7 +516,7 @@ class _VerificationCard extends ConsumerWidget {
                 Row(
                   children: [
                     CircleAvatar(
-                      backgroundColor: AppColors.neonCyan.withOpacity(0.2),
+                      backgroundColor: AppColors.neonCyan.withValues(alpha: 0.2),
                       foregroundColor: AppColors.neonCyan,
                       child: Text(request.userName[0]),
                     ),

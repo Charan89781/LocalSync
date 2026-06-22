@@ -116,14 +116,14 @@ class _NotificationCenterScreenState extends ConsumerState<NotificationCenterScr
               decoration: BoxDecoration(
                 color: AppColors.surfaceNavy,
                 borderRadius: BorderRadius.circular(25),
-                border: Border.all(color: Colors.white.withOpacity(0.04)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
               ),
               child: TabBar(
                 controller: _tabController,
                 indicator: BoxDecoration(
                   borderRadius: BorderRadius.circular(25),
-                  color: AppColors.neonCyan.withOpacity(0.12),
-                  border: Border.all(color: AppColors.neonCyan.withOpacity(0.3), width: 1),
+                  color: AppColors.neonCyan.withValues(alpha: 0.12),
+                  border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.3), width: 1),
                 ),
                 labelColor: Colors.white,
                 unselectedLabelColor: Colors.white38,
@@ -174,7 +174,7 @@ class _NotificationCenterScreenState extends ConsumerState<NotificationCenterScr
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.02),
+                color: Colors.white.withValues(alpha: 0.02),
               ),
               child: const Icon(Icons.notifications_off_outlined, size: 48, color: Colors.white24),
             ),
@@ -209,7 +209,7 @@ class _NotificationCenterScreenState extends ConsumerState<NotificationCenterScr
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.only(right: 24),
             decoration: BoxDecoration(
-              color: AppColors.errorRed.withOpacity(0.12),
+              color: AppColors.errorRed.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Icon(Icons.delete_outline_rounded, color: AppColors.errorRed),
@@ -225,7 +225,7 @@ class _NotificationCenterScreenState extends ConsumerState<NotificationCenterScr
               child: GlassCard(
                 borderRadius: 20,
                 padding: const EdgeInsets.all(16),
-                borderColor: !item.isRead ? AppColors.neonCyan.withOpacity(0.3) : null,
+                borderColor: !item.isRead ? AppColors.neonCyan.withValues(alpha: 0.3) : null,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -233,7 +233,7 @@ class _NotificationCenterScreenState extends ConsumerState<NotificationCenterScr
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: _getTypeColor(item.type).withOpacity(0.08),
+                        color: _getTypeColor(item.type).withValues(alpha: 0.08),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(_getTypeIcon(item.type), color: _getTypeColor(item.type), size: 20),

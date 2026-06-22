@@ -8,4 +8,6 @@ abstract class EventRepository {
   Future<void> addEventDiscussion(
       String eventId, String userId, String userName, String message);
   Stream<List<Map<String, dynamic>>> getEventDiscussions(String eventId);
+  Future<void> cancelRsvpToEvent(String eventId, String userId);
+  Future<void> deleteEvent(String eventId);
 }

@@ -316,10 +316,10 @@ class _WeatherAlertsScreenState extends ConsumerState<WeatherAlertsScreen>
                 child: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.08),
+                    color: Colors.white.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                        color: Colors.white.withOpacity(0.15), width: 1),
+                        color: Colors.white.withValues(alpha: 0.15), width: 1),
                   ),
                   child: const Icon(Icons.arrow_back_ios_new_rounded,
                       color: Colors.white, size: 16),
@@ -344,7 +344,7 @@ class _WeatherAlertsScreenState extends ConsumerState<WeatherAlertsScreen>
                 Text(
                   count > 0 ? '$count active alerts in your area' : 'No active alerts',
                   style: GoogleFonts.inter(
-                    color: Colors.white.withOpacity(0.5),
+                    color: Colors.white.withValues(alpha: 0.5),
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -362,12 +362,12 @@ class _WeatherAlertsScreenState extends ConsumerState<WeatherAlertsScreen>
                 height: 10,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFFFF3B30).withOpacity(
+                  color: const Color(0xFFFF3B30).withValues(alpha: 
                       0.5 + 0.5 * _headerPulse.value),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFFFF3B30)
-                          .withOpacity(0.5 * _headerPulse.value),
+                          .withValues(alpha: 0.5 * _headerPulse.value),
                       blurRadius: 12,
                       spreadRadius: 2,
                     ),
@@ -419,13 +419,13 @@ class _WeatherAlertsScreenState extends ConsumerState<WeatherAlertsScreen>
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? chipColor.withOpacity(0.2)
-                    : Colors.white.withOpacity(0.05),
+                    ? chipColor.withValues(alpha: 0.2)
+                    : Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: isSelected
                       ? chipColor
-                      : Colors.white.withOpacity(0.12),
+                      : Colors.white.withValues(alpha: 0.12),
                   width: isSelected ? 1.5 : 1,
                 ),
               ),
@@ -446,7 +446,7 @@ class _WeatherAlertsScreenState extends ConsumerState<WeatherAlertsScreen>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: chipColor.withOpacity(isSelected ? 0.3 : 0.15),
+                        color: chipColor.withValues(alpha: isSelected ? 0.3 : 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
@@ -480,7 +480,7 @@ class _WeatherAlertsScreenState extends ConsumerState<WeatherAlertsScreen>
               Container(
                 padding: const EdgeInsets.all(28),
                 decoration: BoxDecoration(
-                  color: AppColors.neonGreen.withOpacity(0.1),
+                  color: AppColors.neonGreen.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -503,7 +503,7 @@ class _WeatherAlertsScreenState extends ConsumerState<WeatherAlertsScreen>
                 'No weather alerts for the selected category.\nYour area is currently safe.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
-                  color: Colors.white.withOpacity(0.5),
+                  color: Colors.white.withValues(alpha: 0.5),
                   fontSize: 14,
                   height: 1.6,
                 ),
@@ -605,12 +605,12 @@ class _AlertCardState extends State<_AlertCard> {
           color: AppColors.secondaryNavy,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: widget.severityColor.withOpacity(0.35),
+            color: widget.severityColor.withValues(alpha: 0.35),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: widget.severityColor.withOpacity(0.12),
+              color: widget.severityColor.withValues(alpha: 0.12),
               blurRadius: 20,
               offset: const Offset(0, 6),
             ),
@@ -625,7 +625,7 @@ class _AlertCardState extends State<_AlertCard> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    widget.severityColor.withOpacity(0.2),
+                    widget.severityColor.withValues(alpha: 0.2),
                     Colors.transparent,
                   ],
                   begin: Alignment.centerLeft,
@@ -644,7 +644,7 @@ class _AlertCardState extends State<_AlertCard> {
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: [
                         BoxShadow(
-                          color: widget.severityColor.withOpacity(0.4),
+                          color: widget.severityColor.withValues(alpha: 0.4),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -667,10 +667,10 @@ class _AlertCardState extends State<_AlertCard> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: widget.severityColor.withOpacity(0.2),
+                                color: widget.severityColor.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: widget.severityColor.withOpacity(0.5),
+                                  color: widget.severityColor.withValues(alpha: 0.5),
                                   width: 1,
                                 ),
                               ),
@@ -688,7 +688,7 @@ class _AlertCardState extends State<_AlertCard> {
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           color: widget.severityColor
-                                              .withOpacity(0.5 +
+                                              .withValues(alpha: 0.5 +
                                                   0.5 *
                                                       widget.pulseController
                                                           .value),
@@ -748,7 +748,7 @@ class _AlertCardState extends State<_AlertCard> {
                         child: Text(
                           widget.alert.areaAffected,
                           style: GoogleFonts.inter(
-                            color: Colors.white.withOpacity(0.5),
+                            color: Colors.white.withValues(alpha: 0.5),
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
@@ -759,7 +759,7 @@ class _AlertCardState extends State<_AlertCard> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.06),
+                          color: Colors.white.withValues(alpha: 0.06),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -793,7 +793,7 @@ class _AlertCardState extends State<_AlertCard> {
                           Text(
                             widget.alert.description,
                             style: GoogleFonts.inter(
-                              color: Colors.white.withOpacity(0.75),
+                              color: Colors.white.withValues(alpha: 0.75),
                               fontSize: 13,
                               height: 1.65,
                               fontWeight: FontWeight.w500,

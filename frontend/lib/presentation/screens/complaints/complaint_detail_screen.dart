@@ -57,52 +57,7 @@ class _ComplaintDetailScreenState extends ConsumerState<ComplaintDetailScreen> {
     });
   }
 
-  Future<void> _markResolved(ComplaintEntity complaint) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.secondaryNavy,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text('Resolve Issue?', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
-        content: Text(
-          'Are you sure you want to mark this civic complaint as resolved? This will close the tracking timeline.',
-          style: GoogleFonts.inter(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel', style: GoogleFonts.inter(color: Colors.white30)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.greenAccent,
-              foregroundColor: AppColors.primaryNavy,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: Text('Resolve', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
 
-    if (confirm == true && mounted) {
-      HapticFeedback.mediumImpact();
-      await ref.read(complaintRepositoryProvider).updateComplaintStatus(
-            complaint.id,
-            ComplaintStatus.resolved,
-            'Issue marked resolved & closed by the reporter.',
-          );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Complaint successfully resolved!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -166,7 +121,7 @@ class _ComplaintDetailScreenState extends ConsumerState<ComplaintDetailScreen> {
                   height: 250,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.errorRed.withOpacity(0.03),
+                    color: AppColors.errorRed.withValues(alpha: 0.03),
                   ),
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 70, sigmaY: 70),
@@ -185,7 +140,7 @@ class _ComplaintDetailScreenState extends ConsumerState<ComplaintDetailScreen> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             // Header Title Card
-                            _buildHeaderCard(complaint, isSupporting, user.id),
+                            _buildHeaderCard(complaint, isSupporting, user.id, isOwner),
                             const SizedBox(height: 24),
 
                             // Dynamic Timeline Status Tracker
@@ -224,38 +179,9 @@ class _ComplaintDetailScreenState extends ConsumerState<ComplaintDetailScreen> {
                               const SizedBox(height: 28),
                             ],
 
-                            // Mark Resolved Button (Visible only to ticket creator or administrators when not already resolved)
-                            if ((isOwner || isAdmin) && complaint.status != ComplaintStatus.resolved) ...[
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.greenAccent.withOpacity(0.06),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: Colors.greenAccent.withOpacity(0.2)),
-                                ),
-                                child: TextButton(
-                                  onPressed: () => _markResolved(complaint),
-                                  style: TextButton.styleFrom(
-                                    minimumSize: const Size(double.infinity, 60),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      const Icon(Icons.check_circle_outline_rounded, color: Colors.greenAccent, size: 20),
-                                      const SizedBox(width: 12),
-                                      Text(
-                                        'MARK AS RESOLVED',
-                                        style: GoogleFonts.inter(
-                                          color: Colors.greenAccent,
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 14,
-                                          letterSpacing: 1,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
+                            // Admin Status Control Panel (Visible only to administrators)
+                            if (isAdmin && complaint.status != ComplaintStatus.resolved) ...[
+                              _buildAdminControlPanel(complaint),
                               const SizedBox(height: 32),
                             ],
 
@@ -288,42 +214,73 @@ class _ComplaintDetailScreenState extends ConsumerState<ComplaintDetailScreen> {
     );
   }
 
-  Widget _buildHeaderCard(ComplaintEntity complaint, bool isSupporting, String userId) {
+  Widget _buildHeaderCard(ComplaintEntity complaint, bool isSupporting, String userId, bool isOwner) {
     return GlassCard(
       borderRadius: 24,
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 12,
+            runSpacing: 12,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: AppColors.neonCyan.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.neonCyan.withOpacity(0.2)),
-                ),
-                child: Text(
-                  complaint.category.toUpperCase(),
-                  style: GoogleFonts.outfit(
-                    color: AppColors.neonCyan,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1,
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: AppColors.neonCyan.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.2)),
+                    ),
+                    child: Text(
+                      complaint.category.toUpperCase(),
+                      style: GoogleFonts.outfit(
+                        color: AppColors.neonCyan,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1,
+                      ),
+                    ),
                   ),
-                ),
+                  if (isOwner) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.orangeAccent.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        'YOUR TICKET (REPORTER)',
+                        style: GoogleFonts.inter(
+                          color: Colors.orangeAccent,
+                          fontSize: 8,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
                     icon: Icon(
                       isSupporting ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                      color: isSupporting ? Colors.redAccent : Colors.white60,
+                      color: isOwner
+                          ? Colors.white10
+                          : (isSupporting ? Colors.redAccent : Colors.white60),
                       size: 20,
                     ),
-                    onPressed: () => _toggleUpvote(complaint, userId),
+                    onPressed: isOwner ? null : () => _toggleUpvote(complaint, userId),
                   ),
                   Text(
                     '${complaint.supportUserIds.length} supports',
@@ -351,7 +308,7 @@ class _ComplaintDetailScreenState extends ConsumerState<ComplaintDetailScreen> {
           Text(
             complaint.description,
             style: GoogleFonts.inter(
-              color: Colors.white.withOpacity(0.65),
+              color: Colors.white.withValues(alpha: 0.65),
               fontSize: 13,
               height: 1.5,
             ),
@@ -439,15 +396,20 @@ class _ComplaintDetailScreenState extends ConsumerState<ComplaintDetailScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        title.toUpperCase(),
-                        style: GoogleFonts.outfit(
-                          color: isCompleted ? Colors.white : Colors.white30,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.5,
+                      Expanded(
+                        child: Text(
+                          title.toUpperCase(),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.outfit(
+                            color: isCompleted ? Colors.white : Colors.white30,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                          ),
                         ),
                       ),
+                      const SizedBox(width: 8),
                       Text(
                         date,
                         style: GoogleFonts.inter(
@@ -488,7 +450,7 @@ class _ComplaintDetailScreenState extends ConsumerState<ComplaintDetailScreen> {
             margin: const EdgeInsets.only(right: 12),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withOpacity(0.08)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
@@ -507,9 +469,9 @@ class _ComplaintDetailScreenState extends ConsumerState<ComplaintDetailScreen> {
   Widget _buildAuthorityCard(ComplaintEntity complaint) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.primaryBlue.withOpacity(0.06),
+        color: AppColors.primaryBlue.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.primaryBlue.withOpacity(0.2)),
+        border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.2)),
       ),
       padding: const EdgeInsets.all(20),
       child: Row(
@@ -518,7 +480,7 @@ class _ComplaintDetailScreenState extends ConsumerState<ComplaintDetailScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppColors.primaryBlue.withOpacity(0.12),
+              color: AppColors.primaryBlue.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.shield_outlined, color: AppColors.primaryBlue, size: 22),
@@ -541,7 +503,7 @@ class _ComplaintDetailScreenState extends ConsumerState<ComplaintDetailScreen> {
                 Text(
                   'Assigned Authority: ${complaint.assignedAuthority ?? "Utility Supervisor"}. Active operations are underway to resolve the issue as reported.',
                   style: GoogleFonts.inter(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 13,
                     height: 1.4,
                   ),
@@ -606,7 +568,7 @@ class _ComplaintDetailScreenState extends ConsumerState<ComplaintDetailScreen> {
                           children: [
                             CircleAvatar(
                               radius: 12,
-                              backgroundColor: AppColors.neonCyan.withOpacity(0.12),
+                              backgroundColor: AppColors.neonCyan.withValues(alpha: 0.12),
                               child: Text(
                                 sender.isNotEmpty ? sender[0].toUpperCase() : 'N',
                                 style: GoogleFonts.outfit(color: AppColors.neonCyan, fontSize: 10, fontWeight: FontWeight.bold),
@@ -645,7 +607,7 @@ class _ComplaintDetailScreenState extends ConsumerState<ComplaintDetailScreen> {
       decoration: BoxDecoration(
         color: AppColors.surfaceNavy,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
@@ -673,5 +635,190 @@ class _ComplaintDetailScreenState extends ConsumerState<ComplaintDetailScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildAdminControlPanel(ComplaintEntity complaint) {
+    return GlassCard(
+      borderRadius: 24,
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.admin_panel_settings_rounded, color: AppColors.neonCyan, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'ADMIN CONSOLE CONTROLS',
+                style: GoogleFonts.outfit(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.neonCyan,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Change resolution status and update resident timeline:',
+            style: GoogleFonts.inter(color: Colors.white70, fontSize: 12),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              _buildAdminActionButton(
+                label: 'IN PROGRESS',
+                icon: Icons.rotate_right_rounded,
+                color: AppColors.neonCyan,
+                onPressed: () => _showStatusUpdateDialog(complaint, ComplaintStatus.inProgress),
+              ),
+              _buildAdminActionButton(
+                label: 'RESOLVE',
+                icon: Icons.check_circle_outline_rounded,
+                color: Colors.greenAccent,
+                onPressed: () => _showStatusUpdateDialog(complaint, ComplaintStatus.resolved),
+              ),
+              _buildAdminActionButton(
+                label: 'REJECT',
+                icon: Icons.cancel_outlined,
+                color: Colors.redAccent,
+                onPressed: () => _showStatusUpdateDialog(complaint, ComplaintStatus.rejected),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdminActionButton({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: TextButton.icon(
+        onPressed: onPressed,
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+        icon: Icon(icon, color: color, size: 16),
+        label: Text(
+          label,
+          style: GoogleFonts.inter(
+            color: color,
+            fontWeight: FontWeight.w800,
+            fontSize: 12,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showStatusUpdateDialog(ComplaintEntity complaint, ComplaintStatus status) async {
+    final statusStr = status == ComplaintStatus.inProgress
+        ? 'In Progress'
+        : (status == ComplaintStatus.resolved ? 'Resolved' : 'Rejected');
+    
+    final defaultMsg = status == ComplaintStatus.inProgress
+        ? 'Issue marked in progress. Authority team assigned.'
+        : (status == ComplaintStatus.resolved 
+            ? 'Issue marked resolved & closed by the Administrator.' 
+            : 'Issue rejected by Administrator.');
+
+    final messageController = TextEditingController(text: defaultMsg);
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.secondaryNavy,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          'Update Status to ${statusStr.toUpperCase()}?', 
+          style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Enter a timeline update message to notify residents:',
+              style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surfaceNavy,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: TextField(
+                controller: messageController,
+                maxLines: 3,
+                style: GoogleFonts.inter(color: Colors.white, fontSize: 13),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  hintText: 'Type resolution message...',
+                  hintStyle: TextStyle(color: Colors.white30),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel', style: GoogleFonts.inter(color: Colors.white30)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: status == ComplaintStatus.resolved
+                  ? Colors.greenAccent
+                  : (status == ComplaintStatus.rejected ? Colors.redAccent : AppColors.neonCyan),
+              foregroundColor: AppColors.primaryNavy,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text('Update', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      HapticFeedback.mediumImpact();
+      final finalMsg = messageController.text.trim().isEmpty 
+          ? defaultMsg 
+          : messageController.text.trim();
+
+      await ref.read(complaintRepositoryProvider).updateComplaintStatus(
+            complaint.id,
+            status,
+            finalMsg,
+          );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Status successfully updated to $statusStr!'),
+            backgroundColor: status == ComplaintStatus.resolved
+                ? Colors.green
+                : (status == ComplaintStatus.rejected ? Colors.red : AppColors.primaryBlue),
+          ),
+        );
+      }
+    }
+    messageController.dispose();
   }
 }

@@ -81,9 +81,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                 decoration: BoxDecoration(
-                                  color: AppColors.neonCyan.withOpacity(0.08),
+                                  color: AppColors.neonCyan.withValues(alpha: 0.08),
                                   borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: AppColors.neonCyan.withOpacity(0.2)),
+                                  border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.2)),
                                 ),
                                 child: Row(
                                   children: [
@@ -104,7 +104,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: Colors.greenAccent.withOpacity(0.08),
+                                  color: Colors.greenAccent.withValues(alpha: 0.08),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
@@ -218,9 +218,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryNavy.withOpacity(0.7),
+                          color: AppColors.primaryNavy.withValues(alpha: 0.7),
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white.withOpacity(0.12)),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
                         ),
                         child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 16),
                       ),
@@ -233,9 +233,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryNavy.withOpacity(0.7),
+                          color: AppColors.primaryNavy.withValues(alpha: 0.7),
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white.withOpacity(0.12)),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
                         ),
                         child: Icon(
                           _isLiked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
@@ -279,7 +279,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               gradient: LinearGradient(
                 colors: [
                   AppColors.primaryNavy,
-                  AppColors.primaryNavy.withOpacity(0.0),
+                  AppColors.primaryNavy.withValues(alpha: 0.0),
                 ],
                 begin: Alignment.bottomCenter,
                 end: Alignment.topCenter,
@@ -425,7 +425,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               Text(
                 value,
                 style: GoogleFonts.inter(
-                  color: Colors.white.withOpacity(0.85),
+                  color: Colors.white.withValues(alpha: 0.85),
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
@@ -446,7 +446,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             height: 70,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withOpacity(0.06)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
@@ -615,9 +615,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.04),
+                    color: Colors.white.withValues(alpha: 0.04),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withOpacity(0.08)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                   ),
                   child: TextField(
                     controller: commentCtrl,
@@ -627,6 +627,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       hintText: 'Share your experience...',
                       hintStyle: TextStyle(color: Colors.white24, fontSize: 13),
                       border: InputBorder.none,
+                      filled: false,
+                      fillColor: Colors.transparent,
                     ),
                   ),
                 ),

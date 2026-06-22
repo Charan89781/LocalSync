@@ -24,6 +24,9 @@ class PostEntity {
   final String? helperId;
   final String? helperName;
   final List<String> willingToHelp;
+  final double? latitude;
+  final double? longitude;
+  final bool isSending;
 
   PostEntity({
     required this.id,
@@ -44,6 +47,9 @@ class PostEntity {
     this.helperId,
     this.helperName,
     this.willingToHelp = const [],
+    this.latitude,
+    this.longitude,
+    this.isSending = false,
   });
 
   int get likes => likedBy.length;
@@ -67,6 +73,9 @@ class PostEntity {
     String? helperId,
     String? helperName,
     List<String>? willingToHelp,
+    double? latitude,
+    double? longitude,
+    bool? isSending,
   }) {
     return PostEntity(
       id: id ?? this.id,
@@ -87,6 +96,9 @@ class PostEntity {
       helperId: helperId ?? this.helperId,
       helperName: helperName ?? this.helperName,
       willingToHelp: willingToHelp ?? this.willingToHelp,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      isSending: isSending ?? this.isSending,
     );
   }
 
@@ -109,6 +121,8 @@ class PostEntity {
       'helperId': helperId,
       'helperName': helperName,
       'willingToHelp': willingToHelp,
+      'latitude': latitude,
+      'longitude': longitude,
     };
   }
 
@@ -142,6 +156,8 @@ class PostEntity {
       helperId: map['helperId'],
       helperName: map['helperName'],
       willingToHelp: List<String>.from(map['willingToHelp'] ?? []),
+      latitude: map['latitude'] != null ? (map['latitude'] as num).toDouble() : null,
+      longitude: map['longitude'] != null ? (map['longitude'] as num).toDouble() : null,
     );
   }
 }

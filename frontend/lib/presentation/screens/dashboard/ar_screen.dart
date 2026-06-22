@@ -112,7 +112,7 @@ class _ArScreenState extends ConsumerState<ArScreen> with SingleTickerProviderSt
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.neonCyan.withOpacity(0.08),
+                color: AppColors.neonCyan.withValues(alpha: 0.08),
               ),
               child: const Icon(
                 Icons.camera_outlined,
@@ -256,9 +256,9 @@ class _ArScreenState extends ConsumerState<ArScreen> with SingleTickerProviderSt
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.08),
+                color: color.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
-                border: Border.all(color: color.withOpacity(0.2), width: 1),
+                border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
               ),
               child: Icon(icon, color: color, size: 20),
             ),
@@ -335,10 +335,10 @@ class _ArScreenState extends ConsumerState<ArScreen> with SingleTickerProviderSt
                 padding: const EdgeInsets.symmetric(horizontal: 18),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.neonCyan.withOpacity(0.16) : Colors.white.withOpacity(0.03),
+                  color: isSelected ? AppColors.neonCyan.withValues(alpha: 0.16) : Colors.white.withValues(alpha: 0.03),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: isSelected ? AppColors.neonCyan : Colors.white.withOpacity(0.08),
+                    color: isSelected ? AppColors.neonCyan : Colors.white.withValues(alpha: 0.08),
                     width: 1.5,
                   ),
                 ),
@@ -406,7 +406,7 @@ class RadarSweepPainter extends CustomPainter {
     final maxRadius = math.min(size.width, size.height) * 0.45;
 
     final paintRings = Paint()
-      ..color = Colors.white.withOpacity(0.04)
+      ..color = Colors.white.withValues(alpha: 0.04)
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
 
@@ -420,8 +420,8 @@ class RadarSweepPainter extends CustomPainter {
     final paintSweep = Paint()
       ..shader = RadialGradient(
         colors: [
-          color.withOpacity(0.2),
-          color.withOpacity(0.0),
+          color.withValues(alpha: 0.2),
+          color.withValues(alpha: 0.0),
         ],
       ).createShader(Rect.fromCircle(center: center, radius: maxRadius))
       ..style = PaintingStyle.fill;
@@ -436,7 +436,7 @@ class RadarSweepPainter extends CustomPainter {
 
     // Active sweep line
     final paintSweepLine = Paint()
-      ..color = color.withOpacity(0.4)
+      ..color = color.withValues(alpha: 0.4)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 

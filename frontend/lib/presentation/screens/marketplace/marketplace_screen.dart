@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -24,6 +25,16 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
   final _searchController = TextEditingController();
   late AnimationController _fabAnimationController;
   late Animation<double> _fabScaleAnimation;
+
+  // Filter states
+  String _filterListingType = 'All';
+  double? _filterMinPrice;
+  double? _filterMaxPrice;
+  String _sortBy = 'Newest';
+  bool _onlyAvailable = false;
+
+  final _minPriceController = TextEditingController();
+  final _maxPriceController = TextEditingController();
 
   final List<Map<String, dynamic>> _categories = [
     {'label': 'All', 'icon': Icons.apps_rounded},
@@ -53,6 +64,8 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
   void dispose() {
     _fabAnimationController.dispose();
     _searchController.dispose();
+    _minPriceController.dispose();
+    _maxPriceController.dispose();
     super.dispose();
   }
 
@@ -75,6 +88,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
             children: [
               _buildHeader(context),
               _buildSearchBar(),
+              _buildQuickLedgerActions(context),
               _buildCategoryChips(),
               _buildViewToggle(listingsAsync),
               Expanded(child: _buildBody(listingsAsync)),
@@ -109,8 +123,8 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF007BFF).withOpacity(0.9),
-            const Color(0xFF00D1FF).withOpacity(0.7),
+            const Color(0xFF007BFF).withValues(alpha: 0.9),
+            const Color(0xFF00D1FF).withValues(alpha: 0.7),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -121,7 +135,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF007BFF).withOpacity(0.3),
+            color: const Color(0xFF007BFF).withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -147,7 +161,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                 Text(
                   'Community',
                   style: GoogleFonts.inter(
-                    color: Colors.white.withOpacity(0.75),
+                    color: Colors.white.withValues(alpha: 0.75),
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.5,
@@ -165,30 +179,60 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
               ],
             ),
           ),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white.withOpacity(0.2)),
+          // Ledger Screen navigation button
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.push('/marketplace/ledger');
+            },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                  ),
+                  child: const Icon(Icons.receipt_long_rounded, color: Colors.white, size: 18),
                 ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.filter_list_rounded, color: Colors.white, size: 18),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Filter',
-                      style: GoogleFonts.inter(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Interactive Filter button
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              _showFilterBottomSheet();
+            },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.filter_list_rounded, color: Colors.white, size: 18),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Filter',
+                        style: GoogleFonts.inter(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -208,9 +252,9 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.07),
+              color: Colors.white.withValues(alpha: 0.07),
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Colors.white.withOpacity(0.12), width: 1.5),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
             ),
             child: TextField(
               controller: _searchController,
@@ -219,14 +263,14 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
               decoration: InputDecoration(
                 hintText: 'Search items to borrow or buy...',
                 hintStyle: GoogleFonts.inter(
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withValues(alpha: 0.3),
                   fontSize: 14,
                 ),
                 border: InputBorder.none,
-                prefixIcon: Icon(Icons.search_rounded, color: const Color(0xFF00D1FF).withOpacity(0.8), size: 22),
+                prefixIcon: Icon(Icons.search_rounded, color: const Color(0xFF00D1FF).withValues(alpha: 0.8), size: 22),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: Icon(Icons.close_rounded, color: Colors.white.withOpacity(0.5), size: 18),
+                        icon: Icon(Icons.close_rounded, color: Colors.white.withValues(alpha: 0.5), size: 18),
                         onPressed: () {
                           _searchController.clear();
                           setState(() {});
@@ -266,18 +310,18 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                         end: Alignment.bottomRight,
                       )
                     : null,
-                color: isSelected ? null : Colors.white.withOpacity(0.06),
+                color: isSelected ? null : Colors.white.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: isSelected
                       ? Colors.transparent
-                      : Colors.white.withOpacity(0.12),
+                      : Colors.white.withValues(alpha: 0.12),
                   width: 1.5,
                 ),
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: const Color(0xFF007BFF).withOpacity(0.4),
+                          color: const Color(0xFF007BFF).withValues(alpha: 0.4),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         )
@@ -289,13 +333,13 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                   Icon(
                     cat['icon'] as IconData,
                     size: 14,
-                    color: isSelected ? Colors.white : Colors.white.withOpacity(0.5),
+                    color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.5),
                   ),
                   const SizedBox(width: 6),
                   Text(
                     cat['label'],
                     style: GoogleFonts.inter(
-                      color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
+                      color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.6),
                       fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                       fontSize: 12,
                     ),
@@ -312,9 +356,15 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
   Widget _buildViewToggle(AsyncValue<List<ListingEntity>> listingsAsync) {
     final count = listingsAsync.whenData((l) {
       return l
-          .where((item) =>
-              (_selectedCategory == 'All' || item.category == _selectedCategory) &&
-              item.title.toLowerCase().contains(_searchController.text.toLowerCase()))
+          .where((item) {
+            final matchCat = _selectedCategory == 'All' || item.category == _selectedCategory;
+            final matchSearch = item.title.toLowerCase().contains(_searchController.text.toLowerCase());
+            final matchType = _filterListingType == 'All' || item.type.name == _filterListingType;
+            final matchMinPrice = _filterMinPrice == null || item.price >= _filterMinPrice!;
+            final matchMaxPrice = _filterMaxPrice == null || item.price <= _filterMaxPrice!;
+            final matchAvailability = !_onlyAvailable || item.isAvailable;
+            return matchCat && matchSearch && matchType && matchMinPrice && matchMaxPrice && matchAvailability;
+          })
           .length;
     }).value ?? 0;
 
@@ -325,7 +375,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
           Text(
             '$count items found',
             style: GoogleFonts.inter(
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
               fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
@@ -337,11 +387,11 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
               duration: const Duration(milliseconds: 150),
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: _isGridView ? const Color(0xFF00D1FF).withOpacity(0.15) : Colors.transparent,
+                color: _isGridView ? const Color(0xFF00D1FF).withValues(alpha: 0.15) : Colors.transparent,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(Icons.grid_view_rounded,
-                color: _isGridView ? const Color(0xFF00D1FF) : Colors.white.withOpacity(0.4),
+                color: _isGridView ? const Color(0xFF00D1FF) : Colors.white.withValues(alpha: 0.4),
                 size: 20,
               ),
             ),
@@ -353,11 +403,11 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
               duration: const Duration(milliseconds: 150),
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: !_isGridView ? const Color(0xFF00D1FF).withOpacity(0.15) : Colors.transparent,
+                color: !_isGridView ? const Color(0xFF00D1FF).withValues(alpha: 0.15) : Colors.transparent,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(Icons.view_list_rounded,
-                color: !_isGridView ? const Color(0xFF00D1FF) : Colors.white.withOpacity(0.4),
+                color: !_isGridView ? const Color(0xFF00D1FF) : Colors.white.withValues(alpha: 0.4),
                 size: 20,
               ),
             ),
@@ -375,8 +425,22 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
           final matchSearch = item.title
               .toLowerCase()
               .contains(_searchController.text.toLowerCase());
-          return matchCat && matchSearch;
+          
+          final matchType = _filterListingType == 'All' || item.type.name == _filterListingType;
+          final matchMinPrice = _filterMinPrice == null || item.price >= _filterMinPrice!;
+          final matchMaxPrice = _filterMaxPrice == null || item.price <= _filterMaxPrice!;
+          final matchAvailability = !_onlyAvailable || item.isAvailable;
+
+          return matchCat && matchSearch && matchType && matchMinPrice && matchMaxPrice && matchAvailability;
         }).toList();
+
+        if (_sortBy == 'lowToHigh') {
+          filtered.sort((a, b) => a.price.compareTo(b.price));
+        } else if (_sortBy == 'highToLow') {
+          filtered.sort((a, b) => b.price.compareTo(a.price));
+        } else {
+          filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        }
 
         if (filtered.isEmpty) return _buildEmptyState();
 
@@ -427,9 +491,9 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.06),
+              color: Colors.white.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -446,7 +510,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                                 imageUrl: item.imageUrls.first,
                                 fit: BoxFit.cover,
                                 placeholder: (_, __) => Container(
-                                  color: Colors.white.withOpacity(0.05),
+                                  color: Colors.white.withValues(alpha: 0.05),
                                   child: const Center(
                                     child: CircularProgressIndicator(
                                       color: Color(0xFF00D1FF),
@@ -455,13 +519,13 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                                   ),
                                 ),
                                 errorWidget: (_, __, ___) => Container(
-                                  color: Colors.white.withOpacity(0.05),
+                                  color: Colors.white.withValues(alpha: 0.05),
                                   child: const Icon(Icons.inventory_2_outlined,
                                       color: Color(0xFF00D1FF), size: 40),
                                 ),
                               )
                             : Container(
-                                color: Colors.white.withOpacity(0.05),
+                                color: Colors.white.withValues(alpha: 0.05),
                                 child: const Icon(Icons.inventory_2_outlined,
                                     color: Color(0xFF00D1FF), size: 40),
                               ),
@@ -477,9 +541,9 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.55),
+                            color: Colors.black.withValues(alpha: 0.55),
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.white.withOpacity(0.1)),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                           ),
                           child: Text(
                             item.price > 0 ? '₹${item.price.toInt()}/day' : 'FREE',
@@ -517,7 +581,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                           children: [
                             CircleAvatar(
                               radius: 10,
-                              backgroundColor: const Color(0xFF007BFF).withOpacity(0.3),
+                              backgroundColor: const Color(0xFF007BFF).withValues(alpha: 0.3),
                               child: Text(
                                 item.ownerName.isNotEmpty ? item.ownerName[0].toUpperCase() : 'U',
                                 style: GoogleFonts.inter(
@@ -534,7 +598,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: GoogleFonts.inter(
-                                  color: Colors.white.withOpacity(0.5),
+                                  color: Colors.white.withValues(alpha: 0.5),
                                   fontSize: 10,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -543,11 +607,11 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                             Row(
                               children: [
                                 Icon(Icons.location_on_rounded,
-                                    size: 10, color: Colors.white.withOpacity(0.4)),
+                                    size: 10, color: Colors.white.withValues(alpha: 0.4)),
                                 Text(
                                   '0.3 km',
                                   style: GoogleFonts.inter(
-                                    color: Colors.white.withOpacity(0.4),
+                                    color: Colors.white.withValues(alpha: 0.4),
                                     fontSize: 10,
                                   ),
                                 ),
@@ -579,9 +643,9 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.06),
+                color: Colors.white.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
               ),
               child: Row(
                 children: [
@@ -595,20 +659,20 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                               imageUrl: item.imageUrls.first,
                               fit: BoxFit.cover,
                               placeholder: (_, __) => Container(
-                                color: Colors.white.withOpacity(0.05),
+                                color: Colors.white.withValues(alpha: 0.05),
                                 child: const Center(
                                   child: CircularProgressIndicator(
                                       color: Color(0xFF00D1FF), strokeWidth: 2),
                                 ),
                               ),
                               errorWidget: (_, __, ___) => Container(
-                                color: Colors.white.withOpacity(0.05),
+                                color: Colors.white.withValues(alpha: 0.05),
                                 child: const Icon(Icons.inventory_2_outlined,
                                     color: Color(0xFF00D1FF), size: 30),
                               ),
                             )
                           : Container(
-                              color: Colors.white.withOpacity(0.05),
+                              color: Colors.white.withValues(alpha: 0.05),
                               child: const Icon(Icons.inventory_2_outlined,
                                   color: Color(0xFF00D1FF), size: 30),
                             ),
@@ -638,11 +702,11 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                             Row(
                               children: [
                                 Icon(Icons.location_on_rounded,
-                                    size: 12, color: Colors.white.withOpacity(0.4)),
+                                    size: 12, color: Colors.white.withValues(alpha: 0.4)),
                                 Text(
                                   '0.3 km',
                                   style: GoogleFonts.inter(
-                                    color: Colors.white.withOpacity(0.4),
+                                    color: Colors.white.withValues(alpha: 0.4),
                                     fontSize: 11,
                                   ),
                                 ),
@@ -658,7 +722,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                               children: [
                                 CircleAvatar(
                                   radius: 11,
-                                  backgroundColor: const Color(0xFF007BFF).withOpacity(0.3),
+                                  backgroundColor: const Color(0xFF007BFF).withValues(alpha: 0.3),
                                   child: Text(
                                     item.ownerName.isNotEmpty
                                         ? item.ownerName[0].toUpperCase()
@@ -674,7 +738,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                                 Text(
                                   item.ownerName,
                                   style: GoogleFonts.inter(
-                                    color: Colors.white.withOpacity(0.5),
+                                    color: Colors.white.withValues(alpha: 0.5),
                                     fontSize: 12,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -716,9 +780,9 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: const Color(0xFF00D1FF).withOpacity(0.15),
+        color: const Color(0xFF00D1FF).withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFF00D1FF).withOpacity(0.3)),
+        border: Border.all(color: const Color(0xFF00D1FF).withValues(alpha: 0.3)),
       ),
       child: Text(
         category,
@@ -741,17 +805,17 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: const Color(0xFF00D1FF).withOpacity(0.08),
+              color: const Color(0xFF00D1FF).withValues(alpha: 0.08),
               shape: BoxShape.circle,
               border: Border.all(
-                color: const Color(0xFF00D1FF).withOpacity(0.2),
+                color: const Color(0xFF00D1FF).withValues(alpha: 0.2),
                 width: 2,
               ),
             ),
             child: Icon(
               Icons.inventory_2_outlined,
               size: 52,
-              color: const Color(0xFF00D1FF).withOpacity(0.5),
+              color: const Color(0xFF00D1FF).withValues(alpha: 0.5),
             ),
           ),
           const SizedBox(height: 24),
@@ -767,7 +831,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
           Text(
             'Try a different category or search term',
             style: GoogleFonts.inter(
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withValues(alpha: 0.4),
               fontSize: 14,
             ),
           ),
@@ -783,7 +847,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF007BFF).withOpacity(0.4),
+                    color: const Color(0xFF007BFF).withValues(alpha: 0.4),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),
@@ -816,7 +880,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
       itemCount: 6,
       itemBuilder: (_, __) => Container(
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(20),
         ),
       ),
@@ -828,7 +892,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.wifi_off_rounded, size: 64, color: Colors.white.withOpacity(0.2)),
+          Icon(Icons.wifi_off_rounded, size: 64, color: Colors.white.withValues(alpha: 0.2)),
           const SizedBox(height: 16),
           Text(
             'Could not load listings',
@@ -849,6 +913,318 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
             child: Text('Retry', style: GoogleFonts.inter(fontWeight: FontWeight.w800)),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQuickLedgerActions(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          children: [
+            _buildQuickActionCard(
+              context: context,
+              icon: Icons.outbox_rounded,
+              label: 'My Listings',
+              color: AppColors.neonCyan,
+              tabIndex: 0,
+            ),
+            const SizedBox(width: 8),
+            _buildQuickActionCard(
+              context: context,
+              icon: Icons.download_rounded,
+              label: 'Borrowed Items',
+              color: Colors.purpleAccent,
+              tabIndex: 1,
+            ),
+            const SizedBox(width: 8),
+            _buildQuickActionCard(
+              context: context,
+              icon: Icons.history_edu_rounded,
+              label: 'My Requests',
+              color: Colors.amberAccent,
+              tabIndex: 3,
+            ),
+            const SizedBox(width: 8),
+            _buildQuickActionCard(
+              context: context,
+              icon: Icons.receipt_long_rounded,
+              label: 'Contribution Ledger',
+              color: AppColors.neonGreen,
+              tabIndex: 2,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActionCard({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required Color color,
+    required int tabIndex,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        context.push('/marketplace/ledger?tab=$tabIndex');
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 14),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                color: Colors.white.withValues(alpha: 0.85),
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showFilterBottomSheet() {
+    _minPriceController.text = _filterMinPrice?.toString() ?? '';
+    _maxPriceController.text = _filterMaxPrice?.toString() ?? '';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (ctx, setSheetState) => DraggableScrollableSheet(
+          initialChildSize: 0.65,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          builder: (scrollCtx, scrollController) => ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF15202B).withValues(alpha: 0.95),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
+                ),
+                padding: const EdgeInsets.all(24),
+                child: ListView(
+                  controller: scrollController,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.white24,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'FILTER ITEMS',
+                          style: GoogleFonts.inter(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 16,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            setSheetState(() {
+                              _filterListingType = 'All';
+                              _filterMinPrice = null;
+                              _filterMaxPrice = null;
+                              _minPriceController.clear();
+                              _maxPriceController.clear();
+                              _sortBy = 'Newest';
+                              _onlyAvailable = false;
+                            });
+                          },
+                          child: const Text('Reset All', style: TextStyle(color: Colors.white54, fontSize: 13)),
+                        ),
+                      ],
+                    ),
+                    const Divider(color: Colors.white10),
+                    const SizedBox(height: 16),
+                    Text(
+                      'LISTING TYPE',
+                      style: GoogleFonts.inter(color: Colors.white54, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        _buildFilterTypeChip('All', 'All', setSheetState),
+                        const SizedBox(width: 8),
+                        _buildFilterTypeChip('Lend / Borrow', 'resource', setSheetState),
+                        const SizedBox(width: 8),
+                        _buildFilterTypeChip('Rent', 'rental', setSheetState),
+                        const SizedBox(width: 8),
+                        _buildFilterTypeChip('Buy', 'sale', setSheetState),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'PRICE RANGE (₹)',
+                      style: GoogleFonts.inter(color: Colors.white54, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                            child: TextField(
+                              controller: _minPriceController,
+                              keyboardType: TextInputType.number,
+                              style: const TextStyle(color: Colors.white, fontSize: 14),
+                              decoration: const InputDecoration(
+                                hintText: 'Min price',
+                                hintStyle: TextStyle(color: Colors.white24, fontSize: 13),
+                                border: InputBorder.none,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                            child: TextField(
+                              controller: _maxPriceController,
+                              keyboardType: TextInputType.number,
+                              style: const TextStyle(color: Colors.white, fontSize: 14),
+                              decoration: const InputDecoration(
+                                hintText: 'Max price',
+                                hintStyle: TextStyle(color: Colors.white24, fontSize: 13),
+                                border: InputBorder.none,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'SORT BY',
+                      style: GoogleFonts.inter(color: Colors.white54, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                    ),
+                    const SizedBox(height: 12),
+                    ...['Newest', 'lowToHigh', 'highToLow'].map((sort) {
+                      final label = sort == 'Newest'
+                          ? 'Newest Listings'
+                          : sort == 'lowToHigh'
+                              ? 'Price: Low to High'
+                              : 'Price: High to Low';
+                      return RadioListTile<String>(
+                        title: Text(label, style: GoogleFonts.inter(color: Colors.white, fontSize: 14)),
+                        value: sort,
+                        groupValue: _sortBy,
+                        activeColor: AppColors.neonCyan,
+                        onChanged: (val) {
+                          setSheetState(() {
+                            _sortBy = val!;
+                          });
+                        },
+                      );
+                    }).toList(),
+                    const SizedBox(height: 16),
+                    SwitchListTile(
+                      title: Text('Show only available items', style: GoogleFonts.inter(color: Colors.white, fontSize: 14)),
+                      value: _onlyAvailable,
+                      activeColor: AppColors.neonCyan,
+                      onChanged: (val) {
+                        setSheetState(() {
+                          _onlyAvailable = val;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 32),
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          _filterMinPrice = double.tryParse(_minPriceController.text);
+                          _filterMaxPrice = double.tryParse(_maxPriceController.text);
+                        });
+                        Navigator.pop(ctx);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.neonCyan,
+                        foregroundColor: AppColors.primaryNavy,
+                        minimumSize: const Size(double.infinity, 56),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: Text(
+                        'APPLY FILTERS',
+                        style: GoogleFonts.inter(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterTypeChip(String label, String value, StateSetter setSheetState) {
+    final isSelected = _filterListingType == value;
+    return GestureDetector(
+      onTap: () {
+        setSheetState(() {
+          _filterListingType = value;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.neonCyan : Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? Colors.transparent : Colors.white.withValues(alpha: 0.12),
+          ),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.inter(
+            color: isSelected ? AppColors.primaryNavy : Colors.white70,
+            fontWeight: FontWeight.bold,
+            fontSize: 11,
+          ),
+        ),
       ),
     );
   }

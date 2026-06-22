@@ -7,9 +7,13 @@ import 'core/theme/app_theme.dart';
 import 'core/navigation/app_router.dart';
 import 'presentation/providers/theme_provider.dart';
 import 'firebase_options.dart';
+import 'core/services/gemini_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Eagerly initialize Gemini Service on launch to establish connection
+  GeminiService.instance;
 
   bool firebaseInitialized = false;
   String? errorMessage;

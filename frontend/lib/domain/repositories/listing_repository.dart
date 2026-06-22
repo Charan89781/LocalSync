@@ -7,6 +7,7 @@ abstract class ListingRepository {
   Future<void> requestBorrow(BorrowRequestEntity request);
   Stream<List<BorrowRequestEntity>> getBorrowRequests(String userId);
   Stream<List<BorrowRequestEntity>> getIncomingRequests(String ownerId);
+  Stream<List<BorrowRequestEntity>> getRequestsForListing(String listingId);
   Future<void> updateRequestStatus(String requestId, RequestStatus status);
   Future<void> deleteListing(String listingId);
 }

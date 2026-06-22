@@ -1,27 +1,13 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../firebase_options.dart';
+import '../../../core/services/gemini_service.dart';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-const _kPrefKey = 'localsync_gemini_api_key';
-
-// Model fallback chain: try newest first, fall back automatically
-const List<String> _kModelChain = [
-  'gemini-2.5-flash',
-  'gemini-2.5-pro',
-  'gemini-2.0-flash',
-  'gemini-2.0-flash-lite',
-  'gemini-flash-latest',
-];
-
 const _kSystemPrompt = """You are LocalSync AI — the official, premium smart assistant embedded inside the LocalSync3 community app.
 
 IDENTITY & PERSONALITY:
@@ -29,7 +15,7 @@ IDENTITY & PERSONALITY:
 - Keep all responses naturally CONCISE, short, and engaging (typically 2-4 sentences max per turn). Avoid long paragraphs, articles, or walls of text unless the user explicitly requests an in-depth explanation or detailed guide.
 - You are fully capable of chatting naturally about daily life, general topics, hobbies, philosophy, daily challenges, and personal advice (behaving like a real human friend).
 - Be conversational, warm, and natural. DO NOT force LocalSync app references into general daily life chats unless the user explicitly asks about the app or it naturally fits the context.
-- CRITICAL COMMAND: If the user says "stop", "enough", "hush", "shut up", "quit", "silence", or similar commands, immediately stop the current topic and respond with an extremely brief 1-sentence acknowledgment (e.g., "Understood, stopping here! Let me know what you'd like to do next.") and do not output any other content.
+- CRITICAL COMMAND: If the user say "stop", "enough", "hush", "shut up", "quit", "silence", or similar commands, immediately stop the current topic and respond with an extremely brief 1-sentence acknowledgment (e.g., "Understood, stopping here! Let me know what you'd like to do next.") and do not output any other content.
 - You also know every detail about LocalSync3 features and guide users fluently when asked.
 - Use emojis strategically to make answers engaging.
 - Keep responses structured with bullet points when listing features.
@@ -42,12 +28,9 @@ LOCALSYNC3 APP FEATURES (know these deeply):
 4. 🏠 Rental Spaces — List/book driveways, terraces, storage lofts by the hour
 5. 🚨 SOS & Emergency — Broadcast live location, trigger emergency calls, access shelter points
 6. 📅 Community Events — Host/join block parties, cleanups, drills with RSVP and map view
-7. 🚗 RideSync Carpooling — Offer/find commute seats, earn eco points, reduce carbon footprint
-8. ♻️ EcoSync Initiatives — Waste sorting guides, solar savings tracker, neighborhood leaderboards
-9. 🗺️ AR Shelter Navigator — Augmented reality camera overlay guiding you to nearest shelter
-10. 💬 Chats & Discussion — Verified-only DMs and group discussion rooms
-11. 🎫 Complaint Tracker — File, upvote, and track civic issues (potholes, broken lights) in real-time
-12. 👤 Resident Hub — Trust score, flip ID card, eco-points leaderboard, residency verification
+7. 🗺️ AR Shelter Navigator — Augmented reality camera overlay guiding you to nearest shelter
+8. 💬 Chats & Discussion — Verified-only DMs and group discussion rooms
+9. 🎫 Complaint Tracker — File, upvote, and track civic issues (potholes, broken lights) in real-time
 
 EMERGENCY INFO:
 - Primary Shelter: Community Hall B (behind the park) — has diesel generators, water, first-aid, blankets
@@ -98,20 +81,18 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
   final List<_ChatMessage> _messages = [];
 
   bool _isThinking = false;
-  // Inbuilt default key + any user-saved key from Settings
-  String _geminiKey = 'AQ.Ab8RN6L1ROXgp_mTR29HzKH_71IwThA_VXl9Ojw2nN6GP4a74g';
+  bool? _isServerConnected;
 
   late AnimationController _dotController;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnim;
+
 
   // Quick suggestion chips
   final List<Map<String, String>> _suggestions = [
     {'icon': '🚀', 'label': 'About the app'},
     {'icon': '🚨', 'label': 'Emergency info'},
     {'icon': '🔄', 'label': 'How to borrow'},
-    {'icon': '🚗', 'label': 'RideSync'},
-    {'icon': '♻️', 'label': 'EcoSync tips'},
     {'icon': '🗺️', 'label': 'Find shelter'},
     {'icon': '🎫', 'label': 'File complaint'},
     {'icon': '⛈️', 'label': 'Monsoon prep'},
@@ -135,20 +116,16 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
-    _loadApiKey();
+    _isServerConnected = GeminiService.instance.isConnected;
+    GeminiService.instance.addListener(_onServiceUpdate);
     _addWelcome();
   }
 
-  Future<void> _loadApiKey() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final saved = prefs.getString(_kPrefKey) ?? '';
-      // Prefer user-saved key if non-empty, else keep inbuilt default
-      if (saved.isNotEmpty && mounted) {
-        setState(() => _geminiKey = saved);
-      }
-    } catch (_) {
-      // Keep inbuilt default key on any error
+  void _onServiceUpdate() {
+    if (mounted) {
+      setState(() {
+        _isServerConnected = GeminiService.instance.isConnected;
+      });
     }
   }
 
@@ -157,7 +134,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
       role: _Role.assistant,
       text: "Welcome! I'm **LocalSync AI** 🤖✨\n\n"
           "Your personal neighborhood intelligence hub. I'm online and ready to help with:\n\n"
-          "• **Feature guides** — Borrow items, plan carpools, earn eco-points\n"
+          "• **Feature guides** — Borrow items, find local businesses, book rentals\n"
           "• **Emergency info** — Active shelters, SOS broadcasts, hotlines\n"
           "• **Community rules** — Verification, notices, complaint tracker\n"
           "• **Monsoon alerts** — Safety tips for active heavy-rain season\n\n"
@@ -191,6 +168,8 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
   Future<void> _send([String? override]) async {
     final text = (override ?? _msgController.text).trim();
     if (text.isEmpty || _isThinking) return;
+
+    HapticFeedback.mediumImpact();
 
     if (override == null) _msgController.clear();
 
@@ -250,14 +229,14 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
     }
   }
 
-  // ─── Gemini API Call ─────────────────────────────────────────────────────
+  // ─── Gemini API Call (routed via GeminiService) ──────────────────────────
   Future<String> _callGemini(String userQuery) async {
     // Build conversation history for multi-turn context
     final historyContents = <Content>[];
 
     // Add previous messages (last 10 turns for context window efficiency)
     final history = _messages.skip(_messages.length > 10 ? _messages.length - 10 : 0).toList();
-    // Remove the last message from history if it is the current user message to avoid duplicate consecutive user roles
+    // Remove the last message from history if it is the current user message
     if (history.isNotEmpty && history.last.text == userQuery && history.last.role == _Role.user) {
       history.removeLast();
     }
@@ -267,46 +246,30 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
       if (msg.role == _Role.user) {
         historyContents.add(Content.text(msg.text));
       } else {
-        // Skip leading model messages to ensure the history sent to Gemini always starts with a user turn (API requirement)
+        // Skip leading model messages so history always starts with a user turn (API requirement)
         if (historyContents.isEmpty) continue;
         historyContents.add(Content.model([TextPart(msg.text)]));
       }
     }
 
-    final errors = <String>[];
-
-    // Try each model in the fallback chain using the official SDK!
-    for (final modelName in _kModelChain) {
-      try {
-        debugPrint('[LocalSync AI] Official SDK trying model: $modelName');
-        final requestOptions = (modelName.contains('2.0') || modelName.contains('2.5') || modelName.contains('3.'))
-            ? const RequestOptions(apiVersion: 'v1beta')
-            : const RequestOptions(apiVersion: 'v1');
-
-        final model = GenerativeModel(
-          model: modelName,
-          apiKey: _geminiKey,
-          requestOptions: requestOptions,
-          systemInstruction: Content.system(_kSystemPrompt),
-        );
-
-        final chat = model.startChat(history: historyContents);
-        final response = await chat.sendMessage(Content.text(userQuery)).timeout(const Duration(seconds: 20));
-        
-        final text = response.text ?? '';
-        if (text.isNotEmpty) {
-          debugPrint('[LocalSync AI] Official SDK success: $modelName');
-          return text;
-        }
-      } catch (e) {
-        debugPrint('[LocalSync AI] Official SDK error on $modelName: $e');
-        errors.add('$modelName: ${e.toString().split('\n').first}');
-        continue; // Try next model
+    try {
+      // Route through GeminiService — handles retry, model fallback, caching, heartbeat
+      final response = await GeminiService.instance.generateResponse(
+        prompt: userQuery,
+        history: historyContents,
+        systemInstruction: _kSystemPrompt,
+      );
+      if (mounted && _isServerConnected != true) {
+        setState(() => _isServerConnected = true);
       }
+      return response;
+    } catch (e) {
+      debugPrint('[LocalSync AI] All models failed: $e');
+      if (mounted && _isServerConnected != false) {
+        setState(() => _isServerConnected = false);
+      }
+      return _localResponse(userQuery);
     }
-
-    // All models failed — fall back to local intelligence
-    return _localResponse(userQuery);
   }
 
   // ─── Local Smart Fallback ────────────────────────────────────────────────
@@ -336,7 +299,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
     if (has(['tirupati', 'temple', 'place', 'visit', 'travel', 'tourist', 'trip'])) {
       return "Tirupati is a magnificent spiritual and historical destination! 🌴✨\n\n"
           "The most famous place is the **Tirumala Venkateswara Temple** on the hills. Other beautiful spots include **Kapila Theertham water falls** and the historic **Chandragiri Fort**.\n\n"
-          "🚗 **LocalSync3 Tip:** Planning a trip there? Go to **Events → RideSync tab** to see if any neighbors are carpooling to Tirupati this weekend! Also, check out **Urban Cafe** in our **Business Directory** to get a cup of authentic South Indian filter coffee before your trip! ☕";
+          "☕ **LocalSync3 Tip:** Before you go, check out **Urban Cafe** in our **Business Directory** to get a cup of authentic South Indian filter coffee! ☕";
     }
 
     // Food & Dining / Hungry
@@ -388,19 +351,16 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
     // App overview
     if (has(['app', 'localsync', 'features', 'overview', 'all', 'everything', 'what can'])) {
       return "🚀 **LocalSync3 — Full Feature Guide**\n\n"
-          "Your community super-app with **12 powerful modules:**\n\n"
+          "Your community super-app with **9 powerful modules:**\n\n"
           "🤝 **Help & Volunteering** — Request aid or mark yourself as 'Willing to Help'\n"
           "🔄 **Borrow Marketplace** — Share tools, appliances with verified neighbors\n"
           "🏢 **Business Directory** — Local shops + **20% off at Urban Cafe** for residents!\n"
           "🏠 **Rental Spaces** — Book driveways, terraces, storage rooms hourly\n"
           "🚨 **SOS & Emergency** — Live GPS broadcast + instant emergency hotline calls\n"
           "📅 **Community Events** — RSVP, host, volunteer for neighborhood events\n"
-          "🚗 **RideSync** — Carpooling system for daily commutes, save fuel + earn eco points\n"
-          "♻️ **EcoSync** — Recycling guides, solar savings, green leaderboards\n"
           "🗺️ **AR Navigator** — Augmented reality shelter guidance through your camera\n"
           "💬 **Chats** — Spam-free verified-only DMs and group discussion rooms\n"
-          "🎫 **Complaint Tracker** — File, upvote, and track civic issues to resolution\n"
-          "👤 **Resident Hub** — Trust score, ID card, eco-points, residency verification\n\n"
+          "🎫 **Complaint Tracker** — File, upvote, and track civic issues to resolution\n\n"
           "Which feature would you like to explore in detail?";
     }
 
@@ -413,29 +373,6 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
           "• **Lend** — List your items with photos, price (₹/day), and borrowing rules\n"
           "• **Trust Shield** — Only residency-verified users can access listings\n\n"
           "Popular items lent in your community: Power drills, folding tables, camping gear, books!";
-    }
-
-    // RideSync
-    if (has(['ride', 'ridesync', 'carpool', 'carpooling', 'commute', 'car', 'fuel', 'travel', 'seat'])) {
-      return "🚗 **RideSync Carpooling**\n\n"
-          "Commute smart, save money, go green together!\n\n"
-          "• **Offer a ride** — Post your route, timing, and available seats\n"
-          "• **Find a ride** — Search by destination, match with trusted neighbors\n"
-          "• **Eco Impact** — Each shared trip earns **carbon offset points** toward your green badge\n"
-          "• **Cost sharing** — Split fuel costs automatically via the app\n\n"
-          "Go to **Events → RideSync tab** in your bottom nav to get started!";
-    }
-
-    // EcoSync
-    if (has(['eco', 'ecosync', 'recycle', 'recycling', 'green', 'solar', 'waste', 'points', 'badge', 'leaderboard'])) {
-      return "♻️ **EcoSync & Green Leaderboards**\n\n"
-          "Gamify your sustainable living!\n\n"
-          "• **Waste Sorting Guide** — Detailed local recycling instructions (wet/dry/e-waste)\n"
-          "• **Solar Savings** — View community solar panel output and energy savings\n"
-          "• **Rainwater harvesting** tips for monsoon season\n"
-          "• **Eco Points** — Earn badges for carpooling, volunteering, clean-ups\n"
-          "• **Leaderboard** — Compete with neighbors for top green score!\n\n"
-          "Badges: 🏆 *Green Commuter*, ⭐ *Active Volunteer*, 🌱 *Clean Block Champion*";
     }
 
     // AR / Navigation
@@ -502,7 +439,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
       return "💬 **Chats & Community Messaging**\n\n"
           "Safe, spam-free communication for verified residents!\n\n"
           "• **Direct DMs** — Message any verified neighbor privately\n"
-          "• **Discussion Rooms** — Topic-based group chats (Events, Monsoon Prep, EcoSync)\n"
+          "• **Discussion Rooms** — Topic-based group chats (Events, Monsoon Prep, General)\n"
           "• **Notice Board** — Pinned official announcements with like & comment threads\n"
           "• **Spam Shield** — Strict admin verification blocks all unverified accounts\n\n"
           "Tap **Chat** (💬) in the bottom navigation bar to open your inbox!";
@@ -534,12 +471,11 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
 
     // Profile / Verification / Trust
     if (has(['profile', 'verify', 'verification', 'trust', 'score', 'id', 'pass', 'badge', 'resident'])) {
-      return "👤 **Resident Hub & Verification**\n\n"
+      return "👤 **Profile & Verification**\n\n"
           "Your digital neighborhood identity!\n\n"
           "• **Flip your ID card** — Tap the card on Profile screen to reveal QR verification pass\n"
           "• **Trust Score** — Built from successful helps, trades, and community contributions\n"
           "• **Residency Verification** — Upload utility bill photo to get the ✅ Verified badge\n"
-          "• **Eco Points** — Earned from carpooling, volunteering, recycling activities\n"
           "• **Leaderboard** — See your rank among the community's top contributors\n\n"
           "Verified residents get access to ALL marketplace features and exclusive business discounts!";
     }
@@ -601,6 +537,41 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
 
   // (Settings Dialog removed)
 
+  Widget _buildConnectionWarning() {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.amber.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.3), width: 1),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.cloud_off_rounded, color: Colors.amber, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Connection Interrupted',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Reconnecting in background — running in local fallback mode',
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ─── Build ────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -619,6 +590,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
         appBar: _buildAppBar(),
         body: Column(
           children: [
+            if (_isServerConnected == false) _buildConnectionWarning(),
             Expanded(child: _buildMessageList()),
             if (_isThinking) _buildThinkingBubble(),
             _buildSuggestions(),
@@ -665,7 +637,9 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                   child: Container(
                     width: 11, height: 11,
                     decoration: BoxDecoration(
-                      color: AppColors.neonGreen,
+                      color: _isServerConnected == true
+                          ? AppColors.neonGreen
+                          : (_isServerConnected == null ? Colors.amber : Colors.redAccent),
                       shape: BoxShape.circle,
                       border: Border.all(color: AppColors.primaryNavy, width: 2),
                     ),
@@ -685,16 +659,22 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                   Container(
                     width: 6, height: 6,
                     decoration: BoxDecoration(
-                      color: AppColors.neonGreen,
+                      color: _isServerConnected == true
+                          ? AppColors.neonGreen
+                          : (_isServerConnected == null ? Colors.amber : Colors.redAccent),
                       shape: BoxShape.circle,
                     ),
                   ),
                   const SizedBox(width: 5),
-                  const Text(
-                    'Smart AI • Live',
+                  Text(
+                    _isServerConnected == true
+                        ? 'Smart AI • Connected'
+                        : (_isServerConnected == null ? 'Checking Connection...' : 'Offline Fallback'),
                     style: TextStyle(
                       fontSize: 10,
-                      color: AppColors.neonCyan,
+                      color: _isServerConnected == true
+                          ? AppColors.neonCyan
+                          : (_isServerConnected == null ? Colors.amber : Colors.white38),
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -795,9 +775,9 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
             ),
             border: isUser
                 ? null
-                : Border.all(color: Colors.white.withOpacity(0.07), width: 1),
+                : Border.all(color: Colors.white.withValues(alpha: 0.07), width: 1),
             boxShadow: isUser
-                ? [BoxShadow(color: AppColors.neonCyan.withOpacity(0.2), blurRadius: 12, offset: const Offset(0, 4))]
+                ? [BoxShadow(color: AppColors.neonCyan.withValues(alpha: 0.2), blurRadius: 12, offset: const Offset(0, 4))]
                 : null,
           ),
           child: Column(
@@ -812,7 +792,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                     _fmtTime(msg.timestamp),
                     style: TextStyle(
                       color: isUser
-                          ? AppColors.primaryNavy.withOpacity(0.5)
+                          ? AppColors.primaryNavy.withValues(alpha: 0.5)
                           : Colors.white24,
                       fontSize: 9,
                       fontWeight: FontWeight.w600,
@@ -824,7 +804,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                       width: 12, height: 12,
                       child: CircularProgressIndicator(
                         strokeWidth: 1.5,
-                        color: AppColors.neonCyan.withOpacity(0.6),
+                        color: AppColors.neonCyan.withValues(alpha: 0.6),
                       ),
                     ),
                   ],
@@ -927,7 +907,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
             bottomRight: Radius.circular(20),
             bottomLeft: Radius.circular(4),
           ),
-          border: Border.all(color: Colors.white.withOpacity(0.07)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -973,13 +953,16 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: GestureDetector(
-              onTap: () => _send('${s['icon']} ${s['label']}'),
+              onTap: () {
+                HapticFeedback.lightImpact();
+                _send('${s['icon']} ${s['label']}');
+              },
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
                   color: const Color(0xFF151F2E),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withOpacity(0.1)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                 ),
                 child: Text(
                   '${s['icon']}  ${s['label']}',
@@ -1002,7 +985,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
       padding: EdgeInsets.fromLTRB(16, 10, 16, MediaQuery.of(context).padding.bottom + 14),
       decoration: BoxDecoration(
         color: const Color(0xFF0A121A),
-        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.06))),
+        border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.06))),
       ),
       child: Row(
         children: [
@@ -1011,7 +994,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
               decoration: BoxDecoration(
                 color: const Color(0xFF151F2E),
                 borderRadius: BorderRadius.circular(26),
-                border: Border.all(color: Colors.white.withOpacity(0.08)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 18),
               child: TextField(
@@ -1045,7 +1028,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.neonCyan.withOpacity(0.3),
+                    color: AppColors.neonCyan.withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),

@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 
-enum _BadgeCategory { community, safety, trading, eco }
+enum _BadgeCategory { community, safety, trading }
 
 class _BadgeData {
   final String title;
@@ -132,36 +132,6 @@ class _BadgeDetailsScreenState extends ConsumerState<BadgeDetailsScreen>
       progress: 1.0,
       category: _BadgeCategory.trading,
     ),
-    _BadgeData(
-      title: 'Eco Warrior',
-      description: 'Champion of sustainable community practices.',
-      howToEarn: 'Contribute 5+ rides in RideSync or log solar analytics.',
-      icon: Icons.eco_rounded,
-      color: AppColors.successGreen,
-      earned: true,
-      progress: 1.0,
-      category: _BadgeCategory.eco,
-    ),
-    _BadgeData(
-      title: 'Green Rider',
-      description: 'Reduces carbon footprint through carpooling.',
-      howToEarn: 'Complete 10 carpool rides in RideSync.',
-      icon: Icons.electric_car_rounded,
-      color: Colors.lightGreenAccent,
-      earned: false,
-      progress: 0.7,
-      category: _BadgeCategory.eco,
-    ),
-    _BadgeData(
-      title: 'Zero Waste Hero',
-      description: 'Active participant in neighborhood recycling programs.',
-      howToEarn: 'Log 5+ recycling events in EcoSync.',
-      icon: Icons.recycling_rounded,
-      color: Colors.tealAccent,
-      earned: false,
-      progress: 0.2,
-      category: _BadgeCategory.eco,
-    ),
   ];
 
   @override
@@ -186,7 +156,6 @@ class _BadgeDetailsScreenState extends ConsumerState<BadgeDetailsScreen>
       case _BadgeCategory.community: return 'Community';
       case _BadgeCategory.safety: return 'Safety';
       case _BadgeCategory.trading: return 'Trading';
-      case _BadgeCategory.eco: return 'Eco';
     }
   }
 
@@ -195,7 +164,6 @@ class _BadgeDetailsScreenState extends ConsumerState<BadgeDetailsScreen>
       case _BadgeCategory.community: return Icons.people_rounded;
       case _BadgeCategory.safety: return Icons.shield_rounded;
       case _BadgeCategory.trading: return Icons.storefront_rounded;
-      case _BadgeCategory.eco: return Icons.eco_rounded;
     }
   }
 
@@ -240,7 +208,7 @@ class _BadgeDetailsScreenState extends ConsumerState<BadgeDetailsScreen>
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.07),
+                color: Colors.white.withValues(alpha: 0.07),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: Colors.white12),
               ),
@@ -278,16 +246,16 @@ class _BadgeDetailsScreenState extends ConsumerState<BadgeDetailsScreen>
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             ),
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.amberAccent.withOpacity(0.15),
+                    color: Colors.amberAccent.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: const Icon(Icons.emoji_events_rounded,
@@ -356,7 +324,7 @@ class _BadgeDetailsScreenState extends ConsumerState<BadgeDetailsScreen>
                       ? const LinearGradient(
                           colors: [AppColors.primaryBlue, AppColors.neonCyan])
                       : null,
-                  color: selected ? null : Colors.white.withOpacity(0.05),
+                  color: selected ? null : Colors.white.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                       color: selected ? Colors.transparent : Colors.white12),
@@ -426,13 +394,13 @@ class _BadgeDetailsScreenState extends ConsumerState<BadgeDetailsScreen>
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: badge.earned
-                  ? badge.color.withOpacity(0.08)
-                  : Colors.white.withOpacity(0.04),
+                  ? badge.color.withValues(alpha: 0.08)
+                  : Colors.white.withValues(alpha: 0.04),
               borderRadius: BorderRadius.circular(22),
               border: Border.all(
                 color: badge.earned
-                    ? badge.color.withOpacity(0.4)
-                    : Colors.white.withOpacity(0.08),
+                    ? badge.color.withValues(alpha: 0.4)
+                    : Colors.white.withValues(alpha: 0.08),
                 width: 1.5,
               ),
             ),
@@ -446,12 +414,12 @@ class _BadgeDetailsScreenState extends ConsumerState<BadgeDetailsScreen>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: badge.earned
-                        ? badge.color.withOpacity(0.15)
-                        : Colors.white.withOpacity(0.05),
+                        ? badge.color.withValues(alpha: 0.15)
+                        : Colors.white.withValues(alpha: 0.05),
                     boxShadow: badge.earned
                         ? [
                             BoxShadow(
-                              color: badge.color.withOpacity(0.4),
+                              color: badge.color.withValues(alpha: 0.4),
                               blurRadius: 14,
                               spreadRadius: 2,
                             )
@@ -491,9 +459,9 @@ class _BadgeDetailsScreenState extends ConsumerState<BadgeDetailsScreen>
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.successGreen.withOpacity(0.15),
+                      color: AppColors.successGreen.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.successGreen.withOpacity(0.4)),
+                      border: Border.all(color: AppColors.successGreen.withValues(alpha: 0.4)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -535,7 +503,7 @@ class _BadgeDetailsScreenState extends ConsumerState<BadgeDetailsScreen>
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
+                      color: Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text('LOCKED',
@@ -564,9 +532,9 @@ class _BadgeDetailsScreenState extends ConsumerState<BadgeDetailsScreen>
           child: Container(
             padding: const EdgeInsets.all(28),
             decoration: BoxDecoration(
-              color: AppColors.primaryNavy.withOpacity(0.95),
+              color: AppColors.primaryNavy.withValues(alpha: 0.95),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-              border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -585,9 +553,9 @@ class _BadgeDetailsScreenState extends ConsumerState<BadgeDetailsScreen>
                   height: 80,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: badge.color.withOpacity(0.15),
+                    color: badge.color.withValues(alpha: 0.15),
                     boxShadow: [
-                      BoxShadow(color: badge.color.withOpacity(0.4), blurRadius: 20, spreadRadius: 4),
+                      BoxShadow(color: badge.color.withValues(alpha: 0.4), blurRadius: 20, spreadRadius: 4),
                     ],
                   ),
                   child: Icon(badge.icon, color: badge.color, size: 40),
@@ -605,7 +573,7 @@ class _BadgeDetailsScreenState extends ConsumerState<BadgeDetailsScreen>
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
+                    color: Colors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.white12),
                   ),

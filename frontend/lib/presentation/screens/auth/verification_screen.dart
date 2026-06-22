@@ -97,7 +97,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
               height: 250,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.neonCyan.withOpacity(0.04),
+                color: AppColors.neonCyan.withValues(alpha: 0.04),
               ),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 70, sigmaY: 70),
@@ -120,9 +120,9 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.02),
+                            color: Colors.white.withValues(alpha: 0.02),
                             border: Border.all(
-                              color: AppColors.neonCyan.withOpacity(0.2),
+                              color: AppColors.neonCyan.withValues(alpha: 0.2),
                               width: 1.5,
                             ),
                           ),
@@ -181,7 +181,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                             color: AppColors.surfaceNavy,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: _houseFocused ? AppColors.neonCyan : Colors.white.withOpacity(0.08),
+                              color: _houseFocused ? AppColors.neonCyan : Colors.white.withValues(alpha: 0.08),
                               width: 1.5,
                             ),
                           ),
@@ -224,8 +224,8 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
                                 color: _documentImage != null
-                                    ? AppColors.neonCyan.withOpacity(0.5)
-                                    : Colors.white.withOpacity(0.08),
+                                    ? AppColors.neonCyan.withValues(alpha: 0.5)
+                                    : Colors.white.withValues(alpha: 0.08),
                                 width: 1.5,
                               ),
                             ),

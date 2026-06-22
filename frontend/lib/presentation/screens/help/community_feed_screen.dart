@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shimmer/shimmer.dart';
 import 'dart:io';
 import '../../../core/theme/app_colors.dart';
 import '../../../domain/entities/post_entity.dart';
@@ -27,43 +30,100 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
   ];
   PostType _selectedType = PostType.general;
   final ImagePicker _picker = ImagePicker();
+  bool _isSubmitting = false;
 
-  Future<void> _createPost(List<XFile> localImages) async {
+  Future<void> _createPost(List<XFile> localImages, StateSetter setSheetState) async {
     if (_postController.text.isEmpty && _selectedType != PostType.poll) return;
 
     final user = ref.read(authStateProvider).value;
     if (user == null) return;
 
-    PollEntity? poll;
-    if (_selectedType == PostType.poll) {
-      final options = _pollOptionControllers
-          .where((c) => c.text.isNotEmpty)
-          .map((c) => PollOption(label: c.text))
-          .toList();
-      if (options.length < 2) return; // Need at least 2 options
-      poll = PollEntity(question: _postController.text, options: options);
-    }
+    setSheetState(() => _isSubmitting = true);
+    setState(() => _isSubmitting = true);
 
-    final newPost = PostEntity(
-      id: '',
-      authorId: user.id,
-      authorName: user.name ?? 'Neighbor',
-      authorProfileUrl: user.profileImageUrl,
-      content: _postController.text,
-      type: _selectedType,
-      createdAt: DateTime.now(),
-      imageUrls: localImages.map((e) => e.path).toList(),
-      poll: poll,
-    );
+    try {
+      // Robust Haptic Feedback response
+      await HapticFeedback.mediumImpact();
 
-    await ref.read(postRepositoryProvider).createPost(newPost);
-    _postController.clear();
-    for (var c in _pollOptionControllers) {
-      c.clear();
-    }
-    if (mounted) {
-      if (context.canPop()) {
-        Navigator.pop(context);
+      PollEntity? poll;
+      if (_selectedType == PostType.poll) {
+        final options = _pollOptionControllers
+            .where((c) => c.text.isNotEmpty)
+            .map((c) => PollOption(label: c.text))
+            .toList();
+        if (options.length < 2) {
+          setSheetState(() => _isSubmitting = false);
+          setState(() => _isSubmitting = false);
+          return; // Need at least 2 options
+        }
+        poll = PollEntity(question: _postController.text, options: options);
+      }
+
+      final newPost = PostEntity(
+        id: '',
+        authorId: user.id,
+        authorName: user.name ?? 'Neighbor',
+        authorProfileUrl: user.profileImageUrl,
+        content: _postController.text,
+        type: _selectedType,
+        createdAt: DateTime.now(),
+        imageUrls: localImages.map((e) => e.path).toList(),
+        poll: poll,
+      );
+
+      await ref.read(postRepositoryProvider).createPost(newPost);
+      _postController.clear();
+      for (var c in _pollOptionControllers) {
+        c.clear();
+      }
+      if (mounted) {
+        if (context.canPop()) {
+          Navigator.pop(context);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setSheetState(() => _isSubmitting = false);
+        setState(() => _isSubmitting = false);
+        // Display user-friendly connection failure dialog
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: AppColors.secondaryNavy,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+              side: BorderSide(color: AppColors.primaryBlue.withValues(alpha: 0.2)),
+            ),
+            title: Row(
+              children: [
+                Icon(Icons.wifi_off_rounded, color: Colors.orangeAccent),
+                SizedBox(width: 12),
+                Text(
+                  'Connection Issue',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            content: Text(
+              'Unable to post your update to the community. Please check your internet connection and try again.\n\nDetails: $e',
+              style: TextStyle(color: Colors.white70),
+            ),
+            actions: [
+               TextButton(
+                 onPressed: () => Navigator.pop(context),
+                 child: Text(
+                   'OK',
+                   style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold),
+                 ),
+               ),
+            ],
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setSheetState(() => _isSubmitting = false);
+        setState(() => _isSubmitting = false);
       }
     }
   }
@@ -84,9 +144,39 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
                 final feedPosts =
                     posts.where((p) => p.type != PostType.help).toList();
                 if (feedPosts.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.only(top: 100),
-                    child: Center(child: Text('No community updates yet.')),
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 80, left: 40, right: 40),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.forum_outlined,
+                            size: 80,
+                            color: AppColors.textGray.withValues(alpha: 0.3),
+                          ),
+                          const SizedBox(height: 20),
+                          const Text(
+                            'No Community Updates Yet',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Be the first to share an update, start a poll, or alert your neighbors!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: AppColors.textGray.withValues(alpha: 0.7),
+                              fontSize: 13,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 }
                 return ListView.builder(
@@ -101,13 +191,29 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
                   ),
                 );
               },
-              loading: () => const Padding(
-                padding: EdgeInsets.only(top: 100),
-                child: Center(child: CircularProgressIndicator()),
+              loading: () => Padding(
+                padding: const EdgeInsets.all(20),
+                child: Shimmer.fromColors(
+                  baseColor: Colors.grey[850]!,
+                  highlightColor: Colors.grey[800]!,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: 3,
+                    itemBuilder: (context, index) => Container(
+                      margin: const EdgeInsets.only(bottom: 24),
+                      height: 200,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(32),
+                      ),
+                    ),
+                  ),
+                ),
               ),
               error: (err, _) => Padding(
                 padding: const EdgeInsets.only(top: 100),
-                child: Center(child: Text('Error: $err')),
+                child: Center(child: Text('Error: $err', style: const TextStyle(color: Colors.white))),
               ),
             ),
           ),
@@ -190,7 +296,11 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
                   const SizedBox(height: 24),
                   GestureDetector(
                     onTap: () async {
-                      final imgs = await _picker.pickMultiImage();
+                      final imgs = await _picker.pickMultiImage(
+                        maxWidth: 1080,
+                        maxHeight: 1080,
+                        imageQuality: 80,
+                      );
                       if (imgs.isNotEmpty) {
                         setSheetState(() => localImages = imgs);
                       }
@@ -212,11 +322,19 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
                                 padding: const EdgeInsets.only(right: 12),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(16),
-                                  child: Image.file(
-                                      File(localImages[index].path),
-                                      width: 100,
-                                      height: 100,
-                                      fit: BoxFit.cover),
+                                  child: kIsWeb
+                                      ? Image.network(
+                                          localImages[index].path,
+                                          width: 100,
+                                          height: 100,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : Image.file(
+                                          File(localImages[index].path),
+                                          width: 100,
+                                          height: 100,
+                                          fit: BoxFit.cover,
+                                        ),
                                 ),
                               ),
                             )
@@ -245,7 +363,7 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
                           ? "What do you want to ask?"
                           : "What's happening in our neighborhood?",
                       hintStyle: TextStyle(
-                          color: AppColors.textGray.withOpacity(0.5)),
+                          color: AppColors.textGray.withValues(alpha: 0.5)),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20)),
                     ),
@@ -304,7 +422,7 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
                         onSelected: (v) =>
                             setSheetState(() => _selectedType = type),
                         selectedColor:
-                            AppColors.primaryBlue.withOpacity(0.2),
+                            AppColors.primaryBlue.withValues(alpha: 0.2),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                       );
@@ -312,12 +430,24 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
                   ),
                   const SizedBox(height: 32),
                   ElevatedButton(
-                    onPressed: () => _createPost(localImages),
-                    child: const Text('POST TO COMMUNITY',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1)),
+                    onPressed: _isSubmitting ? null : () => _createPost(localImages, setSheetState),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 50),
+                    ),
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text('POST TO COMMUNITY',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1)),
                   ),
                 ],
               ),

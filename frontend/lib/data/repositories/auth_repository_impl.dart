@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
@@ -14,23 +15,51 @@ class AuthRepositoryImpl implements AuthRepository {
   );
 
   @override
-  Stream<UserEntity?> get authStateChanges =>
-      _auth.authStateChanges().asyncMap((user) async {
-        if (user == null) return null;
+  Stream<UserEntity?> get authStateChanges {
+    StreamController<UserEntity?>? controller;
+    StreamSubscription<UserEntity?>? firestoreSubscription;
+    StreamSubscription<User?>? authSubscription;
 
-        final doc = await _db.collection('users').doc(user.uid).get();
-        if (doc.exists) {
-          return UserEntity.fromMap(doc.data()!, doc.id);
-        }
+    controller = StreamController<UserEntity?>.broadcast(
+      onListen: () {
+        authSubscription = _auth.authStateChanges().listen((user) {
+          firestoreSubscription?.cancel();
+          if (user == null) {
+            controller?.add(null);
+          } else {
+            firestoreSubscription = _db
+                .collection('users')
+                .doc(user.uid)
+                .snapshots()
+                .map((doc) {
+              if (doc.exists && doc.data() != null) {
+                return UserEntity.fromMap(doc.data()!, doc.id);
+              }
+              return UserEntity(
+                id: user.uid,
+                email: user.email ?? '',
+                name: user.displayName,
+                profileImageUrl: user.photoURL,
+                isVerified: user.emailVerified,
+              );
+            }).listen((userEntity) {
+              controller?.add(userEntity);
+            }, onError: (err) {
+              controller?.addError(err);
+            });
+          }
+        }, onError: (err) {
+          controller?.addError(err);
+        });
+      },
+      onCancel: () {
+        firestoreSubscription?.cancel();
+        authSubscription?.cancel();
+      },
+    );
 
-        return UserEntity(
-          id: user.uid,
-          email: user.email ?? '',
-          name: user.displayName,
-          profileImageUrl: user.photoURL,
-          isVerified: user.emailVerified,
-        );
-      });
+    return controller.stream;
+  }
 
   @override
   Future<UserEntity?> signInWithEmail(String email, String password) async {
@@ -177,7 +206,22 @@ class AuthRepositoryImpl implements AuthRepository {
         debugPrint('Signout status update error: $e');
       }
     }
-    await _googleSignIn.signOut();
+    try {
+      if (!kIsWeb) {
+        final isGoogleSignedIn = await _googleSignIn.isSignedIn().timeout(
+          const Duration(milliseconds: 500),
+          onTimeout: () => false,
+        );
+        if (isGoogleSignedIn) {
+          await _googleSignIn.signOut().timeout(
+            const Duration(milliseconds: 500),
+            onTimeout: () => null,
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Google SignOut error: $e');
+    }
     await _auth.signOut();
   }
 

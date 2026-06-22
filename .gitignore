@@ -49,3 +49,20 @@ app.*.map.json
 **/~$*.xlsx
 ~$*.xlsx
 
+
+# Environment secrets and debug logs
+.env
+*.env
+backend/.env
+*.log
+*.txt
+full_jobs.json
+jobs.json
+jobs_logs.txt
+gradle_fail_log.txt
+job23_logs.txt
+job24_logs.txt
+job25_logs.txt
+job_logs.txt
+/frontend/android/app/build/
+/frontend/android/build/

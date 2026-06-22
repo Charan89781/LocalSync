@@ -4,11 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../domain/entities/user_entity.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../common_widgets/app_bottom_nav.dart';
+import '../../providers/post_provider.dart';
+import '../../providers/listing_provider.dart';
+import '../../providers/space_provider.dart';
+import '../../../domain/entities/post_entity.dart';
+
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -33,24 +39,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     {'icon': Icons.storefront_rounded, 'label': 'Top Merchant', 'color': Color(0xFF5856D6), 'earned': false},
   ];
 
-  final List<Map<String, dynamic>> _posts = [
-    {'title': 'Community Cleanup Drive', 'time': '2h ago', 'likes': 14, 'icon': Icons.eco_rounded},
-    {'title': 'Lost Dog Found Near Park', 'time': '1d ago', 'likes': 31, 'icon': Icons.pets_rounded},
-    {'title': 'Free Furniture Giveaway', 'time': '3d ago', 'likes': 22, 'icon': Icons.chair_rounded},
-  ];
-
-  final List<Map<String, dynamic>> _listings = [
-    {'title': 'Cordless Drill – Borrow', 'status': 'Available', 'color': Color(0xFF34C759)},
-    {'title': 'Ladder 8ft – Rent ₹50/day', 'status': 'Borrowed', 'color': Colors.orangeAccent},
-    {'title': 'Tent for Camping', 'status': 'Available', 'color': Color(0xFF34C759)},
-  ];
-
-  final List<Map<String, dynamic>> _history = [
-    {'action': 'Helped: Plumbing Repair', 'pts': '+50', 'date': 'May 28', 'color': Color(0xFF34C759)},
-    {'action': 'Listed: Power Drill', 'pts': '+20', 'date': 'May 25', 'color': Color(0xFF34C759)},
-    {'action': 'RideSync: To Metro Station', 'pts': '+15', 'date': 'May 22', 'color': Color(0xFF34C759)},
-    {'action': 'Late return warning', 'pts': '-5', 'date': 'May 20', 'color': Colors.redAccent},
-  ];
 
   @override
   void initState() {
@@ -145,7 +133,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       expandedHeight: 80,
       pinned: true,
       elevation: 0,
-      backgroundColor: AppColors.primaryNavy.withOpacity(0.95),
+      backgroundColor: AppColors.primaryNavy.withValues(alpha: 0.95),
       flexibleSpace: FlexibleSpaceBar(
         centerTitle: true,
         title: Text(
@@ -289,7 +277,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.neonCyan.withOpacity(0.3),
+                    color: AppColors.neonCyan.withValues(alpha: 0.3),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),
@@ -383,13 +371,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       height: 52,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: earned ? color.withOpacity(0.18) : Colors.white.withOpacity(0.05),
+                        color: earned ? color.withValues(alpha: 0.18) : Colors.white.withValues(alpha: 0.05),
                         border: Border.all(
-                          color: earned ? color.withOpacity(0.6) : Colors.white12,
+                          color: earned ? color.withValues(alpha: 0.6) : Colors.white12,
                           width: 1.5,
                         ),
                         boxShadow: earned
-                            ? [BoxShadow(color: color.withOpacity(0.35), blurRadius: 10)]
+                            ? [BoxShadow(color: color.withValues(alpha: 0.35), blurRadius: 10)]
                             : [],
                       ),
                       child: Icon(
@@ -439,7 +427,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   gradient: selected
                       ? const LinearGradient(colors: [AppColors.primaryBlue, AppColors.neonCyan])
                       : null,
-                  color: selected ? null : Colors.white.withOpacity(0.06),
+                  color: selected ? null : Colors.white.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
                     color: selected ? Colors.transparent : Colors.white12,
@@ -458,120 +446,260 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           }),
         ),
         const SizedBox(height: 16),
-        _buildTabContent(),
+        _buildTabContent(user),
       ],
     );
   }
 
-  Widget _buildTabContent() {
+  Widget _buildTabContent(UserEntity user) {
     if (_selectedTab == 0) {
-      return Column(
-        children: _posts.map((p) {
-          return _glassCard(
-            padding: 16,
-            margin: const EdgeInsets.only(bottom: 10),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppColors.neonCyan.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(p['icon'] as IconData, color: AppColors.neonCyan, size: 20),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(p['title'] as String,
-                          style: GoogleFonts.inter(
-                              color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14)),
-                      Text(p['time'] as String,
-                          style: GoogleFonts.inter(color: Colors.white38, fontSize: 11)),
-                    ],
-                  ),
-                ),
-                Row(
+      final postsAsync = ref.watch(feedPostsProvider);
+      return postsAsync.when(
+        data: (posts) {
+          final myPosts = posts.where((p) => p.authorId == user.id).toList();
+          if (myPosts.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Text('No posts yet.',
+                    style: GoogleFonts.inter(color: Colors.white38, fontSize: 13)),
+              ),
+            );
+          }
+          return Column(
+            children: myPosts.map((p) {
+              IconData postIcon;
+              switch (p.type) {
+                case PostType.alert:
+                  postIcon = Icons.warning_amber_rounded;
+                  break;
+                case PostType.help:
+                  postIcon = Icons.volunteer_activism_rounded;
+                  break;
+                case PostType.event:
+                  postIcon = Icons.event_rounded;
+                  break;
+                case PostType.general:
+                  postIcon = Icons.forum_rounded;
+                  break;
+                case PostType.complaint:
+                  postIcon = Icons.report_problem_rounded;
+                  break;
+                case PostType.announcement:
+                  postIcon = Icons.announcement_rounded;
+                  break;
+                case PostType.poll:
+                  postIcon = Icons.poll_rounded;
+                  break;
+              }
+              final timeStr = DateFormat('MMM dd, yyyy').format(p.createdAt);
+              return _glassCard(
+                padding: 16,
+                margin: const EdgeInsets.only(bottom: 10),
+                child: Row(
                   children: [
-                    const Icon(Icons.favorite_rounded, color: Colors.pinkAccent, size: 14),
-                    const SizedBox(width: 4),
-                    Text('${p['likes']}',
-                        style: GoogleFonts.inter(color: Colors.white54, fontSize: 12)),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.neonCyan.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(postIcon, color: AppColors.neonCyan, size: 20),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(p.content,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.inter(
+                                  color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14)),
+                          Text(timeStr,
+                              style: GoogleFonts.inter(color: Colors.white38, fontSize: 11)),
+                        ],
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        const Icon(Icons.favorite_rounded, color: Colors.pinkAccent, size: 14),
+                        const SizedBox(width: 4),
+                        Text('${p.likes}',
+                            style: GoogleFonts.inter(color: Colors.white54, fontSize: 12)),
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
+              );
+            }).toList(),
           );
-        }).toList(),
+        },
+        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.neonCyan)),
+        error: (err, _) => Center(child: Text('Error: $err', style: const TextStyle(color: Colors.white38))),
       );
     } else if (_selectedTab == 1) {
-      return Column(
-        children: _listings.map((l) {
-          final color = l['color'] as Color;
-          return _glassCard(
-            padding: 16,
-            margin: const EdgeInsets.only(bottom: 10),
-            child: Row(
-              children: [
-                const Icon(Icons.inventory_2_rounded, color: Colors.white54, size: 20),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(l['title'] as String,
-                      style: GoogleFonts.inter(
-                          color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14)),
+      final listingsAsync = ref.watch(listingsProvider);
+      return listingsAsync.when(
+        data: (listings) {
+          final myListings = listings.where((l) => l.ownerId == user.id).toList();
+          if (myListings.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Text('No listings yet.',
+                    style: GoogleFonts.inter(color: Colors.white38, fontSize: 13)),
+              ),
+            );
+          }
+          return Column(
+            children: myListings.map((l) {
+              final color = l.isAvailable ? const Color(0xFF34C759) : Colors.orangeAccent;
+              final status = l.isAvailable ? 'Available' : 'Borrowed';
+              return _glassCard(
+                padding: 16,
+                margin: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  children: [
+                    const Icon(Icons.inventory_2_rounded, color: Colors.white54, size: 20),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Text(l.title,
+                          style: GoogleFonts.inter(
+                              color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14)),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: color.withValues(alpha: 0.4)),
+                      ),
+                      child: Text(status,
+                          style: GoogleFonts.inter(
+                              color: color, fontSize: 10, fontWeight: FontWeight.w800)),
+                    ),
+                  ],
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: color.withOpacity(0.4)),
-                  ),
-                  child: Text(l['status'] as String,
-                      style: GoogleFonts.inter(
-                          color: color, fontSize: 10, fontWeight: FontWeight.w800)),
-                ),
-              ],
-            ),
+              );
+            }).toList(),
           );
-        }).toList(),
+        },
+        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.neonCyan)),
+        error: (err, _) => Center(child: Text('Error: $err', style: const TextStyle(color: Colors.white38))),
       );
     } else {
-      return Column(
-        children: _history.map((h) {
-          final color = h['color'] as Color;
-          return _glassCard(
-            padding: 16,
-            margin: const EdgeInsets.only(bottom: 10),
-            child: Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(h['action'] as String,
-                          style: GoogleFonts.inter(
-                              color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
-                      Text(h['date'] as String,
-                          style: GoogleFonts.inter(color: Colors.white38, fontSize: 11)),
-                    ],
-                  ),
-                ),
-                Text(h['pts'] as String,
-                    style: GoogleFonts.inter(
-                        color: color, fontSize: 15, fontWeight: FontWeight.w900)),
-              ],
-            ),
+      final bookingsAsync = ref.watch(userBookingsProvider);
+      final postsAsync = ref.watch(feedPostsProvider);
+      final borrowRequestsAsync = ref.watch(borrowRequestsProvider);
+
+      return bookingsAsync.when(
+        data: (bookings) {
+          return postsAsync.when(
+            data: (posts) {
+              return borrowRequestsAsync.when(
+                data: (borrowRequests) {
+                  final List<Map<String, dynamic>> combinedHistory = [];
+
+                  for (final b in bookings) {
+                    combinedHistory.add({
+                      'action': 'Booked Space: ${b.spaceName}',
+                      'pts': '+20',
+                      'date': b.date,
+                      'color': const Color(0xFF34C759),
+                    });
+                  }
+
+                  for (final p in posts) {
+                    if (p.type == PostType.help && p.helpStatus == HelpStatus.completed) {
+                      if (p.helperId == user.id) {
+                        combinedHistory.add({
+                          'action': 'Helped: ${p.content}',
+                          'pts': '+50',
+                          'date': p.createdAt,
+                          'color': const Color(0xFF34C759),
+                        });
+                      } else if (p.authorId == user.id) {
+                        combinedHistory.add({
+                          'action': 'My Request: ${p.content} Completed',
+                          'pts': '+10',
+                          'date': p.createdAt,
+                          'color': const Color(0xFF34C759),
+                        });
+                      }
+                    }
+                  }
+
+                  for (final br in borrowRequests) {
+                    combinedHistory.add({
+                      'action': 'Borrowed: ${br.listingTitle}',
+                      'pts': '+15',
+                      'date': br.createdAt,
+                      'color': const Color(0xFF34C759),
+                    });
+                  }
+
+                  combinedHistory.sort((a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime));
+
+                  if (combinedHistory.isEmpty) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Text('No activity history found.',
+                            style: GoogleFonts.inter(color: Colors.white38, fontSize: 13)),
+                      ),
+                    );
+                  }
+
+                  return Column(
+                    children: combinedHistory.map((h) {
+                      final color = h['color'] as Color;
+                      final date = h['date'] as DateTime;
+                      final dateStr = DateFormat('MMM dd, yyyy').format(date);
+                      return _glassCard(
+                        padding: 16,
+                        margin: const EdgeInsets.only(bottom: 10),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(h['action'] as String,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.inter(
+                                          color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
+                                  Text(dateStr,
+                                      style: GoogleFonts.inter(color: Colors.white38, fontSize: 11)),
+                                ],
+                              ),
+                            ),
+                            Text(h['pts'] as String,
+                                style: GoogleFonts.inter(
+                                    color: color, fontSize: 15, fontWeight: FontWeight.w900)),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator(color: AppColors.neonCyan)),
+                error: (err, _) => Center(child: Text('Error: $err', style: const TextStyle(color: Colors.white38))),
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator(color: AppColors.neonCyan)),
+            error: (err, _) => Center(child: Text('Error: $err', style: const TextStyle(color: Colors.white38))),
           );
-        }).toList(),
+        },
+        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.neonCyan)),
+        error: (err, _) => Center(child: Text('Error: $err', style: const TextStyle(color: Colors.white38))),
       );
     }
   }
@@ -603,9 +731,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 16),
             decoration: BoxDecoration(
-              color: Colors.redAccent.withOpacity(0.1),
+              color: Colors.redAccent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
+              border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
             ),
             child: Center(
               child: Row(
@@ -636,7 +764,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.neonCyan.withOpacity(0.1),
+                color: AppColors.neonCyan.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: AppColors.neonCyan, size: 18),
@@ -671,9 +799,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           child: Container(
             padding: EdgeInsets.all(padding),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1),
             ),
             child: child,
           ),
@@ -698,7 +826,7 @@ class _TrustRingPainter extends CustomPainter {
 
     // Background track
     final trackPaint = Paint()
-      ..color = Colors.white.withOpacity(0.08)
+      ..color = Colors.white.withValues(alpha: 0.08)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
@@ -706,7 +834,7 @@ class _TrustRingPainter extends CustomPainter {
 
     // Progress arc with glow
     final glowPaint = Paint()
-      ..color = color.withOpacity(0.3)
+      ..color = color.withValues(alpha: 0.3)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth + 4
       ..strokeCap = StrokeCap.round
@@ -724,7 +852,7 @@ class _TrustRingPainter extends CustomPainter {
       ..shader = SweepGradient(
         startAngle: startAngle,
         endAngle: startAngle + 2 * math.pi * progress,
-        colors: [color.withOpacity(0.7), color],
+        colors: [color.withValues(alpha: 0.7), color],
       ).createShader(Rect.fromCircle(center: center, radius: radius))
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth

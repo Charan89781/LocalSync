@@ -170,7 +170,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
               Text(
                 'WEATHER REPORT',
                 style: GoogleFonts.inter(
-                  color: Colors.white.withOpacity(0.6),
+                  color: Colors.white.withValues(alpha: 0.6),
                   fontSize: 10,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 2.5,
@@ -246,7 +246,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                   height: 0.9,
                   shadows: [
                     Shadow(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha: 0.3),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -269,7 +269,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
           Text(
             data.description,
             style: GoogleFonts.inter(
-              color: Colors.white.withOpacity(0.65),
+              color: Colors.white.withValues(alpha: 0.65),
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -282,7 +282,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
               Text(
                 DateFormat('EEEE, MMMM d').format(DateTime.now()),
                 style: GoogleFonts.inter(
-                  color: Colors.white.withOpacity(0.5),
+                  color: Colors.white.withValues(alpha: 0.5),
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
@@ -312,7 +312,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
         Text(
           'HOURLY FORECAST',
           style: GoogleFonts.inter(
-            color: Colors.white.withOpacity(0.55),
+            color: Colors.white.withValues(alpha: 0.55),
             fontSize: 11,
             fontWeight: FontWeight.w900,
             letterSpacing: 2,
@@ -326,10 +326,10 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
             child: Container(
               height: 120,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                    color: Colors.white.withOpacity(0.15), width: 1.5),
+                    color: Colors.white.withValues(alpha: 0.15), width: 1.5),
               ),
               child: forecastAsync.when(
                 data: (forecast) {
@@ -402,7 +402,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
         Text(
           'CONDITIONS',
           style: GoogleFonts.inter(
-            color: Colors.white.withOpacity(0.55),
+            color: Colors.white.withValues(alpha: 0.55),
             fontSize: 11,
             fontWeight: FontWeight.w900,
             letterSpacing: 2,
@@ -415,10 +415,10 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
             filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                    color: Colors.white.withOpacity(0.15), width: 1.5),
+                    color: Colors.white.withValues(alpha: 0.15), width: 1.5),
               ),
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -499,7 +499,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
         Text(
           '5-DAY FORECAST',
           style: GoogleFonts.inter(
-            color: Colors.white.withOpacity(0.55),
+            color: Colors.white.withValues(alpha: 0.55),
             fontSize: 11,
             fontWeight: FontWeight.w900,
             letterSpacing: 2,
@@ -513,10 +513,10 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
               filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.08),
+                  color: Colors.white.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                      color: Colors.white.withOpacity(0.15), width: 1.5),
+                      color: Colors.white.withValues(alpha: 0.15), width: 1.5),
                 ),
                 child: ListView.separated(
                   shrinkWrap: true,
@@ -564,7 +564,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                                 Text(
                                   dateStr,
                                   style: GoogleFonts.inter(
-                                    color: Colors.white.withOpacity(0.4),
+                                    color: Colors.white.withValues(alpha: 0.4),
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -594,7 +594,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                                     Text(
                                       '${day.tempMin.toInt()}°',
                                       style: GoogleFonts.inter(
-                                        color: Colors.white.withOpacity(0.4),
+                                        color: Colors.white.withValues(alpha: 0.4),
                                         fontSize: 13,
                                         fontWeight: FontWeight.w700,
                                       ),
@@ -609,7 +609,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                                                 height: 6,
                                                 decoration: BoxDecoration(
                                                   color: Colors.white
-                                                      .withOpacity(0.1),
+                                                      .withValues(alpha: 0.1),
                                                   borderRadius:
                                                       BorderRadius.circular(3),
                                                 ),
@@ -734,7 +734,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.redAccent.withOpacity(0.1),
+                    color: Colors.redAccent.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.cloud_off_rounded,
@@ -860,10 +860,10 @@ class _GlassButton extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(14),
               border:
-                  Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+                  Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1),
             ),
             child: Icon(icon, color: Colors.white, size: 18),
           ),
@@ -886,7 +886,7 @@ class _TempChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.12),
+        color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -927,10 +927,10 @@ class _HourlyCard extends StatelessWidget {
       margin: const EdgeInsets.only(right: 8),
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border:
-            Border.all(color: Colors.white.withOpacity(0.15), width: 1),
+            Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -938,7 +938,7 @@ class _HourlyCard extends StatelessWidget {
           Text(
             time,
             style: GoogleFonts.inter(
-              color: Colors.white.withOpacity(0.6),
+              color: Colors.white.withValues(alpha: 0.6),
               fontSize: 10,
               fontWeight: FontWeight.w700,
             ),
@@ -989,7 +989,7 @@ class _StatCell extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: iconColor.withOpacity(0.12),
+            color: iconColor.withValues(alpha: 0.12),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: iconColor, size: 20),
@@ -1007,7 +1007,7 @@ class _StatCell extends StatelessWidget {
         Text(
           label,
           style: GoogleFonts.inter(
-            color: Colors.white.withOpacity(0.45),
+            color: Colors.white.withValues(alpha: 0.45),
             fontSize: 10,
             fontWeight: FontWeight.w700,
           ),
@@ -1042,7 +1042,7 @@ class _WeatherAmbientPainter extends CustomPainter {
 
   void _drawRain(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.06)
+      ..color = Colors.white.withValues(alpha: 0.06)
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 
@@ -1062,7 +1062,7 @@ class _WeatherAmbientPainter extends CustomPainter {
   void _drawSunRays(Canvas canvas, Size size) {
     final center = Offset(size.width * 0.75, size.height * 0.18);
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.04)
+      ..color = Colors.white.withValues(alpha: 0.04)
       ..style = PaintingStyle.fill;
 
     for (int i = 0; i < 8; i++) {
@@ -1094,7 +1094,7 @@ class _WeatherAmbientPainter extends CustomPainter {
       final paint = Paint()
         ..shader = RadialGradient(
           colors: [
-            Colors.white.withOpacity(0.08),
+            Colors.white.withValues(alpha: 0.08),
             Colors.transparent,
           ],
         ).createShader(Rect.fromCircle(

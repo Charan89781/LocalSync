@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 enum UserRole { resident, admin, moderator }
 
 class UserEntity {
@@ -13,6 +15,9 @@ class UserEntity {
   final int totalPosts;
   final UserRole role;
   final UserSettings settings;
+  final String? safetyStatus;
+  final String? safetyMessage;
+  final DateTime? lastSafetyCheck;
 
   UserEntity({
     required this.id,
@@ -27,6 +32,9 @@ class UserEntity {
     this.totalPosts = 0,
     this.role = UserRole.resident,
     UserSettings? settings,
+    this.safetyStatus,
+    this.safetyMessage,
+    this.lastSafetyCheck,
   }) : this.settings = settings ?? UserSettings();
 
   UserEntity copyWith({
@@ -42,6 +50,9 @@ class UserEntity {
     int? totalPosts,
     UserRole? role,
     UserSettings? settings,
+    String? safetyStatus,
+    String? safetyMessage,
+    DateTime? lastSafetyCheck,
   }) {
     return UserEntity(
       id: id ?? this.id,
@@ -56,6 +67,9 @@ class UserEntity {
       totalPosts: totalPosts ?? this.totalPosts,
       role: role ?? this.role,
       settings: settings ?? this.settings,
+      safetyStatus: safetyStatus ?? this.safetyStatus,
+      safetyMessage: safetyMessage ?? this.safetyMessage,
+      lastSafetyCheck: lastSafetyCheck ?? this.lastSafetyCheck,
     );
   }
 
@@ -72,10 +86,34 @@ class UserEntity {
       'totalPosts': totalPosts,
       'role': role.name,
       'settings': settings.toMap(),
+      'safetyStatus': safetyStatus,
+      'safetyMessage': safetyMessage,
+      'lastSafetyCheck': lastSafetyCheck != null ? Timestamp.fromDate(lastSafetyCheck!) : null,
     };
   }
 
   factory UserEntity.fromMap(Map<String, dynamic> map, String id) {
+    DateTime? parseDate(dynamic value) {
+      if (value == null) return null;
+      if (value is Timestamp) return value.toDate();
+      if (value is String) return DateTime.tryParse(value);
+      return null;
+    }
+
+    double parseDouble(dynamic value, double fallback) {
+      if (value == null) return fallback;
+      if (value is num) return value.toDouble();
+      if (value is String) return double.tryParse(value) ?? fallback;
+      return fallback;
+    }
+
+    int parseInt(dynamic value, int fallback) {
+      if (value == null) return fallback;
+      if (value is num) return value.toInt();
+      if (value is String) return int.tryParse(value) ?? fallback;
+      return fallback;
+    }
+
     return UserEntity(
       id: id,
       email: map['email'] ?? '',
@@ -84,15 +122,18 @@ class UserEntity {
       profileImageUrl: map['profileImageUrl'],
       address: map['address'],
       isVerified: map['isVerified'] ?? false,
-      trustScore: (map['trustScore'] ?? 5.0).toDouble(),
-      totalHelps: map['totalHelps'] ?? 0,
-      totalPosts: map['totalPosts'] ?? 0,
+      trustScore: parseDouble(map['trustScore'], 5.0),
+      totalHelps: parseInt(map['totalHelps'], 0),
+      totalPosts: parseInt(map['totalPosts'], 0),
       role: UserRole.values.firstWhere(
         (e) => e.name == (map['role'] ?? 'resident'),
         orElse: () => UserRole.resident,
       ),
       settings:
           UserSettings.fromMap(map['settings'] as Map<String, dynamic>? ?? {}),
+      safetyStatus: map['safetyStatus'],
+      safetyMessage: map['safetyMessage'],
+      lastSafetyCheck: parseDate(map['lastSafetyCheck']),
     );
   }
 }

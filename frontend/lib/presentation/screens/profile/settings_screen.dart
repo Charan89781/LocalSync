@@ -10,6 +10,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../common_widgets/premium_widgets.dart';
 import '../../../domain/entities/user_entity.dart';
+import '../../../core/services/gemini_service.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -32,6 +33,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   bool _darkMode = true;
   double _textSizeMultiplier = 1.0;
+
   final _apiKeyController = TextEditingController();
 
   @override
@@ -47,19 +49,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _loadPreferences() async {
-    _prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _notificationEmergency = _prefs.getBool('settings_notif_emergency') ?? true;
-      _notificationCommunity = _prefs.getBool('settings_notif_community') ?? true;
-      _notificationMarketplace = _prefs.getBool('settings_notif_marketplace') ?? false;
-      _notificationEvents = _prefs.getBool('settings_notif_events') ?? true;
-      _locationSharing = _prefs.getBool('settings_location_sharing') ?? true;
-      _profileVisibility = _prefs.getBool('settings_profile_visibility') ?? true;
-      _darkMode = _prefs.getBool('settings_dark_mode') ?? true;
-      _textSizeMultiplier = _prefs.getDouble('settings_text_size_multiplier') ?? 1.0;
-      _apiKeyController.text = _prefs.getString('localsync_gemini_api_key') ?? '';
-      _prefsInitialized = true;
-    });
+    try {
+      _prefs = await SharedPreferences.getInstance();
+      setState(() {
+        _notificationEmergency = _prefs.getBool('settings_notif_emergency') ?? true;
+        _notificationCommunity = _prefs.getBool('settings_notif_community') ?? true;
+        _notificationMarketplace = _prefs.getBool('settings_notif_marketplace') ?? false;
+        _notificationEvents = _prefs.getBool('settings_notif_events') ?? true;
+        _locationSharing = _prefs.getBool('settings_location_sharing') ?? true;
+        _profileVisibility = _prefs.getBool('settings_profile_visibility') ?? true;
+        _darkMode = _prefs.getBool('settings_dark_mode') ?? true;
+        
+        final multiplier = _prefs.get('settings_text_size_multiplier');
+        if (multiplier is double) {
+          _textSizeMultiplier = multiplier;
+        } else if (multiplier is int) {
+          _textSizeMultiplier = multiplier.toDouble();
+        } else {
+          _textSizeMultiplier = 1.0;
+        }
+        
+        _apiKeyController.text = _prefs.getString('localsync_gemini_api_key') ?? '';
+        _prefsInitialized = true;
+      });
+    } catch (e) {
+      debugPrint('[Settings] Error loading preferences: $e');
+      setState(() {
+        _prefsInitialized = true;
+      });
+    }
   }
 
   Future<void> _saveSetting(String key, dynamic value) async {
@@ -119,7 +137,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.surfaceNavy,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withOpacity(0.08)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                   ),
                   child: TextField(
                     controller: passController,
@@ -142,7 +160,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.surfaceNavy,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withOpacity(0.08)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                   ),
                   child: TextField(
                     controller: confirmController,
@@ -267,8 +285,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(authStateProvider).value;
-
     return Scaffold(
       backgroundColor: const Color(0xFF0A121A),
       appBar: AppBar(
@@ -297,7 +313,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               height: 250,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primaryBlue.withOpacity(0.04),
+                color: AppColors.primaryBlue.withValues(alpha: 0.04),
               ),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 70, sigmaY: 70),
@@ -415,6 +431,103 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ]),
                   const SizedBox(height: 28),
+                  // SECTION: AI CONFIGURATION
+                  _buildSectionHeader('AI ASSISTANT CONFIGURATION'),
+                  const SizedBox(height: 12),
+                  _buildOptionCard([
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.neonCyan.withValues(alpha: 0.08),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.vpn_key_rounded, color: AppColors.neonCyan, size: 20),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Gemini API Key',
+                                      style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Direct cloud connection for neighborhood AI companion',
+                                      style: GoogleFonts.inter(color: Colors.white38, fontSize: 11),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceNavy,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _apiKeyController,
+                                    obscureText: true,
+                                    style: GoogleFonts.inter(color: Colors.white, fontSize: 13),
+                                    decoration: InputDecoration(
+                                      hintText: 'Enter Gemini API Key (starts with AIzaSy)',
+                                      hintStyle: GoogleFonts.inter(color: Colors.white24, fontSize: 12),
+                                      border: InputBorder.none,
+                                      enabledBorder: InputBorder.none,
+                                      focusedBorder: InputBorder.none,
+                                      filled: false,
+                                    ),
+                                    onChanged: (val) async {
+                                      await _prefs.setString('localsync_gemini_api_key', val.trim());
+                                    },
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.check_circle_outline_rounded, color: AppColors.neonGreen, size: 20),
+                                  onPressed: () async {
+                                    HapticFeedback.lightImpact();
+                                    final savedKey = _apiKeyController.text.trim();
+                                    if (savedKey.isNotEmpty && !savedKey.startsWith('AIzaSy')) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Warning: Gemini API keys usually start with AIzaSy'),
+                                          backgroundColor: Colors.orangeAccent,
+                                        ),
+                                      );
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Gemini API Key saved successfully!'),
+                                          backgroundColor: AppColors.neonGreen,
+                                        ),
+                                      );
+                                    }
+                                    await GeminiService.instance.runConnectivityTest();
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ]),
+                  const SizedBox(height: 28),
 
                   // SECTION: SYSTEM & LOOKS
                   _buildSectionHeader('INTERFACE & VISUALS'),
@@ -464,22 +577,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
                   ]),
-                  const SizedBox(height: 28),
-
-                  // SECTION: DEVELOPER OPTIONS
-                  _buildSectionHeader('AI CONFIGURATION'),
-                  const SizedBox(height: 12),
-                  _buildOptionCard([
-                    _buildApiKeySettingsRow(),
-                  ]),
                   const SizedBox(height: 36),
 
                   // LOGOUT BUTTON
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.errorRed.withOpacity(0.06),
+                      color: AppColors.errorRed.withValues(alpha: 0.06),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.errorRed.withOpacity(0.2)),
+                      border: Border.all(color: AppColors.errorRed.withValues(alpha: 0.2)),
                     ),
                     child: TextButton(
                       onPressed: _handleLogout,
@@ -547,7 +652,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.02),
+          color: Colors.white.withValues(alpha: 0.02),
           shape: BoxShape.circle,
         ),
         child: Icon(icon, color: Colors.white70, size: 20),
@@ -574,7 +679,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.08),
+              color: color.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 20),
@@ -600,7 +705,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             value: value,
             onChanged: onChanged,
             activeColor: AppColors.neonCyan,
-            activeTrackColor: AppColors.neonCyan.withOpacity(0.2),
+            activeTrackColor: AppColors.neonCyan.withValues(alpha: 0.2),
             inactiveThumbColor: Colors.white30,
             inactiveTrackColor: Colors.white10,
           ),
@@ -609,93 +714,4 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildApiKeySettingsRow() {
-    if (!_prefsInitialized) {
-      return const SizedBox(
-        height: 60,
-        child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.neonCyan)),
-      );
-    }
-    
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.neonCyan.withOpacity(0.08),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.vpn_key_rounded, color: AppColors.neonCyan, size: 20),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Gemini API Key',
-                      style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Direct cloud connection for AI assistant',
-                      style: GoogleFonts.inter(color: Colors.white30, fontSize: 11),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceNavy,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withOpacity(0.08)),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _apiKeyController,
-                    obscureText: true,
-                    style: GoogleFonts.inter(color: Colors.white, fontSize: 13),
-                    decoration: InputDecoration(
-                      hintText: 'Enter Gemini API Key (starts with AIzaSy)',
-                      hintStyle: GoogleFonts.inter(color: Colors.white24, fontSize: 12),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      filled: false,
-                    ),
-                    onChanged: (val) async {
-                      await _prefs.setString('localsync_gemini_api_key', val.trim());
-                    },
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.check_circle_outline_rounded, color: AppColors.neonGreen, size: 20),
-                  onPressed: () {
-                    HapticFeedback.lightImpact();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('API Key saved successfully!'),
-                        backgroundColor: AppColors.neonGreen,
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

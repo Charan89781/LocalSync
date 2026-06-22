@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../domain/entities/post_entity.dart';
+import '../../../domain/entities/comment_entity.dart';
 import '../../providers/post_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../common_widgets/app_bottom_nav.dart';
 import '../../../core/services/location_service.dart';
 
@@ -138,124 +141,10 @@ class _NoticeBoardScreenState extends ConsumerState<NoticeBoardScreen>
     Color(0xFF880E4F), // Dark Rose
   ];
 
-  static final List<PostEntity> _seededNotices = [
-    PostEntity(
-      id: 'seed-visitor',
-      authorId: 'admin',
-      authorName: 'Security Office',
-      content: '⚠️ VISITOR GATE PROTOCOL\n\nTo enhance resident safety, starting Monday, all delivery agents (Zomato, Swiggy, Amazon, Zepto) must verify via MyGate code at Gate 2. Please generate codes in advance to avoid entry delays.',
-      type: PostType.announcement,
-      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-      category: 'Security',
-    ),
-    PostEntity(
-      id: 'seed-internet',
-      authorId: 'admin',
-      authorName: 'Utility Board',
-      content: '🌐 FIBER OPTIC UPGRADE\n\nJio & Airtel teams will be laying secondary underground cables. Expect brief, intermittent connection drops in Block B & C between 2:00 PM and 4:00 PM today.',
-      type: PostType.announcement,
-      createdAt: DateTime.now().subtract(const Duration(hours: 6)),
-      category: 'Maintenance',
-    ),
-    PostEntity(
-      id: 'seed-solar',
-      authorId: 'admin',
-      authorName: 'Maintenance Committee',
-      content: '☀️ SOLAR PANELS GRID CLEANING\n\nSemi-annual solar panel washing and backup generator testing will commence this Saturday. Lift services in Block A will run on DG backup power from 10 AM to 11:30 AM.',
-      type: PostType.announcement,
-      createdAt: DateTime.now().subtract(const Duration(hours: 14)),
-      category: 'Utilities',
-    ),
-    PostEntity(
-      id: 'seed-drain',
-      authorId: 'admin',
-      authorName: 'Civic Welfare Board',
-      content: '🧹 PRE-MONSOON DRAIN CLEARING\n\nMunicipal workers will carry out storm-water drain desilting and sanitization spraying on Thursday from 9 AM to 4 PM. Please cooperate by parking vehicles inside basement slots.',
-      type: PostType.announcement,
-      createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      category: 'Safety',
-    ),
-    PostEntity(
-      id: 'seed-market',
-      authorId: 'resident',
-      authorName: 'Asha Verma (Block C)',
-      content: '🍎 SUNDAY FARMERS MARKET\n\nSupport local organic growers! A fresh produce, organic dairy, and handcrafted items market is organized at the Central Clubhouse Lawn this Sunday from 7:00 AM to 1:00 PM. Carry cloth bags!',
-      type: PostType.announcement,
-      createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      category: 'Events',
-    ),
-    PostEntity(
-      id: 'seed-pets',
-      authorId: 'resident',
-      authorName: 'Elena Gilbert',
-      content: '🦮 PET OWNER GUIDELINES\n\nAll pet parents are kindly requested to use designated walking tracks behind Block D and ensure their pets are leashed in public common areas. Let’s keep our parks clean and safe!',
-      type: PostType.announcement,
-      createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      category: 'Community',
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final cityName = ref.watch(cityNameProvider);
     final postsAsync = ref.watch(feedPostsProvider);
-
-    final localSeededNotices = [
-      PostEntity(
-        id: 'seed-visitor',
-        authorId: 'admin',
-        authorName: 'Security Office',
-        content: '⚠️ $cityName GATE PROTOCOL\n\nTo enhance resident safety in $cityName, starting Monday, all delivery agents (Zomato, Swiggy, Amazon, Zepto) must verify via MyGate code at Gate 2. Please generate codes in advance to avoid entry delays.',
-        type: PostType.announcement,
-        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-        category: 'Security',
-      ),
-      PostEntity(
-        id: 'seed-internet',
-        authorId: 'admin',
-        authorName: 'Utility Board',
-        content: '🌐 $cityName FIBER UPGRADE\n\nJio & Airtel teams will be laying secondary underground cables in $cityName. Expect brief, intermittent connection drops in Block B & C between 2:00 PM and 4:00 PM today.',
-        type: PostType.announcement,
-        createdAt: DateTime.now().subtract(const Duration(hours: 6)),
-        category: 'Maintenance',
-      ),
-      PostEntity(
-        id: 'seed-solar',
-        authorId: 'admin',
-        authorName: 'Maintenance Committee',
-        content: '☀️ SOLAR PANELS CLEANING\n\nSemi-annual solar panel washing and backup generator testing in $cityName will commence this Saturday. Lift services in Block A will run on DG backup power from 10 AM to 11:30 AM.',
-        type: PostType.announcement,
-        createdAt: DateTime.now().subtract(const Duration(hours: 14)),
-        category: 'Utilities',
-      ),
-      PostEntity(
-        id: 'seed-drain',
-        authorId: 'admin',
-        authorName: 'Civic Welfare Board',
-        content: '🧹 $cityName DRAIN CLEANING\n\nMunicipal workers will carry out storm-water drain desilting and sanitization spraying in $cityName on Thursday from 9 AM to 4 PM. Please cooperate by parking vehicles inside basement slots.',
-        type: PostType.announcement,
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-        category: 'Safety',
-      ),
-      PostEntity(
-        id: 'seed-market',
-        authorId: 'resident',
-        authorName: 'Asha Verma (Block C)',
-        content: '🍎 $cityName SUNDAY MARKET\n\nSupport local organic growers! A fresh produce, organic dairy, and handcrafted items market is organized at $cityName Central Clubhouse Lawn this Sunday from 7:00 AM to 1:00 PM. Carry cloth bags!',
-        type: PostType.announcement,
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-        category: 'Events',
-      ),
-      PostEntity(
-        id: 'seed-pets',
-        authorId: 'resident',
-        authorName: 'Elena Gilbert',
-        content: '🦮 $cityName PET GUIDELINES\n\nAll pet parents in $cityName are kindly requested to use designated walking tracks behind Block D and ensure their pets are leashed in public common areas. Let’s keep our parks clean and safe!',
-        type: PostType.announcement,
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-        category: 'Community',
-      ),
-    ];
 
     return Scaffold(
       body: Container(
@@ -276,7 +165,13 @@ class _NoticeBoardScreenState extends ConsumerState<NoticeBoardScreen>
                 data: (posts) {
                   final dbNotices =
                       posts.where((p) => p.type == PostType.announcement).toList();
-                  final displayNotices = dbNotices.isEmpty ? localSeededNotices : dbNotices;
+                  if (dbNotices.isEmpty) {
+                    return SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: _buildEmptyState(),
+                    );
+                  }
+                  final displayNotices = dbNotices;
                   return SliverPadding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                     sliver: SliverGrid(
@@ -355,8 +250,8 @@ class _NoticeBoardScreenState extends ConsumerState<NoticeBoardScreen>
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                const Color(0xFF5D1A00).withOpacity(0.9),
-                const Color(0xFF8B2500).withOpacity(0.7),
+                const Color(0xFF5D1A00).withValues(alpha: 0.9),
+                const Color(0xFF8B2500).withValues(alpha: 0.7),
                 Colors.transparent,
               ],
               begin: Alignment.topCenter,
@@ -379,7 +274,7 @@ class _NoticeBoardScreenState extends ConsumerState<NoticeBoardScreen>
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -390,9 +285,9 @@ class _NoticeBoardScreenState extends ConsumerState<NoticeBoardScreen>
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.redAccent.withOpacity(0.2),
+                      color: Colors.redAccent.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.redAccent.withOpacity(0.4)),
+                      border: Border.all(color: Colors.redAccent.withValues(alpha: 0.4)),
                     ),
                     child: const Row(
                       children: [
@@ -414,16 +309,16 @@ class _NoticeBoardScreenState extends ConsumerState<NoticeBoardScreen>
               const SizedBox(height: 6),
               Text(
                 'Official hand-pinned updates for $cityName residents',
-                style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 13, fontWeight: FontWeight.w500),
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.65), fontSize: 13, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 16),
               // Segmented Toggle
               Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
+                  color: Colors.white.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.white.withOpacity(0.08)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                 ),
                 child: Row(
                   children: [
@@ -492,7 +387,7 @@ class _NoticeBoardScreenState extends ConsumerState<NoticeBoardScreen>
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.04),
+              color: Colors.white.withValues(alpha: 0.04),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.push_pin_outlined, size: 56, color: Colors.white24),
@@ -509,6 +404,8 @@ class _NoticeBoardScreenState extends ConsumerState<NoticeBoardScreen>
   }
 
   Widget _buildStickyNote(int index, PostEntity notice) {
+    final currentUser = ref.watch(authStateProvider).value;
+    final isOwner = currentUser != null && notice.authorId == currentUser.id;
     final bg = _noteBg[index % _noteBg.length];
     final accent = _noteAccent[index % _noteAccent.length];
     // Slight rotation for cork-board feel
@@ -527,13 +424,13 @@ class _NoticeBoardScreenState extends ConsumerState<NoticeBoardScreen>
             boxShadow: [
               // Main drop shadow
               BoxShadow(
-                color: Colors.black.withOpacity(0.35),
+                color: Colors.black.withValues(alpha: 0.35),
                 blurRadius: 12,
                 offset: const Offset(3, 6),
               ),
               // Color glow from note color
               BoxShadow(
-                color: bg.withOpacity(0.15),
+                color: bg.withValues(alpha: 0.15),
                 blurRadius: 20,
                 spreadRadius: 4,
               ),
@@ -553,7 +450,7 @@ class _NoticeBoardScreenState extends ConsumerState<NoticeBoardScreen>
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.redAccent.withOpacity(0.5),
+                          color: Colors.redAccent.withValues(alpha: 0.5),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -605,7 +502,7 @@ class _NoticeBoardScreenState extends ConsumerState<NoticeBoardScreen>
                         notice.content,
                         style: TextStyle(
                           fontSize: 12.5,
-                          color: Colors.black.withOpacity(0.82),
+                          color: Colors.black.withValues(alpha: 0.82),
                           height: 1.45,
                           fontWeight: FontWeight.w600,
                           fontFamily: 'Georgia', // Handwritten-note feel
@@ -619,17 +516,31 @@ class _NoticeBoardScreenState extends ConsumerState<NoticeBoardScreen>
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         GestureDetector(
-                          onTap: () => setState(() {
-                            _localLikes[notice.id] = (_localLikes[notice.id] ?? 0) + 1;
-                          }),
+                          onTap: isOwner
+                              ? () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text("You cannot upvote your own sticky notice!"),
+                                      backgroundColor: AppColors.errorRed,
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                              : () => setState(() {
+                                  _localLikes[notice.id] = (_localLikes[notice.id] ?? 0) + 1;
+                                }),
                           child: Row(
                             children: [
-                              Icon(Icons.favorite_rounded, color: Colors.redAccent, size: 13),
+                              Icon(
+                                Icons.favorite_rounded,
+                                color: isOwner ? Colors.black26 : Colors.redAccent,
+                                size: 13,
+                              ),
                               const SizedBox(width: 3),
                               Text(
                                 '$likesCount',
                                 style: TextStyle(
-                                  color: Colors.black.withOpacity(0.6),
+                                  color: Colors.black.withValues(alpha: 0.6),
                                   fontSize: 11,
                                   fontWeight: FontWeight.w800,
                                 ),
@@ -664,11 +575,6 @@ class _NoticeBoardScreenState extends ConsumerState<NoticeBoardScreen>
   }
 
   void _showThreadSheet(BuildContext context, Color bg, Color accent, PostEntity notice) {
-    final List<Map<String, String>> mockReplies = [
-      {'user': 'Rohan Shah', 'reply': 'Absolutely agree! This is very important for our community.'},
-      {'user': 'Elena D.', 'reply': 'What is the expected timeline for this?'},
-      {'user': 'Vikram G.', 'reply': 'Let\'s gather at Block C common area to coordinate.'},
-    ];
     final replyCtrl = TextEditingController();
 
     showModalBottomSheet(
@@ -679,162 +585,206 @@ class _NoticeBoardScreenState extends ConsumerState<NoticeBoardScreen>
         borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: StatefulBuilder(
-            builder: (ctx, setSheetState) => Container(
-              height: MediaQuery.of(ctx).size.height * 0.82,
-              decoration: BoxDecoration(
-                color: AppColors.primaryNavy.withOpacity(0.95),
-                border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
-              ),
-              padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 12),
-                  Center(
-                    child: Container(
-                      width: 44, height: 5,
-                      decoration: BoxDecoration(
-                        color: Colors.white24,
-                        borderRadius: BorderRadius.circular(10),
+          child: Container(
+            height: MediaQuery.of(ctx).size.height * 0.82,
+            decoration: BoxDecoration(
+              color: AppColors.primaryNavy.withValues(alpha: 0.95),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
+            ),
+            padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 12),
+                Center(
+                  child: Container(
+                    width: 44, height: 5,
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                // Note preview header
+                Container(
+                  margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: bg,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 8, offset: const Offset(2, 4)),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(color: accent, borderRadius: BorderRadius.circular(6)),
+                            child: const Text('PINNED NOTICE', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900)),
+                          ),
+                          const Spacer(),
+                          Text(DateFormat('MMM dd, yyyy').format(notice.createdAt),
+                              style: TextStyle(color: Colors.black.withValues(alpha: 0.4), fontSize: 10)),
+                        ],
                       ),
-                    ),
+                      const SizedBox(height: 10),
+                      Text(notice.content,
+                          style: TextStyle(fontSize: 14, color: Colors.black.withValues(alpha: 0.85), height: 1.5, fontWeight: FontWeight.w600)),
+                    ],
                   ),
-                  // Note preview header
-                  Container(
-                    margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: bg,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 8, offset: const Offset(2, 4)),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(color: accent, borderRadius: BorderRadius.circular(6)),
-                              child: Text('PINNED NOTICE', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900)),
-                            ),
-                            const Spacer(),
-                            Text(DateFormat('MMM dd, yyyy').format(notice.createdAt),
-                                style: TextStyle(color: Colors.black.withOpacity(0.4), fontSize: 10)),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Text(notice.content,
-                            style: TextStyle(fontSize: 14, color: Colors.black.withOpacity(0.85), height: 1.5, fontWeight: FontWeight.w600)),
-                      ],
-                    ),
+                ),
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Text('PULSE DISCUSSION',
+                      style: TextStyle(color: accent, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1.5)),
+                ),
+                const SizedBox(height: 8),
+                Container(height: 1, color: Colors.white10),
+                Expanded(
+                  child: Consumer(
+                    builder: (context, ref, child) {
+                      final commentsAsync = ref.watch(postCommentsProvider(notice.id));
+                      return commentsAsync.when(
+                        data: (comments) {
+                          if (comments.isEmpty) {
+                            return Center(
+                              child: Text(
+                                'No comments in this pulse thread yet.',
+                                style: GoogleFonts.inter(color: Colors.white38, fontSize: 13),
+                              ),
+                            );
+                          }
+                          return ListView.builder(
+                            padding: const EdgeInsets.all(20),
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: comments.length,
+                            itemBuilder: (ctx, i) {
+                              final r = comments[i];
+                              final timeStr = DateFormat('hh:mm a').format(r.createdAt);
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 14),
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.04),
+                                  borderRadius: BorderRadius.circular(18),
+                                  border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            CircleAvatar(
+                                              radius: 13,
+                                              backgroundColor: bg.withValues(alpha: 0.25),
+                                              backgroundImage: r.authorProfileUrl != null
+                                                  ? NetworkImage(r.authorProfileUrl!)
+                                                  : null,
+                                              child: r.authorProfileUrl == null
+                                                  ? Text(r.authorName[0],
+                                                      style: TextStyle(color: accent, fontSize: 11, fontWeight: FontWeight.bold))
+                                                  : null,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(r.authorName,
+                                                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
+                                          ],
+                                        ),
+                                        Text(
+                                          timeStr,
+                                          style: const TextStyle(color: Colors.white24, fontSize: 10),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(r.text,
+                                        style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4)),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        },
+                        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.neonCyan)),
+                        error: (err, _) => Center(child: Text('Error: $err', style: const TextStyle(color: Colors.white38))),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Text('PULSE DISCUSSION',
-                        style: TextStyle(color: accent, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1.5)),
+                ),
+                // Reply input
+                Container(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondaryNavy,
+                    border: const Border(top: BorderSide(color: Colors.white10)),
                   ),
-                  const SizedBox(height: 8),
-                  Container(height: 1, color: Colors.white10),
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.all(20),
-                      physics: const BouncingScrollPhysics(),
-                      itemCount: mockReplies.length,
-                      itemBuilder: (ctx, i) {
-                        final r = mockReplies[i];
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 14),
-                          padding: const EdgeInsets.all(14),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.04),
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: Colors.white.withOpacity(0.07)),
+                            color: Colors.white.withValues(alpha: 0.06),
+                            borderRadius: BorderRadius.circular(22),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 13,
-                                    backgroundColor: bg.withOpacity(0.25),
-                                    child: Text(r['user']![0],
-                                        style: TextStyle(color: accent, fontSize: 11, fontWeight: FontWeight.bold)),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(r['user']!,
-                                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Text(r['reply']!,
-                                  style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4)),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  // Reply input
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-                    decoration: BoxDecoration(
-                      color: AppColors.secondaryNavy,
-                      border: const Border(top: BorderSide(color: Colors.white10)),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.06),
-                              borderRadius: BorderRadius.circular(22),
-                              border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
-                            ),
-                            child: TextField(
-                              controller: replyCtrl,
-                              style: const TextStyle(color: Colors.white, fontSize: 14),
-                              decoration: const InputDecoration(
-                                hintText: 'Add to this pulse thread...',
-                                hintStyle: TextStyle(color: Colors.white30, fontSize: 14),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(vertical: 12),
-                                filled: false,
-                              ),
+                          child: TextField(
+                            controller: replyCtrl,
+                            style: const TextStyle(color: Colors.white, fontSize: 14),
+                            decoration: const InputDecoration(
+                              hintText: 'Add to this pulse thread...',
+                              hintStyle: TextStyle(color: Colors.white30, fontSize: 14),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(vertical: 12),
+                              filled: false,
+                              fillColor: Colors.transparent,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        GestureDetector(
-                          onTap: () {
-                            if (replyCtrl.text.isNotEmpty) {
-                              setSheetState(() {
-                                mockReplies.add({'user': 'You', 'reply': replyCtrl.text});
-                                replyCtrl.clear();
-                              });
-                            }
-                          },
-                          child: Container(
-                            width: 46, height: 46,
-                            decoration: BoxDecoration(
-                              color: bg,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(Icons.send_rounded, color: accent, size: 20),
+                      ),
+                      const SizedBox(width: 10),
+                      GestureDetector(
+                        onTap: () async {
+                          final text = replyCtrl.text.trim();
+                          if (text.isNotEmpty) {
+                            final user = ref.read(authStateProvider).value;
+                            if (user == null) return;
+                            
+                            final comment = CommentEntity(
+                              id: '',
+                              authorId: user.id,
+                              authorName: user.name ?? 'Neighbor',
+                              authorProfileUrl: user.profileImageUrl,
+                              text: text,
+                              createdAt: DateTime.now(),
+                            );
+                            
+                            await ref.read(postRepositoryProvider).addComment(notice.id, comment);
+                            replyCtrl.clear();
+                          }
+                        },
+                        child: Container(
+                          width: 46, height: 46,
+                          decoration: BoxDecoration(
+                            color: bg,
+                            shape: BoxShape.circle,
                           ),
+                          child: Icon(Icons.send_rounded, color: accent, size: 20),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -852,10 +802,10 @@ class _FoldPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final shadow = Paint()
-      ..color = Colors.black.withOpacity(0.2)
+      ..color = Colors.black.withValues(alpha: 0.2)
       ..style = PaintingStyle.fill;
     final fold = Paint()
-      ..color = accent.withOpacity(0.35)
+      ..color = accent.withValues(alpha: 0.35)
       ..style = PaintingStyle.fill;
 
     final path = Path()
@@ -922,9 +872,9 @@ extension on _NoticeBoardScreenState {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.04),
+        color: Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(18),
@@ -933,8 +883,15 @@ extension on _NoticeBoardScreenState {
           child: InkWell(
             onTap: () async {
               final url = Uri.parse(item['link'] ?? '');
-              if (await canLaunchUrl(url)) {
+              try {
                 await launchUrl(url, mode: LaunchMode.externalApplication);
+              } catch (e) {
+                debugPrint('Error launching url: $e');
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Could not launch browser: $e')),
+                  );
+                }
               }
             },
             child: Padding(
@@ -947,7 +904,7 @@ extension on _NoticeBoardScreenState {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppColors.neonCyan.withOpacity(0.12),
+                          color: AppColors.neonCyan.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(

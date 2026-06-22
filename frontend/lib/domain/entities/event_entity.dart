@@ -16,6 +16,9 @@ class EventEntity {
   final double? price;
   final double? latitude;
   final double? longitude;
+  final String? chatRoomId;
+  final int durationHours;
+  final List<String> requirements;
 
   EventEntity({
     required this.id,
@@ -33,6 +36,9 @@ class EventEntity {
     this.price,
     this.latitude,
     this.longitude,
+    this.chatRoomId,
+    this.durationHours = 2,
+    this.requirements = const [],
   });
 
   EventEntity copyWith({
@@ -51,6 +57,9 @@ class EventEntity {
     double? price,
     double? latitude,
     double? longitude,
+    String? chatRoomId,
+    int? durationHours,
+    List<String>? requirements,
   }) {
     return EventEntity(
       id: id ?? this.id,
@@ -68,6 +77,9 @@ class EventEntity {
       price: price ?? this.price,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      chatRoomId: chatRoomId ?? this.chatRoomId,
+      durationHours: durationHours ?? this.durationHours,
+      requirements: requirements ?? this.requirements,
     );
   }
 
@@ -87,6 +99,9 @@ class EventEntity {
       'price': price,
       'latitude': latitude,
       'longitude': longitude,
+      'chatRoomId': chatRoomId,
+      'durationHours': durationHours,
+      'requirements': requirements,
     };
   }
 
@@ -113,6 +128,9 @@ class EventEntity {
       price: (map['price'] ?? 0.0).toDouble(),
       latitude: (map['latitude'] as num?)?.toDouble(),
       longitude: (map['longitude'] as num?)?.toDouble(),
+      chatRoomId: map['chatRoomId'],
+      durationHours: map['durationHours'] ?? 2,
+      requirements: List<String>.from(map['requirements'] ?? []),
     );
   }
 }

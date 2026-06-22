@@ -58,20 +58,20 @@ class AppBottomNav extends StatelessWidget {
           child: Container(
             height: 68,
             decoration: BoxDecoration(
-              color: AppColors.primaryNavy.withOpacity(0.92),
+              color: AppColors.primaryNavy.withValues(alpha: 0.92),
               borderRadius: BorderRadius.circular(32),
               border: Border.all(
-                color: Colors.white.withOpacity(0.12),
+                color: Colors.white.withValues(alpha: 0.12),
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.35),
+                  color: Colors.black.withValues(alpha: 0.35),
                   blurRadius: 24,
                   offset: const Offset(0, 8),
                 ),
                 BoxShadow(
-                  color: AppColors.neonCyan.withOpacity(0.06),
+                  color: AppColors.neonCyan.withValues(alpha: 0.06),
                   blurRadius: 16,
                   offset: const Offset(0, 0),
                 ),
@@ -169,7 +169,7 @@ class _NavItemWidgetState extends State<_NavItemWidget>
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFFF3B30).withOpacity(0.5),
+                  color: const Color(0xFFFF3B30).withValues(alpha: 0.5),
                   blurRadius: 16,
                   offset: const Offset(0, 4),
                 ),
@@ -210,7 +210,7 @@ class _NavItemWidgetState extends State<_NavItemWidget>
                 width: widget.isSelected ? 48 : 36,
                 decoration: BoxDecoration(
                   color: widget.isSelected
-                      ? AppColors.neonCyan.withOpacity(0.18)
+                      ? AppColors.neonCyan.withValues(alpha: 0.18)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                 ),

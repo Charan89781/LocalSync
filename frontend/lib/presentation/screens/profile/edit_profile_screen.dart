@@ -1,7 +1,11 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/services/storage_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../common_widgets/premium_widgets.dart';
 
@@ -16,6 +20,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _nameController = TextEditingController();
   final _addressController = TextEditingController();
   final _phoneController = TextEditingController();
+  XFile? _localImageFile;
+  bool _isUploading = false;
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    if (pickedFile != null) {
+      setState(() {
+        _localImageFile = pickedFile;
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -58,7 +74,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           isPhone: true),
                       const SizedBox(height: 48),
                       ElevatedButton(
-                        onPressed: _saveProfile,
+                        onPressed: _isUploading ? null : _saveProfile,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.neonCyan,
                           foregroundColor: AppColors.primaryNavy,
@@ -66,10 +82,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16)),
                         ),
-                        child: const Text('SAVE CHANGES',
-                            style: TextStyle(
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.2)),
+                        child: _isUploading
+                            ? const CircularProgressIndicator(color: AppColors.primaryNavy)
+                            : const Text('SAVE CHANGES',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1.2)),
                       ),
                     ],
                   ),
@@ -113,26 +131,43 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Widget _buildProfilePicSection() {
-    return Stack(
-      alignment: Alignment.bottomRight,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(4),
-          decoration: const BoxDecoration(
-              shape: BoxShape.circle, gradient: AppColors.neonGradient),
-          child: const CircleAvatar(
-            radius: 60,
-            backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=pavan'),
+    final user = ref.watch(authStateProvider).value;
+    ImageProvider imgProvider;
+    if (_localImageFile != null) {
+      if (kIsWeb) {
+        imgProvider = NetworkImage(_localImageFile!.path);
+      } else {
+        imgProvider = FileImage(File(_localImageFile!.path));
+      }
+    } else if (user?.profileImageUrl != null && user!.profileImageUrl!.isNotEmpty) {
+      imgProvider = NetworkImage(user.profileImageUrl!);
+    } else {
+      imgProvider = const NetworkImage('https://i.pravatar.cc/150?u=pavan');
+    }
+
+    return GestureDetector(
+      onTap: _pickImage,
+      child: Stack(
+        alignment: Alignment.bottomRight,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: const BoxDecoration(
+                shape: BoxShape.circle, gradient: AppColors.neonGradient),
+            child: CircleAvatar(
+              radius: 60,
+              backgroundImage: imgProvider,
+            ),
           ),
-        ),
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: const BoxDecoration(
-              color: AppColors.neonCyan, shape: BoxShape.circle),
-          child: const Icon(Icons.camera_alt_rounded,
-              size: 20, color: AppColors.primaryNavy),
-        ),
-      ],
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: const BoxDecoration(
+                color: AppColors.neonCyan, shape: BoxShape.circle),
+            child: const Icon(Icons.camera_alt_rounded,
+                size: 20, color: AppColors.primaryNavy),
+          ),
+        ],
+      ),
     );
   }
 
@@ -144,7 +179,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       children: [
         Text(label,
             style: TextStyle(
-                color: Colors.white.withOpacity(0.4),
+                color: Colors.white.withValues(alpha: 0.4),
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.5)),
@@ -170,21 +205,45 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   void _saveProfile() async {
     final user = ref.read(authStateProvider).value;
     if (user != null) {
-      final updatedUser = user.copyWith(
-        name: _nameController.text,
-        address: _addressController.text,
-        phoneNumber: _phoneController.text,
-      );
+      setState(() => _isUploading = true);
+      try {
+        String? profileImageUrl = user.profileImageUrl;
+        if (_localImageFile != null) {
+          final storage = ref.read(storageServiceProvider);
+          final fileName = 'avatar_${DateTime.now().millisecondsSinceEpoch}.jpg';
+          final storagePath = 'profiles/${user.id}/$fileName';
+          profileImageUrl = await storage.uploadFile(storagePath, _localImageFile!);
+        }
 
-      await ref.read(authRepositoryProvider).updateProfile(updatedUser);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Profile updated successfully!'),
-              backgroundColor: AppColors.neonGreen),
+        final updatedUser = user.copyWith(
+          name: _nameController.text,
+          address: _addressController.text,
+          phoneNumber: _phoneController.text,
+          profileImageUrl: profileImageUrl,
         );
-        if (context.canPop()) {
-          context.pop();
+
+        await ref.read(authRepositoryProvider).updateProfile(updatedUser);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Profile updated successfully!'),
+                backgroundColor: AppColors.neonGreen),
+          );
+          if (context.canPop()) {
+            context.pop();
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Error: $e'),
+                backgroundColor: AppColors.errorRed),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isUploading = false);
         }
       }
     }

@@ -9,9 +9,10 @@ class PostRepositoryImpl implements PostRepository {
   @override
   Stream<List<PostEntity>> getFeedPosts() {
     return _db.collection('posts').snapshots().map((snap) {
-      final list = snap.docs
-          .map((doc) => PostEntity.fromMap(doc.data(), doc.id))
-          .toList();
+      final list = snap.docs.map((doc) {
+        final post = PostEntity.fromMap(doc.data(), doc.id);
+        return post.copyWith(isSending: doc.metadata.hasPendingWrites);
+      }).toList();
       list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return list;
     });
@@ -22,6 +23,33 @@ class PostRepositoryImpl implements PostRepository {
     final Map<String, dynamic> data = post.toMap();
     data['createdAt'] = FieldValue.serverTimestamp();
     await _db.collection('posts').add(data);
+
+    // Auto-alert system for notice board announcements
+    if (post.type == PostType.announcement) {
+      try {
+        final alertRooms = await _db.collection('chatRooms')
+            .where('roomName', isEqualTo: '#alerts')
+            .limit(1)
+            .get();
+        if (alertRooms.docs.isNotEmpty) {
+          final alertRoomId = alertRooms.docs.first.id;
+          final messageRef = _db.collection('chatRooms').doc(alertRoomId).collection('messages').doc();
+          await messageRef.set({
+            'senderId': 'system',
+            'senderName': 'System Alert',
+            'text': '📢 NEW NOTICE: ${post.content}',
+            'timestamp': FieldValue.serverTimestamp(),
+          });
+          await _db.collection('chatRooms').doc(alertRoomId).update({
+            'lastMessage': '📢 Notice: ${post.content.length > 40 ? post.content.substring(0, 40) + "..." : post.content}',
+            'lastMessageTime': FieldValue.serverTimestamp(),
+          });
+        }
+      } catch (e) {
+        // Safe fail silently
+        print('Error posting auto alert: $e');
+      }
+    }
   }
 
   @override
@@ -125,5 +153,10 @@ class PostRepositoryImpl implements PostRepository {
         'willingToHelp': FieldValue.arrayUnion([userId]),
       });
     }
+  }
+
+  @override
+  Future<void> deletePost(String postId) async {
+    await _db.collection('posts').doc(postId).delete();
   }
 }

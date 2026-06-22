@@ -57,13 +57,20 @@ class ListingEntity {
       return DateTime.now();
     }
 
+    double parseDouble(dynamic value) {
+      if (value == null) return 0.0;
+      if (value is num) return value.toDouble();
+      if (value is String) return double.tryParse(value) ?? 0.0;
+      return 0.0;
+    }
+
     return ListingEntity(
       id: id,
       ownerId: map['ownerId'] ?? '',
       ownerName: map['ownerName'] ?? 'Neighbor',
       title: map['title'] ?? '',
       description: map['description'] ?? '',
-      price: (map['price'] ?? 0).toDouble(),
+      price: parseDouble(map['price']),
       type: ListingType.values.firstWhere((e) => e.name == map['type'],
           orElse: () => ListingType.rental),
       category: map['category'] ?? '',
