@@ -1,0 +1,14 @@
+{
+  "name": "mobile_appium_tests",
+  "version": "1.0.0",
+  "description": "Appium Mobile E2E tests for LocalSync",
+  "main": "mobile_test.js",
+  "scripts": {
+    "test": "mocha mobile_test.js --timeout 30000"
+  },
+  "dependencies": {
+    "chai": "^4.3.7",
+    "mocha": "^10.2.0",
+    "webdriverio": "^8.12.0"
+  }
+}

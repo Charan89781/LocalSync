@@ -1,0 +1,14 @@
+{
+  "name": "selenium_web_tests",
+  "version": "1.0.0",
+  "description": "E2E Web Frontend tests for LocalSync",
+  "main": "web_test.js",
+  "scripts": {
+    "test": "mocha web_test.js --timeout 15000"
+  },
+  "dependencies": {
+    "chai": "^4.3.7",
+    "mocha": "^10.2.0",
+    "selenium-webdriver": "^4.10.0"
+  }
+}

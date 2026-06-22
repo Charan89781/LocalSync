@@ -66,3 +66,4 @@ job25_logs.txt
 job_logs.txt
 /frontend/android/app/build/
 /frontend/android/build/
+*.xlsx
