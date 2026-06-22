@@ -6,8 +6,8 @@ import os
 import statistics
 
 # Configuration
-CONCURRENT_USERS = 40
-TEST_DURATION_SECS = 5
+CONCURRENT_USERS = 100
+TEST_DURATION_SECS = 60
 TARGET_API = os.getenv('TARGET_API_URL', 'http://localhost:8080')
 ENDPOINTS = [
     '/api/listings',
