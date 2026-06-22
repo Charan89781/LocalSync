@@ -162,8 +162,8 @@ jobs:
       - name: Boot Android Emulator & Run Appium Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 33
-          target: google_apis
+          api-level: 29
+          target: default
           arch: x86_64
           force-avd-creation: false
           emulator-options: -no-window -gpu off -no-audio -no-boot-anim
