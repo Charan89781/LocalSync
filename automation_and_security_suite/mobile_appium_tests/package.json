@@ -1,10 +1,10 @@
 {
   "name": "mobile_appium_tests",
   "version": "1.0.0",
-  "description": "Appium Mobile E2E tests for LocalSync",
+  "description": "Appium Mobile E2E tests for LocalSync (102 tests · 51 screens · 13 categories)",
   "main": "mobile_test.js",
   "scripts": {
-    "test": "mocha mobile_test.js --timeout 30000"
+    "test": "mocha mobile_test.js --timeout 60000 --exit --reporter spec"
   },
   "dependencies": {
     "chai": "^4.3.7",

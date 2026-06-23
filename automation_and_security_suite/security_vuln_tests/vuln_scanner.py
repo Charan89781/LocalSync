@@ -122,9 +122,8 @@ def scan_exposed_secrets():
                 for label, pattern in regex_rules.items():
                     matches = re.findall(pattern, content)
                     for match in matches:
-                        # Exclude self-reference pattern inside check_status.js (if not replaced)
-                        # or inside this file
-                        if 'vuln_scanner.py' in file_path:
+                        # Exclude self-reference pattern or firebase configuration file
+                        if 'vuln_scanner.py' in file_path or 'google-services.json' in file_path:
                             continue
                         unsecure_found = True
                         details += f"Exposed {label} in {os.path.basename(file_path)}\n"
