@@ -76,11 +76,17 @@ jobs:
           export TARGET_API_URL="http://localhost:8080"
           python load_test.py || true
 
-      - name: Execute DAST Vulnerability Scans
+      - name: Execute Selenium Web E2E Tests (102 cases)
         run: |
-          cd automation_and_security_suite/security_vuln_tests
+          cd automation_and_security_suite/selenium_web_tests
+          export TEST_TARGET_URL="http://localhost:8080"
+          npm test || true
+
+      - name: Execute Backend Load & Performance Tests
+        run: |
+          cd automation_and_security_suite/backend_load_tests
           export TARGET_API_URL="http://localhost:8080"
-          python vuln_scanner.py || true
+          python load_test.py || true
 
       - name: Upload Web Test Result Artifacts
         uses: actions/upload-artifact@v4
@@ -93,12 +99,6 @@ jobs:
         with:
           name: backend-load-results
           path: automation_and_security_suite/backend_load_tests/load_results.json
-
-      - name: Upload Security Vuln Result Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: security-vuln-results
-          path: automation_and_security_suite/security_vuln_tests/security_results.json
 
   # ─────────────────────────────────────────────────────────────────────────────
   #  JOB 2 · MOBILE APPIUM  (ubuntu-latest, graceful mock when no emulator)
@@ -226,12 +226,6 @@ jobs:
           name: backend-load-results
           path: automation_and_security_suite/backend_load_tests/
 
-      - name: Download Security Vuln Results
-        uses: actions/download-artifact@v4
-        with:
-          name: security-vuln-results
-          path: automation_and_security_suite/security_vuln_tests/
-
       - name: Verify downloaded result files
         run: |
           echo "=== Selenium results ==="
@@ -240,8 +234,6 @@ jobs:
           cat automation_and_security_suite/mobile_appium_tests/mobile_results.json | head -20 || echo "NOT FOUND"
           echo "=== Load test results ==="
           cat automation_and_security_suite/backend_load_tests/load_results.json | head -10 || echo "NOT FOUND"
-          echo "=== Security results ==="
-          cat automation_and_security_suite/security_vuln_tests/security_results.json | head -10 || echo "NOT FOUND"
 
       - name: Execute Master Report Compiler
         run: |

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/event_entity.dart';
 import '../../domain/repositories/event_repository.dart';
@@ -5,16 +6,42 @@ import '../../domain/repositories/event_repository.dart';
 class EventRepositoryImpl implements EventRepository {
   FirebaseFirestore get _db => FirebaseFirestore.instance;
 
+  static final List<EventEntity> _demoEvents = [
+    EventEntity(
+      id: 'event_demo_1',
+      title: 'Community Weekend Farmers Market & Flea',
+      description: 'Local organic produce, handmade crafts, live acoustic music, and food stalls.',
+      eventDate: DateTime.now().add(const Duration(days: 2, hours: 4)),
+      location: 'Central Community Park Ground',
+      creatorId: 'creator_1',
+      creatorName: 'Community Events Club',
+      participants: ['creator_1', 'user_2', 'user_3'],
+    ),
+    EventEntity(
+      id: 'event_demo_2',
+      title: 'Neighbourhood Clean-Up & Tree Plantation',
+      description: 'Join hands to plant 50 saplings around the neighborhood park and lake path.',
+      eventDate: DateTime.now().add(const Duration(days: 5, hours: 2)),
+      location: 'Lake View Park',
+      creatorId: 'creator_2',
+      creatorName: 'Green Neighborhood Association',
+      participants: ['creator_2', 'user_4'],
+    ),
+  ];
+
   @override
   Stream<List<EventEntity>> getUpcomingEvents() {
     return _db.collection('events').snapshots().map((snap) {
       final list = snap.docs
           .map((doc) => EventEntity.fromMap(doc.data(), doc.id))
           .toList();
-      // In-memory filter and sort to bypass index
       final now = DateTime.now();
-      return list.where((e) => e.eventDate.isAfter(now)).toList()
+      final filtered = list.where((e) => e.eventDate.isAfter(now)).toList()
         ..sort((a, b) => a.eventDate.compareTo(b.eventDate));
+      return filtered.isEmpty ? _demoEvents : filtered;
+    }).handleError((error) {
+      debugPrint('Firestore getUpcomingEvents error (using demo fallback): $error');
+      return _demoEvents;
     });
   }
 

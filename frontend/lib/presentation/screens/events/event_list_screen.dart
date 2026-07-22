@@ -51,6 +51,7 @@ class EventListScreen extends ConsumerStatefulWidget {
 class _EventListScreenState extends ConsumerState<EventListScreen> {
   String _selectedCategory = 'All';
   bool _isMapView = false;
+  bool _showCompletedEvents = false; // false = Upcoming, true = Completed/Past Events
   GoogleMapController? _mapController;
   final PageController _pageController = PageController(viewportFraction: 0.85);
   int _currentPageIndex = 0;
@@ -421,14 +422,16 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
       ),
       body: eventsAsync.when(
         data: (events) {
-          var filtered = events
-              .where((e) =>
-                  _selectedCategory == 'All' ||
-                  (e.imageUrl != null &&
-                      _categoryImages.entries.any((entry) =>
-                          entry.value == e.imageUrl &&
-                          entry.key == _selectedCategory)))
-              .toList();
+          final now = DateTime.now().subtract(const Duration(hours: 4));
+          var filtered = events.where((e) {
+            final matchTab = _showCompletedEvents ? e.eventDate.isBefore(now) : e.eventDate.isAfter(now);
+            final matchCategory = _selectedCategory == 'All' ||
+                (e.imageUrl != null &&
+                    _categoryImages.entries.any((entry) =>
+                        entry.value == e.imageUrl &&
+                        entry.key == _selectedCategory));
+            return matchTab && matchCategory;
+          }).toList();
 
           if (_searchQuery.isNotEmpty) {
             final q = _searchQuery.toLowerCase();
@@ -497,6 +500,61 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       child: Column(
         children: [
+          // 2-Way Tab Bar: Upcoming Events vs Completed Events
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _showCompletedEvents = false),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        color: !_showCompletedEvents ? AppColors.neonCyan : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'UPCOMING EVENTS',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          color: !_showCompletedEvents ? AppColors.primaryNavy : Colors.white70,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _showCompletedEvents = true),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        color: _showCompletedEvents ? AppColors.successGreen : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'COMPLETED EVENTS',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          color: _showCompletedEvents ? AppColors.primaryNavy : Colors.white70,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
           Container(
             decoration: BoxDecoration(
               color: AppColors.secondaryNavy,

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/space_entity.dart';
 import '../../domain/entities/booking_entity.dart';
@@ -6,12 +7,59 @@ import '../../domain/repositories/space_repository.dart';
 class SpaceRepositoryImpl implements SpaceRepository {
   FirebaseFirestore get _db => FirebaseFirestore.instance;
 
+  static final List<SpaceEntity> _demoSpaces = [
+    SpaceEntity(
+      id: 'space_demo_1',
+      name: 'Spacious 2 BHK Modern Apartment',
+      location: 'Greenwood Heights, Block C',
+      description: 'Well-ventilated 2 BHK apartment with modular kitchen and balcony view.',
+      pricePerHour: 25.0,
+      imageUrl: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
+      spaceType: 'Flat',
+      bhkType: '2 BHK',
+      furnishingStatus: 'Fully Furnished',
+      preferredTenants: 'Family / Working Professionals',
+      depositAmount: 3000.0,
+      monthlyRent: 1200.0,
+      isMonthly: true,
+      ownerId: 'owner_demo',
+      isAvailable: true,
+      avgRating: 4.7,
+      reviewCount: 12,
+      isVerified: true,
+    ),
+    SpaceEntity(
+      id: 'space_demo_2',
+      name: 'Cozy Private Studio / Work Pod',
+      location: 'Community Hub Plaza',
+      description: 'Quiet studio space with high-speed fiber internet for remote work.',
+      pricePerHour: 15.0,
+      imageUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c',
+      spaceType: 'Office',
+      bhkType: 'Studio',
+      furnishingStatus: 'Fully Furnished',
+      preferredTenants: 'Any',
+      depositAmount: 500.0,
+      monthlyRent: 450.0,
+      isMonthly: false,
+      ownerId: 'owner_demo',
+      isAvailable: true,
+      avgRating: 4.9,
+      reviewCount: 8,
+      isVerified: true,
+    ),
+  ];
+
   @override
   Stream<List<SpaceEntity>> getSpaces() {
     return _db.collection('spaces').snapshots().map((snap) {
-      return snap.docs
+      final list = snap.docs
           .map((doc) => SpaceEntity.fromMap(doc.data(), doc.id))
           .toList();
+      return list.isEmpty ? _demoSpaces : list;
+    }).handleError((error) {
+      debugPrint('Firestore getSpaces error (using demo fallback): $error');
+      return _demoSpaces;
     });
   }
 

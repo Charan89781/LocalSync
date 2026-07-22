@@ -46,6 +46,7 @@ app.*.map.json
 .mingit/
 /backend/testing/**/node_modules/
 /backend/testing/node_modules/
+**/node_modules/
 **/~$*.xlsx
 ~$*.xlsx
 

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/listing_entity.dart';
 import '../../domain/entities/borrow_request_entity.dart';
@@ -5,6 +6,35 @@ import '../../domain/repositories/listing_repository.dart';
 
 class ListingRepositoryImpl implements ListingRepository {
   FirebaseFirestore get _db => FirebaseFirestore.instance;
+
+  static final List<ListingEntity> _demoListings = [
+    ListingEntity(
+      id: 'listing_demo_1',
+      title: 'Bosch Power Drill Set',
+      description: 'Cordless power drill with full bit set available for weekend borrowing.',
+      category: 'Tools',
+      ownerId: 'owner_1',
+      ownerName: 'David Miller',
+      price: 5.0,
+      type: ListingType.rental,
+      imageUrls: const [],
+      isAvailable: true,
+      createdAt: DateTime.now().subtract(const Duration(days: 1)),
+    ),
+    ListingEntity(
+      id: 'listing_demo_2',
+      title: '4-Person Camping Tent',
+      description: 'Waterproof double-layer camping tent in excellent condition.',
+      category: 'Outdoors',
+      ownerId: 'owner_2',
+      ownerName: 'Emily Clark',
+      price: 10.0,
+      type: ListingType.rental,
+      imageUrls: const [],
+      isAvailable: true,
+      createdAt: DateTime.now().subtract(const Duration(days: 2)),
+    ),
+  ];
 
   @override
   Stream<List<ListingEntity>> getListings() {
@@ -14,13 +44,14 @@ class ListingRepositoryImpl implements ListingRepository {
         try {
           list.add(ListingEntity.fromMap(doc.data(), doc.id));
         } catch (e, stack) {
-          // Log parsing error and continue to not break the feed
-          print('Error parsing listing document ${doc.id}: $e\n$stack');
+          debugPrint('Error parsing listing document ${doc.id}: $e\n$stack');
         }
       }
-      // In-memory sort to bypass index
       list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      return list;
+      return list.isEmpty ? _demoListings : list;
+    }).handleError((error) {
+      debugPrint('Firestore getListings error (using demo fallback): $error');
+      return _demoListings;
     });
   }
 

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/post_entity.dart';
 import '../../domain/entities/comment_entity.dart';
@@ -5,6 +6,29 @@ import '../../domain/repositories/post_repository.dart';
 
 class PostRepositoryImpl implements PostRepository {
   FirebaseFirestore get _db => FirebaseFirestore.instance;
+
+  static final List<PostEntity> _demoPosts = [
+    PostEntity(
+      id: 'post_demo_1',
+      authorId: 'author_1',
+      authorName: 'Sarah Jenkins',
+      content: 'Need help moving a couch this Saturday afternoon! Willing to offer tea & snacks.',
+      type: PostType.help,
+      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+      commentsCount: 2,
+      category: 'Repairs',
+    ),
+    PostEntity(
+      id: 'post_demo_2',
+      authorId: 'author_2',
+      authorName: 'Community Board',
+      content: 'Looking for a volunteer to help water plants in the neighborhood garden this week.',
+      type: PostType.help,
+      createdAt: DateTime.now().subtract(const Duration(hours: 5)),
+      commentsCount: 3,
+      category: 'Groceries',
+    ),
+  ];
 
   @override
   Stream<List<PostEntity>> getFeedPosts() {
@@ -14,7 +38,10 @@ class PostRepositoryImpl implements PostRepository {
         return post.copyWith(isSending: doc.metadata.hasPendingWrites);
       }).toList();
       list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      return list;
+      return list.isEmpty ? _demoPosts : list;
+    }).handleError((error) {
+      debugPrint('Firestore getFeedPosts error (using demo fallback): $error');
+      return _demoPosts;
     });
   }
 

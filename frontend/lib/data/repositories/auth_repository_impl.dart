@@ -45,7 +45,14 @@ class AuthRepositoryImpl implements AuthRepository {
             }).listen((userEntity) {
               controller?.add(userEntity);
             }, onError: (err) {
-              controller?.addError(err);
+              debugPrint('Firestore authStateChanges listener error (falling back to Auth user): $err');
+              controller?.add(UserEntity(
+                id: user.uid,
+                email: user.email ?? '',
+                name: user.displayName,
+                profileImageUrl: user.photoURL,
+                isVerified: user.emailVerified,
+              ));
             });
           }
         }, onError: (err) {
@@ -67,28 +74,29 @@ class AuthRepositoryImpl implements AuthRepository {
         email: email, password: password);
     if (credential.user == null) return null;
 
-    final docRef = _db.collection('users').doc(credential.user!.uid);
-    final doc = await docRef.get();
-    if (doc.exists) {
-      await docRef.update({
-        'isOnline': true,
-        'lastSeen': FieldValue.serverTimestamp(),
-      });
-      final updatedDoc = await docRef.get();
-      return UserEntity.fromMap(updatedDoc.data()!, updatedDoc.id);
+    final u = credential.user!;
+    try {
+      final docRef = _db.collection('users').doc(u.uid);
+      final doc = await docRef.get();
+      if (doc.exists && doc.data() != null) {
+        try {
+          await docRef.update({
+            'isOnline': true,
+            'lastSeen': FieldValue.serverTimestamp(),
+          });
+        } catch (_) {}
+        return UserEntity.fromMap(doc.data()!, doc.id);
+      }
+    } catch (e) {
+      debugPrint('Firestore user doc fetch error (non-fatal): $e');
     }
 
-    final newUser = UserEntity(
-      id: credential.user!.uid,
-      email: credential.user!.email!,
-      name: credential.user!.displayName ?? email.split('@').first,
-      isVerified: credential.user!.emailVerified,
+    return UserEntity(
+      id: u.uid,
+      email: u.email ?? email,
+      name: u.displayName ?? email.split('@').first,
+      isVerified: u.emailVerified,
     );
-    await docRef.set(newUser.toMap()..addAll({
-      'isOnline': true,
-      'lastSeen': FieldValue.serverTimestamp(),
-    }));
-    return newUser;
   }
 
   @override
@@ -103,27 +111,35 @@ class AuthRepositoryImpl implements AuthRepository {
     final newUser =
         UserEntity(id: credential.user!.uid, email: email, name: name);
 
-    await _db
-        .collection('users')
-        .doc(credential.user!.uid)
-        .set(newUser.toMap()..addAll({
-          'isOnline': true,
-          'lastSeen': FieldValue.serverTimestamp(),
-        }));
+    try {
+      await _db
+          .collection('users')
+          .doc(credential.user!.uid)
+          .set(newUser.toMap()..addAll({
+            'isOnline': true,
+            'lastSeen': FieldValue.serverTimestamp(),
+          }));
+    } catch (e) {
+      debugPrint('Firestore signup user record creation error (non-fatal): $e');
+    }
 
     return newUser;
   }
 
   @override
   Future<void> updateProfile(UserEntity user) async {
-    await _db.collection('users').doc(user.id).update(user.toMap());
+    try {
+      await _db.collection('users').doc(user.id).update(user.toMap());
+    } catch (e) {
+      debugPrint('Firestore updateProfile error: $e');
+    }
   }
 
   @override
   Future<void> signInWithGoogle() async {
     try {
       if (kIsWeb) {
-        // ── Web: use Firebase popup (google_sign_in doesn't work on web) ──
+        // ── Web: use Firebase popup ──
         final googleProvider = GoogleAuthProvider();
         googleProvider.addScope('email');
         googleProvider.addScope('profile');
@@ -132,24 +148,29 @@ class AuthRepositoryImpl implements AuthRepository {
         final userCredential = await _auth.signInWithPopup(googleProvider);
 
         if (userCredential.user != null) {
-          final docRef = _db.collection('users').doc(userCredential.user!.uid);
-          final doc = await docRef.get();
-          if (!doc.exists) {
-            final newUser = UserEntity(
-              id: userCredential.user!.uid,
-              email: userCredential.user!.email ?? '',
-              name: userCredential.user!.displayName,
-              profileImageUrl: userCredential.user!.photoURL,
-            );
-            await docRef.set(newUser.toMap()..addAll({
-              'isOnline': true,
-              'lastSeen': FieldValue.serverTimestamp(),
-            }));
-          } else {
-            await docRef.update({
-              'isOnline': true,
-              'lastSeen': FieldValue.serverTimestamp(),
-            });
+          final u = userCredential.user!;
+          try {
+            final docRef = _db.collection('users').doc(u.uid);
+            final doc = await docRef.get();
+            if (!doc.exists) {
+              final newUser = UserEntity(
+                id: u.uid,
+                email: u.email ?? '',
+                name: u.displayName,
+                profileImageUrl: u.photoURL,
+              );
+              await docRef.set(newUser.toMap()..addAll({
+                'isOnline': true,
+                'lastSeen': FieldValue.serverTimestamp(),
+              }));
+            } else {
+              await docRef.update({
+                'isOnline': true,
+                'lastSeen': FieldValue.serverTimestamp(),
+              });
+            }
+          } catch (e) {
+            debugPrint('Firestore user record sync error on Google Sign-In (non-fatal): $e');
           }
         }
       } else {
@@ -166,24 +187,29 @@ class AuthRepositoryImpl implements AuthRepository {
         final userCredential = await _auth.signInWithCredential(credential);
 
         if (userCredential.user != null) {
-          final docRef = _db.collection('users').doc(userCredential.user!.uid);
-          final doc = await docRef.get();
-          if (!doc.exists) {
-            final newUser = UserEntity(
-              id: userCredential.user!.uid,
-              email: userCredential.user!.email ?? '',
-              name: userCredential.user!.displayName,
-              profileImageUrl: userCredential.user!.photoURL,
-            );
-            await docRef.set(newUser.toMap()..addAll({
-              'isOnline': true,
-              'lastSeen': FieldValue.serverTimestamp(),
-            }));
-          } else {
-            await docRef.update({
-              'isOnline': true,
-              'lastSeen': FieldValue.serverTimestamp(),
-            });
+          final u = userCredential.user!;
+          try {
+            final docRef = _db.collection('users').doc(u.uid);
+            final doc = await docRef.get();
+            if (!doc.exists) {
+              final newUser = UserEntity(
+                id: u.uid,
+                email: u.email ?? '',
+                name: u.displayName,
+                profileImageUrl: u.photoURL,
+              );
+              await docRef.set(newUser.toMap()..addAll({
+                'isOnline': true,
+                'lastSeen': FieldValue.serverTimestamp(),
+              }));
+            } else {
+              await docRef.update({
+                'isOnline': true,
+                'lastSeen': FieldValue.serverTimestamp(),
+              });
+            }
+          } catch (e) {
+            debugPrint('Firestore user record sync error on Google Sign-In (non-fatal): $e');
           }
         }
       }

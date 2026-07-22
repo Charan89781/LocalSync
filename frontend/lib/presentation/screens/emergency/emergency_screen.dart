@@ -23,6 +23,7 @@ class EmergencyScreen extends ConsumerStatefulWidget {
 
 class _EmergencyScreenState extends ConsumerState<EmergencyScreen> with TickerProviderStateMixin {
   bool _isSOSActive = false;
+  bool _showResolvedAlerts = false; // false = Active, true = Resolved Alerts Archive
   GoogleMapController? _mapController;
   LatLng _myLocation = const LatLng(17.3850, 78.4867); // Hyderabad Default
   double _radarRadius = 100.0;
@@ -589,22 +590,86 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen> with TickerPr
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Active Neighborhood Alerts',
-            style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-                letterSpacing: -0.5)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('Neighborhood Alerts',
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: -0.5)),
+            // Active vs Resolved toggle
+            Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => setState(() => _showResolvedAlerts = false),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: !_showResolvedAlerts ? Colors.redAccent : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'ACTIVE',
+                        style: TextStyle(
+                          color: !_showResolvedAlerts ? Colors.white : Colors.white60,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => setState(() => _showResolvedAlerts = true),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _showResolvedAlerts ? Colors.green : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'RESOLVED',
+                        style: TextStyle(
+                          color: _showResolvedAlerts ? Colors.white : Colors.white60,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: 16),
         alertsAsync.when(
-          data: (alerts) => alerts.isEmpty
-              ? const Center(
-                  child: Text('No active emergencies nearby.',
-                      style: TextStyle(color: Colors.white30)))
-              : Column(
-                  children:
-                      alerts.map((alert) => _buildAlertCard(alert, accentColor)).toList(),
+          data: (alerts) {
+            final filtered = alerts.where((a) => a.isResolved == _showResolvedAlerts).toList();
+            if (filtered.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: Text(
+                    _showResolvedAlerts
+                        ? 'No resolved alerts in archive.'
+                        : 'No active emergencies nearby.',
+                    style: const TextStyle(color: Colors.white30, fontSize: 13),
+                  ),
                 ),
+              );
+            }
+            return Column(
+              children: filtered.map((alert) => _buildAlertCard(alert, accentColor)).toList(),
+            );
+          },
           loading: () => Center(child: CircularProgressIndicator(color: accentColor)),
           error: (err, _) => Center(
             child: Column(

@@ -26,7 +26,7 @@ class HelpRequestScreen extends ConsumerStatefulWidget {
 
 class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with SingleTickerProviderStateMixin {
   String? _filterCategory;
-  bool _showOfferingHelp = false; // false = Needs Help (Feed), true = Offering Help (My Volunteers)
+  int _viewTab = 0; // 0 = Active Requests, 1 = My Volunteering, 2 = Resolved & Completed
   late AnimationController _headerCtrl;
   late Animation<double> _headerFade;
 
@@ -73,7 +73,84 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildCategorySlider(ref),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
+                    // 3-Way Tab Selector: Active Requests vs My Volunteering vs Resolved
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _viewTab = 0),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: _viewTab == 0 ? AppColors.neonCyan : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'ACTIVE',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.inter(
+                                    color: _viewTab == 0 ? AppColors.primaryNavy : Colors.white70,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _viewTab = 1),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: _viewTab == 1 ? AppColors.neonCyan : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'VOLUNTEERING',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.inter(
+                                    color: _viewTab == 1 ? AppColors.primaryNavy : Colors.white70,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _viewTab = 2),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: _viewTab == 2 ? AppColors.successGreen : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'RESOLVED',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.inter(
+                                    color: _viewTab == 2 ? AppColors.primaryNavy : Colors.white70,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Row(
@@ -81,10 +158,10 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                         children: [
                           Text(
                             _filterCategory == null
-                                ? (_showOfferingHelp ? 'My Volunteering' : 'Active Requests')
+                                ? (_viewTab == 2 ? 'Resolved & Completed Requests' : (_viewTab == 1 ? 'My Volunteering' : 'Active Requests'))
                                 : 'Requests for $_filterCategory',
                             style: GoogleFonts.inter(
-                              fontSize: 18,
+                              fontSize: 16,
                               fontWeight: FontWeight.w800,
                               color: Colors.white,
                               letterSpacing: -0.3,
@@ -114,7 +191,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                   ],
                 ),
               ),
@@ -137,8 +214,31 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
 
                 final List<PostEntity> helpPosts;
                 
-                if (_showOfferingHelp) {
-                  // Show posts where current user is offering help (helperId or willingToHelp) or is author with active helper
+                if (_viewTab == 2) {
+                  // RESOLVED / COMPLETED TAB: Account Privacy & Scope
+                  // Admins can see all resolved issues; regular users see ONLY issues they authored or helped with.
+                  final bool isAdmin = user != null &&
+                      (user.role.name == 'admin' || user.email?.toLowerCase() == 'admin@localsync.com');
+
+                  helpPosts = filteredPosts.where((p) {
+                    final isHelpPost = p.type == PostType.help || p.type == PostType.general;
+                    final matchCategory = _filterCategory == null || p.category == _filterCategory;
+                    final isCompleted = p.helpStatus == HelpStatus.completed;
+
+                    if (!isHelpPost || !matchCategory || !isCompleted) return false;
+
+                    // Admin has full access to view all resolved community issues
+                    if (isAdmin) return true;
+
+                    // Regular logged-in user can only see resolved issues related to their account
+                    final isMyRequest = user != null && p.authorId == user.id;
+                    final isMyVolunteering = user != null &&
+                        (p.helperId == user.id || p.willingToHelp.contains(user.id));
+
+                    return isMyRequest || isMyVolunteering;
+                  }).toList();
+                } else if (_viewTab == 1) {
+                  // MY VOLUNTEERING TAB
                   helpPosts = filteredPosts.where((p) {
                     final isHelpPost = p.type == PostType.help || p.type == PostType.general;
                     final matchCategory = _filterCategory == null || p.category == _filterCategory;
@@ -146,11 +246,12 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                     return isHelpPost && matchCategory && isHelper;
                   }).toList();
                 } else {
-                  // Needs Help: show all active requests except those completely resolved by someone else
+                  // ACTIVE REQUESTS TAB: hide completed requests
                   helpPosts = filteredPosts.where((p) {
                     final isHelpPost = p.type == PostType.help || p.type == PostType.general;
                     final matchCategory = _filterCategory == null || p.category == _filterCategory;
-                    return isHelpPost && matchCategory;
+                    final isActive = p.helpStatus != HelpStatus.completed;
+                    return isHelpPost && matchCategory && isActive;
                   }).toList();
                 }
 
@@ -161,15 +262,17 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                           hasScrollBody: false,
                           child: Center(
                             child: EmptyStateWidget(
-                              icon: _showOfferingHelp
-                                  ? Icons.volunteer_activism_outlined
-                                  : Icons.handshake_outlined,
-                              title: _showOfferingHelp
-                                  ? 'No Volunteering Runs'
-                                  : 'All Clear!',
-                              message: _showOfferingHelp
-                                  ? 'You haven\'t volunteered for any requests yet.'
-                                  : 'No active help requests in your neighborhood right now.',
+                              icon: _viewTab == 2
+                                  ? Icons.task_alt_outlined
+                                  : (_viewTab == 1 ? Icons.volunteer_activism_outlined : Icons.handshake_outlined),
+                              title: _viewTab == 2
+                                  ? 'No Resolved Requests'
+                                  : (_viewTab == 1 ? 'No Volunteering Runs' : 'All Clear!'),
+                              message: _viewTab == 2
+                                  ? 'Completed & resolved help requests will appear here.'
+                                  : (_viewTab == 1
+                                      ? 'You haven\'t volunteered for any requests yet.'
+                                      : 'No active help requests in your neighborhood right now.'),
                             ),
                           ),
                         )
@@ -322,19 +425,19 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                       child: GestureDetector(
                         onTap: () {
                           HapticFeedback.selectionClick();
-                          setState(() => _showOfferingHelp = false);
+                          setState(() => _viewTab = 0);
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
-                            color: !_showOfferingHelp ? AppColors.neonCyan : Colors.transparent,
+                            color: _viewTab == 0 ? AppColors.neonCyan : Colors.transparent,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           alignment: Alignment.center,
                           child: Text(
                             'NEEDS HELP',
                             style: GoogleFonts.inter(
-                              color: !_showOfferingHelp ? AppColors.primaryNavy : Colors.white60,
+                              color: _viewTab == 0 ? AppColors.primaryNavy : Colors.white60,
                               fontWeight: FontWeight.w900,
                               fontSize: 12,
                               letterSpacing: 0.8,
@@ -347,19 +450,19 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                       child: GestureDetector(
                         onTap: () {
                           HapticFeedback.selectionClick();
-                          setState(() => _showOfferingHelp = true);
+                          setState(() => _viewTab = 1);
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
-                            color: _showOfferingHelp ? AppColors.neonGreen : Colors.transparent,
+                            color: _viewTab == 1 ? AppColors.neonGreen : Colors.transparent,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           alignment: Alignment.center,
                           child: Text(
                             'OFFERING HELP',
                             style: GoogleFonts.inter(
-                              color: _showOfferingHelp ? AppColors.primaryNavy : Colors.white60,
+                              color: _viewTab == 1 ? AppColors.primaryNavy : Colors.white60,
                               fontWeight: FontWeight.w900,
                               fontSize: 12,
                               letterSpacing: 0.8,
@@ -543,12 +646,15 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                     children: [
                       Row(
                         children: [
-                          Text(
-                            post.authorName,
-                            style: GoogleFonts.inter(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                          Flexible(
+                            child: Text(
+                              post.authorName,
+                              style: GoogleFonts.inter(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           if (isOwner) ...[
@@ -711,7 +817,11 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
             SizedBox(
               width: double.infinity,
               child: isOwner
-                  ? Row(
+                  ? Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
                       children: [
                         // "YOUR REQUEST" badge
                         Container(
@@ -738,63 +848,106 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                             ],
                           ),
                         ),
-                        const Spacer(),
-                        // Coordinate button (owner can still view coordination)
-                        TextButton.icon(
-                          onPressed: () {
-                            HapticFeedback.lightImpact();
-                            _showCommentsBottomSheet(context, post, user);
-                          },
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.white54,
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
-                          label: Text(
-                            'VIEW (${post.commentsCount})',
-                            style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        // Delete button for owner
-                        IconButton(
-                          onPressed: () async {
-                            HapticFeedback.lightImpact();
-                            final confirm = await showDialog<bool>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                backgroundColor: const Color(0xFF1A2535),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                title: Text('Delete Request?',
-                                    style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w800)),
-                                content: Text('This will remove your help request permanently.',
-                                    style: GoogleFonts.inter(color: Colors.white60)),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx, false),
-                                    child: Text('CANCEL', style: GoogleFonts.inter(color: Colors.white38)),
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: () => Navigator.pop(ctx, true),
-                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-                                    child: Text('DELETE', style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w900)),
-                                  ),
-                                ],
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            if (post.helpStatus != HelpStatus.completed)
+                              ElevatedButton.icon(
+                                onPressed: () async {
+                                  HapticFeedback.mediumImpact();
+                                  await ref.read(postRepositoryProvider).updateHelpStatus(post.id, HelpStatus.completed);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Request marked as Resolved! Moved to Resolved tab.'),
+                                        backgroundColor: AppColors.successGreen,
+                                      ),
+                                    );
+                                  }
+                                },
+                                icon: const Icon(Icons.check_circle_rounded, size: 13, color: AppColors.primaryNavy),
+                                label: Text(
+                                  'MARK RESOLVED',
+                                  style: GoogleFonts.inter(color: AppColors.primaryNavy, fontWeight: FontWeight.w900, fontSize: 9),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.neonGreen,
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                              )
+                            else
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.successGreen.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: AppColors.successGreen.withValues(alpha: 0.3)),
+                                ),
+                                child: Text(
+                                  '✅ RESOLVED',
+                                  style: GoogleFonts.inter(color: AppColors.successGreen, fontWeight: FontWeight.w900, fontSize: 9),
+                                ),
                               ),
-                            );
-                            if (confirm == true && mounted) {
-                              await ref.read(postRepositoryProvider).deletePost(post.id);
-                            }
-                          },
-                          style: IconButton.styleFrom(
-                            foregroundColor: Colors.redAccent,
-                            padding: const EdgeInsets.all(8),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                            TextButton.icon(
+                              onPressed: () {
+                                HapticFeedback.lightImpact();
+                                _showCommentsBottomSheet(context, post, user);
+                              },
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.white54,
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
+                              label: Text(
+                                'VIEW (${post.commentsCount})',
+                                style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800),
+                              ),
+                            ),
+                            // Delete button for owner
+                            IconButton(
+                              onPressed: () async {
+                                HapticFeedback.lightImpact();
+                                final confirm = await showDialog<bool>(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    backgroundColor: const Color(0xFF1A2535),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                    title: Text('Delete Request?',
+                                        style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w800)),
+                                    content: Text('This will remove your help request permanently.',
+                                        style: GoogleFonts.inter(color: Colors.white60)),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(ctx, false),
+                                        child: Text('CANCEL', style: GoogleFonts.inter(color: Colors.white38)),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () => Navigator.pop(ctx, true),
+                                        style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+                                        child: Text('DELETE', style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w900)),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (confirm == true && mounted) {
+                                  await ref.read(postRepositoryProvider).deletePost(post.id);
+                                }
+                              },
+                              style: IconButton.styleFrom(
+                                foregroundColor: Colors.redAccent,
+                                padding: const EdgeInsets.all(8),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                            ),
+                          ],
                         ),
                       ],
                     )
