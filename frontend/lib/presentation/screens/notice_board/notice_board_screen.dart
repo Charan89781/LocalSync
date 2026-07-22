@@ -13,6 +13,7 @@ import '../../providers/post_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../common_widgets/app_bottom_nav.dart';
 import '../../../core/services/location_service.dart';
+import '../../common_widgets/neighborhood_filter_bar.dart';
 
 class NoticeBoardScreen extends ConsumerStatefulWidget {
   const NoticeBoardScreen({super.key});
@@ -144,7 +145,7 @@ class _NoticeBoardScreenState extends ConsumerState<NoticeBoardScreen>
   @override
   Widget build(BuildContext context) {
     final cityName = ref.watch(cityNameProvider);
-    final postsAsync = ref.watch(feedPostsProvider);
+    final postsAsync = ref.watch(nearbyFeedPostsProvider);
 
     return Scaffold(
       body: Container(
@@ -160,6 +161,12 @@ class _NoticeBoardScreenState extends ConsumerState<NoticeBoardScreen>
           physics: const BouncingScrollPhysics(),
           slivers: [
             _buildHeader(context, cityName),
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: NeighborhoodFilterBar(title: 'Notice Board'),
+              ),
+            ),
             if (!_showNews)
               postsAsync.when(
                 data: (posts) {

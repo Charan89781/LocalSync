@@ -15,6 +15,7 @@ import '../../providers/auth_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../common_widgets/app_bottom_nav.dart';
 import '../../../core/services/location_service.dart';
+import '../../common_widgets/neighborhood_filter_bar.dart';
 import '../../common_widgets/premium_widgets.dart';
 
 /// Forward-geocodes an address string → lat/lon via OpenStreetMap Nominatim.
@@ -393,7 +394,7 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final eventsAsync = ref.watch(upcomingEventsProvider);
+    final eventsAsync = ref.watch(nearbyEventsProvider);
     final user = ref.watch(authStateProvider).value;
 
     return Scaffold(
@@ -420,7 +421,14 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
           ),
         ],
       ),
-      body: eventsAsync.when(
+      body: Column(
+        children: [
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: NeighborhoodFilterBar(title: 'Community Events'),
+          ),
+          Expanded(
+            child: eventsAsync.when(
         data: (events) {
           final now = DateTime.now().subtract(const Duration(hours: 4));
           var filtered = events.where((e) {
@@ -483,16 +491,19 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
             ],
           ),
         ),
+        ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showCreateEventSheet,
-        backgroundColor: AppColors.neonCyan,
-        label: const Text('NEW EVENT',
-            style: TextStyle(color: AppColors.primaryNavy, fontWeight: FontWeight.bold)),
-        icon: const Icon(Icons.add, color: AppColors.primaryNavy),
-      ),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 3),
-    );
+    ],
+  ),
+  floatingActionButton: FloatingActionButton.extended(
+    onPressed: _showCreateEventSheet,
+    backgroundColor: AppColors.neonCyan,
+    label: const Text('NEW EVENT',
+        style: TextStyle(color: AppColors.primaryNavy, fontWeight: FontWeight.bold)),
+    icon: const Icon(Icons.add, color: AppColors.primaryNavy),
+  ),
+  bottomNavigationBar: const AppBottomNav(currentIndex: 3),
+);
   }
 
   Widget _buildSearchAndSortBar() {

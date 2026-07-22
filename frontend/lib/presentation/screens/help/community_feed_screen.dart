@@ -103,7 +103,7 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            backgroundColor: AppColors.cardBackground,
+            backgroundColor: AppColors.secondaryNavy,
             title: Row(
               children: [
                 Icon(Icons.error_outline, color: Colors.redAccent),

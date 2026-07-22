@@ -13,6 +13,7 @@ import '../../providers/space_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/chat_provider.dart';
 import '../../common_widgets/app_bottom_nav.dart';
+import '../../common_widgets/neighborhood_filter_bar.dart';
 
 class RentalSpacesScreen extends ConsumerStatefulWidget {
   const RentalSpacesScreen({super.key});
@@ -1335,7 +1336,7 @@ class _RentalSpacesScreenState extends ConsumerState<RentalSpacesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final spacesAsync = ref.watch(spacesProvider);
+    final spacesAsync = ref.watch(nearbySpacesProvider);
     final savedIdsAsync = ref.watch(savedSpaceIdsProvider);
 
     return Scaffold(
@@ -1367,6 +1368,10 @@ class _RentalSpacesScreenState extends ConsumerState<RentalSpacesScreen> {
                   }
                 },
               ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: NeighborhoodFilterBar(title: 'Local Rentals'),
             ),
 
             // Top Quick Nav Panels
