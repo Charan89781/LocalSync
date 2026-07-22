@@ -16,6 +16,9 @@ class ListingEntity {
   final bool isAvailable;
   final List<String> rules;
   final Map<String, dynamic>? metadata;
+  final double? latitude;
+  final double? longitude;
+  final String? location;
 
   ListingEntity({
     required this.id,
@@ -31,6 +34,9 @@ class ListingEntity {
     this.isAvailable = true,
     this.rules = const [],
     this.metadata,
+    this.latitude,
+    this.longitude,
+    this.location,
   });
 
   Map<String, dynamic> toMap() {
@@ -47,6 +53,9 @@ class ListingEntity {
       'isAvailable': isAvailable,
       'rules': rules,
       'metadata': metadata,
+      'latitude': latitude,
+      'longitude': longitude,
+      'location': location,
     };
   }
 
@@ -79,6 +88,9 @@ class ListingEntity {
       isAvailable: map['isAvailable'] ?? true,
       rules: List<String>.from(map['rules'] ?? []),
       metadata: map['metadata'],
+      latitude: map['latitude'] != null ? parseDouble(map['latitude']) : null,
+      longitude: map['longitude'] != null ? parseDouble(map['longitude']) : null,
+      location: map['location'],
     );
   }
 }

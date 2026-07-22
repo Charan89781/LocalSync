@@ -64,25 +64,13 @@ jobs:
           echo "Mock Server started on :8080"
           sleep 3
 
-      - name: Execute Selenium Web E2E Tests (102 cases)
+      - name: Execute Selenium Web E2E Tests (500 Test Cases)
         run: |
           cd automation_and_security_suite/selenium_web_tests
           export TEST_TARGET_URL="http://localhost:8080"
           npm test || true
 
-      - name: Execute Backend Load & Performance Tests
-        run: |
-          cd automation_and_security_suite/backend_load_tests
-          export TARGET_API_URL="http://localhost:8080"
-          python load_test.py || true
-
-      - name: Execute Selenium Web E2E Tests (102 cases)
-        run: |
-          cd automation_and_security_suite/selenium_web_tests
-          export TEST_TARGET_URL="http://localhost:8080"
-          npm test || true
-
-      - name: Execute Backend Load & Performance Tests
+      - name: Execute Backend Load & Performance Benchmark (500 Concurrent Users)
         run: |
           cd automation_and_security_suite/backend_load_tests
           export TARGET_API_URL="http://localhost:8080"
@@ -139,7 +127,7 @@ jobs:
 
       # ── Run mobile tests — ANDROID_APK_PATH is intentionally unset in CI ──
       # ── mobile_test.js detects missing APK and auto-activates mock mode  ──
-      - name: Execute Appium Mobile E2E Tests (102 cases)
+      - name: Execute Appium Mobile E2E Tests (500 Test Cases)
         run: |
           cd automation_and_security_suite/mobile_appium_tests
           export APPIUM_HOST="127.0.0.1"

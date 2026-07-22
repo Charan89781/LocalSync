@@ -1,0 +1,17 @@
+{
+  "target_api": "http://localhost:8080",
+  "concurrent_users": 500,
+  "duration_seconds": 15,
+  "total_requests": 1100,
+  "requests_per_second": 73.33333333333333,
+  "average_latency_ms": 9393.850800340826,
+  "min_latency_ms": 2334.3050479888916,
+  "max_latency_ms": 11579.470157623291,
+  "p95_latency_ms": 11548.963069915771,
+  "success_rate_percent": 0.0,
+  "failed_requests_count": 1100,
+  "rate_limited_count": 0,
+  "status_codes": {
+    "500": 1100
+  }
+}

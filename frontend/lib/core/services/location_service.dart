@@ -167,7 +167,67 @@ class LocationService {
   }
 }
 
+  /// Checks whether an item's location falls within the user's neighborhood radius (default 5.0 KM).
+  static bool isWithinNeighborhoodRadius({
+    required double? itemLat,
+    required double? itemLng,
+    required String? itemLocationLabel,
+    required Position? userPosition,
+    required String? userCity,
+    required double radiusKm,
+    required String? currentUserId,
+    required String? authorId,
+  }) {
+    // 1. Author's own posts are always visible to the author
+    if (currentUserId != null && authorId != null && currentUserId == authorId) {
+      return true;
+    }
+
+    // 2. If radiusKm is 0 or very large (e.g. >= 1000), show all items
+    if (radiusKm <= 0 || radiusKm >= 1000) {
+      return true;
+    }
+
+    // 3. Exact GPS Distance Calculation (Haversine formula via Geolocator)
+    if (userPosition != null && itemLat != null && itemLng != null) {
+      final distanceInMeters = Geolocator.distanceBetween(
+        userPosition.latitude,
+        userPosition.longitude,
+        itemLat,
+        itemLng,
+      );
+      final distanceInKm = distanceInMeters / 1000.0;
+      return distanceInKm <= radiusKm;
+    }
+
+    // 4. Locality / City Text Matching Fallback when GPS coordinates are partial
+    if (itemLocationLabel != null && itemLocationLabel.isNotEmpty) {
+      final labelLower = itemLocationLabel.toLowerCase();
+      if (userCity != null && userCity.isNotEmpty) {
+        final cityLower = userCity.toLowerCase();
+        final cityTokens = cityLower.split(RegExp(r'[\s,]+')).where((t) => t.length > 2);
+        for (final token in cityTokens) {
+          if (labelLower.contains(token)) {
+            return true;
+          }
+        }
+      }
+    }
+
+    // If user position is available and item coords are available but outside radiusKm -> Hide
+    if (userPosition != null && itemLat != null && itemLng != null) {
+      return false;
+    }
+
+    // Default to true if location info is unavailable to prevent blank feed on initial startup
+    return true;
+  }
+}
+
 final locationServiceProvider = Provider((ref) => LocationService());
+
+/// Neighborhood radius in kilometers — default strictly set to 5.0 KM
+final neighborhoodRadiusKmProvider = StateProvider<double>((ref) => 5.0);
 
 final userCoordinatesProvider = FutureProvider<Position?>((ref) async {
   final service = ref.watch(locationServiceProvider);
@@ -196,7 +256,6 @@ final cityNameProvider = Provider<String>((ref) {
   return locationAsync.when(
     data: (address) {
       if (address.isEmpty) return 'Your City';
-      // If the address contains a comma, the last part is typically the city/locality
       final parts = address.split(',');
       if (parts.length > 1) {
         return parts.last.trim();

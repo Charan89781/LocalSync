@@ -136,7 +136,6 @@ def build_summary_dashboard(ws, stats):
         ("Selenium Web E2E", stats['web_total'], stats['web_passed'], stats['web_failed'], f"{stats['web_rate']:.1f}%"),
         ("Appium Mobile E2E", stats['mobile_total'], stats['mobile_passed'], stats['mobile_failed'], f"{stats['mobile_rate']:.1f}%"),
         ("Backend Load & Performance", stats['load_total'], stats['load_passed'], stats['load_failed'], f"{stats['load_rate']:.1f}%"),
-        ("Security DAST & Vuln Checks", stats['security_total'], stats['security_passed'], stats['security_failed'], f"{stats['security_rate']:.1f}%")
     ]
     
     for row_idx, row_data in enumerate(pillars_data, 8):

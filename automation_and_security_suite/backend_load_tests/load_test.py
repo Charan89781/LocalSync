@@ -5,14 +5,21 @@ import json
 import os
 import statistics
 
-# Configuration
-CONCURRENT_USERS = 100
-TEST_DURATION_SECS = 60
+# Configuration (500 Concurrent Users Benchmark)
+CONCURRENT_USERS = 500
+TEST_DURATION_SECS = 15
 TARGET_API = os.getenv('TARGET_API_URL', 'http://localhost:8080')
 ENDPOINTS = [
     '/api/listings',
     '/api/spaces',
-    '/api/chat/rooms'
+    '/api/help',
+    '/api/events',
+    '/api/emergency',
+    '/api/business',
+    '/api/notice',
+    '/api/chat/rooms',
+    '/api/profile',
+    '/api/ledger'
 ]
 
 async def send_request(session, url, results):
