@@ -10,6 +10,7 @@ import '../../../domain/entities/listing_entity.dart';
 import '../../providers/listing_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../common_widgets/app_bottom_nav.dart';
+import '../../common_widgets/neighborhood_filter_bar.dart';
 
 class MarketplaceScreen extends ConsumerStatefulWidget {
   const MarketplaceScreen({super.key});
@@ -71,7 +72,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
 
   @override
   Widget build(BuildContext context) {
-    final listingsAsync = ref.watch(listingsProvider);
+    final listingsAsync = ref.watch(nearbyListingsProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A121A),
@@ -87,6 +88,10 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
           child: Column(
             children: [
               _buildHeader(context),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: NeighborhoodFilterBar(title: 'Marketplace'),
+              ),
               _buildSearchBar(),
               _buildQuickLedgerActions(context),
               _buildCategoryChips(),

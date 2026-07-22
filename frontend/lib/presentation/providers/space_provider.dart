@@ -6,12 +6,38 @@ import '../../domain/entities/space_entity.dart';
 import '../../domain/entities/booking_entity.dart';
 import 'auth_provider.dart';
 
+import '../../core/services/location_service.dart';
+
 final spaceRepositoryProvider = Provider<SpaceRepository>((ref) {
   return SpaceRepositoryImpl();
 });
 
 final spacesProvider = StreamProvider<List<SpaceEntity>>((ref) {
   return ref.watch(spaceRepositoryProvider).getSpaces();
+});
+
+/// Strictly filters rental spaces by 5 KM neighborhood radius
+final nearbySpacesProvider = StreamProvider.autoDispose<List<SpaceEntity>>((ref) {
+  final spacesAsync = ref.watch(spacesProvider);
+  final userPosition = ref.watch(userCoordinatesProvider).value;
+  final userCity = ref.watch(userLocationProvider).value;
+  final currentUser = ref.watch(authStateProvider).value;
+  final radiusKm = ref.watch(neighborhoodRadiusKmProvider);
+
+  return spacesAsync.whenData((spaces) {
+    return spaces.where((space) {
+      return LocationService.isWithinNeighborhoodRadius(
+        itemLat: space.latitude,
+        itemLng: space.longitude,
+        itemLocationLabel: space.location,
+        userPosition: userPosition,
+        userCity: userCity,
+        radiusKm: radiusKm,
+        currentUserId: currentUser?.id,
+        authorId: space.ownerId,
+      );
+    }).toList();
+  });
 });
 
 final userBookingsProvider = StreamProvider<List<BookingEntity>>((ref) {

@@ -14,6 +14,9 @@ import '../../providers/auth_provider.dart';
 import '../../common_widgets/app_bottom_nav.dart';
 import '../../common_widgets/premium_post_card.dart';
 
+import '../../../core/services/location_service.dart';
+import '../../common_widgets/neighborhood_filter_bar.dart';
+
 class CommunityFeedScreen extends ConsumerStatefulWidget {
   const CommunityFeedScreen({super.key});
 
@@ -37,6 +40,7 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
 
     final user = ref.read(authStateProvider).value;
     if (user == null) return;
+    final position = ref.read(userCoordinatesProvider).value;
 
     setSheetState(() => _isSubmitting = true);
     setState(() => _isSubmitting = true);
@@ -69,6 +73,9 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
         createdAt: DateTime.now(),
         imageUrls: localImages.map((e) => e.path).toList(),
         poll: poll,
+        latitude: position?.latitude,
+        longitude: position?.longitude,
+        locationLabel: user.address,
       );
 
       await ref.read(postRepositoryProvider).createPost(newPost);
@@ -80,23 +87,26 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
         if (context.canPop()) {
           Navigator.pop(context);
         }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '🎉 Post created successfully!',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            backgroundColor: AppColors.successGreen,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        setSheetState(() => _isSubmitting = false);
-        setState(() => _isSubmitting = false);
         // Display user-friendly connection failure dialog
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            backgroundColor: AppColors.secondaryNavy,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-              side: BorderSide(color: AppColors.primaryBlue.withValues(alpha: 0.2)),
-            ),
+            backgroundColor: AppColors.cardBackground,
             title: Row(
               children: [
-                Icon(Icons.wifi_off_rounded, color: Colors.orangeAccent),
+                Icon(Icons.error_outline, color: Colors.redAccent),
                 SizedBox(width: 12),
                 Text(
                   'Connection Issue',
@@ -130,7 +140,7 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final postsAsync = ref.watch(feedPostsProvider);
+    final postsAsync = ref.watch(nearbyFeedPostsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
@@ -138,6 +148,12 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
         physics: const BouncingScrollPhysics(),
         slivers: [
           _buildSliverAppBar(context),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: const NeighborhoodFilterBar(title: 'Community Feed'),
+            ),
+          ),
           SliverToBoxAdapter(
             child: postsAsync.when(
               data: (posts) {

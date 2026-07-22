@@ -17,6 +17,8 @@ import '../../providers/post_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../common_widgets/premium_widgets.dart';
 
+import '../../common_widgets/neighborhood_filter_bar.dart';
+
 class HelpRequestScreen extends ConsumerStatefulWidget {
   const HelpRequestScreen({super.key});
 
@@ -48,7 +50,7 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
 
   @override
   Widget build(BuildContext context) {
-    final postsAsync = ref.watch(feedPostsProvider);
+    final postsAsync = ref.watch(nearbyHelpRequestsProvider);
     final user = ref.watch(authStateProvider).value;
     final userCoordsAsync = ref.watch(userCoordinatesProvider);
 
@@ -72,6 +74,10 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: NeighborhoodFilterBar(title: 'Help Requests'),
+                    ),
                     _buildCategorySlider(ref),
                     const SizedBox(height: 16),
                     // 3-Way Tab Selector: Active Requests vs My Volunteering vs Resolved

@@ -6,12 +6,38 @@ import '../../domain/entities/borrow_request_entity.dart';
 import 'auth_provider.dart';
 
 
+import '../../core/services/location_service.dart';
+
 final listingRepositoryProvider = Provider<ListingRepository>((ref) {
   return ListingRepositoryImpl();
 });
 
 final listingsProvider = StreamProvider<List<ListingEntity>>((ref) {
   return ref.watch(listingRepositoryProvider).getListings();
+});
+
+/// Strictly filters marketplace listings by 5 KM neighborhood radius
+final nearbyListingsProvider = StreamProvider.autoDispose<List<ListingEntity>>((ref) {
+  final listingsAsync = ref.watch(listingsProvider);
+  final userPosition = ref.watch(userCoordinatesProvider).value;
+  final userCity = ref.watch(userLocationProvider).value;
+  final currentUser = ref.watch(authStateProvider).value;
+  final radiusKm = ref.watch(neighborhoodRadiusKmProvider);
+
+  return listingsAsync.whenData((listings) {
+    return listings.where((item) {
+      return LocationService.isWithinNeighborhoodRadius(
+        itemLat: item.latitude,
+        itemLng: item.longitude,
+        itemLocationLabel: item.location,
+        userPosition: userPosition,
+        userCity: userCity,
+        radiusKm: radiusKm,
+        currentUserId: currentUser?.id,
+        authorId: item.ownerId,
+      );
+    }).toList();
+  });
 });
 
 final borrowRequestsProvider = StreamProvider<List<BorrowRequestEntity>>((ref) {
