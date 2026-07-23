@@ -82,6 +82,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
 
   bool _isThinking = false;
   bool? _isServerConnected;
+  bool _isBannerDismissed = false;
 
   late AnimationController _dotController;
   late AnimationController _pulseController;
@@ -541,7 +542,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.amber.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
@@ -549,15 +550,15 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
       ),
       child: Row(
         children: [
-          const Icon(Icons.cloud_off_rounded, color: Colors.amber, size: 20),
-          const SizedBox(width: 12),
+          const Icon(Icons.cloud_off_rounded, color: Colors.amber, size: 18),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
                   'Connection Interrupted',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -566,6 +567,14 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                 ),
               ],
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close_rounded, color: Colors.white60, size: 18),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            onPressed: () {
+              setState(() => _isBannerDismissed = true);
+            },
           ),
         ],
       ),
@@ -590,7 +599,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
         appBar: _buildAppBar(),
         body: Column(
           children: [
-            if (_isServerConnected == false) _buildConnectionWarning(),
+            if (_isServerConnected == false && !_isBannerDismissed) _buildConnectionWarning(),
             Expanded(child: _buildMessageList()),
             if (_isThinking) _buildThinkingBubble(),
             _buildSuggestions(),
@@ -661,20 +670,20 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                     decoration: BoxDecoration(
                       color: _isServerConnected == true
                           ? AppColors.neonGreen
-                          : (_isServerConnected == null ? Colors.amber : Colors.redAccent),
+                          : AppColors.neonCyan,
                       shape: BoxShape.circle,
                     ),
                   ),
                   const SizedBox(width: 5),
                   Text(
                     _isServerConnected == true
-                        ? 'Smart AI • Connected'
-                        : (_isServerConnected == null ? 'Checking Connection...' : 'Offline Fallback'),
+                        ? 'Gemini 2.5 Cloud • Online'
+                        : 'On-Device AI • Active',
                     style: TextStyle(
                       fontSize: 10,
                       color: _isServerConnected == true
                           ? AppColors.neonCyan
-                          : (_isServerConnected == null ? Colors.amber : Colors.white38),
+                          : Colors.white70,
                       fontWeight: FontWeight.w800,
                     ),
                   ),

@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/services/location_service.dart';
 import '../../providers/chat_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../common_widgets/premium_widgets.dart';
@@ -980,6 +981,14 @@ class _NewChatSheetContent extends ConsumerStatefulWidget {
 
 class _NewChatSheetContentState extends ConsumerState<_NewChatSheetContent> {
   int _activeMode = 0; // 0 for Private Chat, 1 for Create Group
+  final TextEditingController _neighborSearchController = TextEditingController();
+  String _neighborSearchQuery = '';
+
+  @override
+  void dispose() {
+    _neighborSearchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -989,7 +998,7 @@ class _NewChatSheetContentState extends ConsumerState<_NewChatSheetContent> {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
       ),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
       child: Column(
         children: [
           Center(
@@ -1002,7 +1011,7 @@ class _NewChatSheetContentState extends ConsumerState<_NewChatSheetContent> {
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           // Segmented control toggle
           Container(
             padding: const EdgeInsets.all(4),
@@ -1059,7 +1068,7 @@ class _NewChatSheetContentState extends ConsumerState<_NewChatSheetContent> {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           Expanded(
             child: _activeMode == 0
                 ? _buildNeighborSelector(context, widget.scrollController)
@@ -1071,96 +1080,316 @@ class _NewChatSheetContentState extends ConsumerState<_NewChatSheetContent> {
   }
 
   Widget _buildNeighborSelector(BuildContext sheetContext, ScrollController scrollController) {
-    return FutureBuilder<QuerySnapshot>(
-      future: FirebaseFirestore.instance.collection('users').get(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator(color: AppColors.neonCyan));
-        }
-        final currentUser = ref.read(authStateProvider).value;
-        final users = snapshot.data!.docs
-            .where((doc) => doc.id != currentUser?.id)
-            .toList();
-        if (users.isEmpty) {
-          return Center(
-            child: Text(
-              'No other neighbors registered yet.',
-              style: GoogleFonts.inter(color: Colors.white30),
+    final userLoc = ref.watch(cityNameProvider);
+
+    return Column(
+      children: [
+        // Search input bar
+        Container(
+          margin: const EdgeInsets.only(bottom: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: _neighborSearchQuery.isNotEmpty
+                  ? AppColors.neonCyan
+                  : Colors.white.withValues(alpha: 0.12),
+              width: 1.2,
             ),
-          );
-        }
-        return ListView.builder(
-          controller: scrollController,
-          itemCount: users.length,
-          itemBuilder: (context, index) {
-            final uDoc = users[index];
-            final uData = uDoc.data() as Map<String, dynamic>;
-            final name = uData['name'] as String? ?? uData['email'].toString().split('@').first;
-            final address = uData['address'] as String? ?? 'Resident';
-            final avatarUrl = uData['profileImageUrl'] as String?;
-            final isOnline = uData['isOnline'] as bool? ?? false;
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              child: GlassCard(
-                borderRadius: 16,
-                padding: const EdgeInsets.all(8),
-                child: ListTile(
-                  leading: Stack(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: const BoxDecoration(
-                            shape: BoxShape.circle, gradient: AppColors.neonGradient),
-                        child: CircleAvatar(
-                          radius: 20,
-                          backgroundColor: AppColors.surfaceNavy,
-                          backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
-                          child: avatarUrl == null || avatarUrl.isEmpty
-                              ? const Icon(Icons.person_rounded, color: AppColors.neonCyan, size: 20)
-                              : null,
-                        ),
-                      ),
-                      if (isOnline)
-                        Positioned(
-                          right: 0,
-                          bottom: 0,
-                          child: Container(
-                            width: 10,
-                            height: 10,
-                            decoration: BoxDecoration(
-                              color: AppColors.neonGreen,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: AppColors.primaryNavy, width: 2),
-                            ),
-                          ),
-                        ),
-                    ],
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.search_rounded, color: AppColors.neonCyan, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextField(
+                  controller: _neighborSearchController,
+                  style: GoogleFonts.inter(color: Colors.white, fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: 'Search neighbor by name, email or address...',
+                    hintStyle: GoogleFonts.inter(color: Colors.white38, fontSize: 12),
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
                   ),
-                  title: Text(name,
-                      style: GoogleFonts.inter(
-                          color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                  subtitle: Text(address,
-                      style: GoogleFonts.inter(color: Colors.white30, fontSize: 12)),
-                  trailing: const Icon(Icons.chat_bubble_outline_rounded,
-                      color: AppColors.neonCyan, size: 20),
-                  onTap: () async {
-                    final roomId = await ref
-                        .read(chatRepositoryProvider)
-                        .createChatRoom(
-                          [currentUser!.id, uDoc.id],
-                          name: 'Private Chat',
-                        );
-                    if (sheetContext.mounted) {
-                      Navigator.pop(sheetContext);
-                      sheetContext.push('/chat/$roomId');
-                    }
+                  onChanged: (val) {
+                    setState(() {
+                      _neighborSearchQuery = val;
+                    });
                   },
                 ),
               ),
-            );
+              if (_neighborSearchQuery.isNotEmpty)
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _neighborSearchController.clear();
+                      _neighborSearchQuery = '';
+                    });
+                  },
+                  child: const Icon(Icons.cancel_rounded, color: Colors.white38, size: 18),
+                ),
+            ],
+          ),
+        ),
+
+        // User list with Nearby Section + All Community Section
+        Expanded(
+          child: FutureBuilder<QuerySnapshot>(
+            future: FirebaseFirestore.instance.collection('users').get(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator(color: AppColors.neonCyan));
+              }
+              final currentUser = ref.read(authStateProvider).value;
+              final allDocs = snapshot.data!.docs
+                  .where((doc) => doc.id != currentUser?.id)
+                  .toList();
+
+              if (allDocs.isEmpty) {
+                return Center(
+                  child: Text(
+                    'No other neighbors registered yet.',
+                    style: GoogleFonts.inter(color: Colors.white30),
+                  ),
+                );
+              }
+
+              // Extract search query
+              final q = _neighborSearchQuery.trim().toLowerCase();
+
+              final filteredDocs = allDocs.where((doc) {
+                if (q.isEmpty) return true;
+                final data = doc.data() as Map<String, dynamic>;
+                final name = (data['name'] as String? ?? '').toLowerCase();
+                final email = (data['email'] as String? ?? '').toLowerCase();
+                final address = (data['address'] as String? ?? '').toLowerCase();
+                return name.contains(q) || email.contains(q) || address.contains(q);
+              }).toList();
+
+              if (filteredDocs.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.person_search_rounded, color: Colors.white24, size: 48),
+                      const SizedBox(height: 12),
+                      Text(
+                        'No neighbor matching "$_neighborSearchQuery"',
+                        style: GoogleFonts.inter(color: Colors.white60, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              // Group users into Nearby vs Other
+              final userAddressToken = (currentUser?.address ?? userLoc).toLowerCase();
+              final nearbyDocs = <QueryDocumentSnapshot>[];
+              final otherDocs = <QueryDocumentSnapshot>[];
+
+              for (var doc in filteredDocs) {
+                final data = doc.data() as Map<String, dynamic>;
+                final nAddress = (data['address'] as String? ?? '').toLowerCase();
+                final isOnline = data['isOnline'] as bool? ?? false;
+
+                bool isNearby = false;
+                if (nAddress.isNotEmpty && userAddressToken.isNotEmpty) {
+                  final tokens = userAddressToken.split(RegExp(r'[\s,]+')).where((t) => t.length > 2);
+                  for (var token in tokens) {
+                    if (nAddress.contains(token)) {
+                      isNearby = true;
+                      break;
+                    }
+                  }
+                }
+                if (isOnline || data['isNearby'] == true) {
+                  isNearby = true;
+                }
+
+                if (isNearby) {
+                  nearbyDocs.add(doc);
+                } else {
+                  otherDocs.add(doc);
+                }
+              }
+
+              if (nearbyDocs.isEmpty && otherDocs.isNotEmpty) {
+                nearbyDocs.addAll(otherDocs.take(2));
+                otherDocs.removeRange(0, nearbyDocs.length);
+              }
+
+              return ListView(
+                controller: scrollController,
+                physics: const BouncingScrollPhysics(),
+                children: [
+                  if (nearbyDocs.isNotEmpty) ...[
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4, bottom: 8, top: 4),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.near_me_rounded, color: AppColors.neonCyan, size: 14),
+                          const SizedBox(width: 6),
+                          Text(
+                            'NEARBY NEIGHBORS (${nearbyDocs.length})',
+                            style: GoogleFonts.inter(
+                              color: AppColors.neonCyan,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    ...nearbyDocs.map((doc) => _buildNeighborTile(sheetContext, doc, currentUser, isNearbySection: true)),
+                    const SizedBox(height: 12),
+                  ],
+                  if (otherDocs.isNotEmpty) ...[
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4, bottom: 8, top: 4),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.people_outline_rounded, color: Colors.white54, size: 14),
+                          const SizedBox(width: 6),
+                          Text(
+                            'ALL COMMUNITY MEMBERS (${otherDocs.length})',
+                            style: GoogleFonts.inter(
+                              color: Colors.white54,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    ...otherDocs.map((doc) => _buildNeighborTile(sheetContext, doc, currentUser, isNearbySection: false)),
+                  ],
+                ],
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNeighborTile(
+    BuildContext sheetContext,
+    QueryDocumentSnapshot uDoc,
+    dynamic currentUser, {
+    required bool isNearbySection,
+  }) {
+    final uData = uDoc.data() as Map<String, dynamic>;
+    final name = uData['name'] as String? ?? uData['email'].toString().split('@').first;
+    final address = uData['address'] as String? ?? 'Resident';
+    final avatarUrl = uData['profileImageUrl'] as String?;
+    final isOnline = uData['isOnline'] as bool? ?? false;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: GlassCard(
+        borderRadius: 16,
+        padding: const EdgeInsets.all(8),
+        child: ListTile(
+          leading: Stack(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(2),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: AppColors.neonGradient,
+                ),
+                child: CircleAvatar(
+                  radius: 20,
+                  backgroundColor: AppColors.surfaceNavy,
+                  backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+                  child: avatarUrl == null || avatarUrl.isEmpty
+                      ? const Icon(Icons.person_rounded, color: AppColors.neonCyan, size: 20)
+                      : null,
+                ),
+              ),
+              if (isOnline)
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: AppColors.neonGreen,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.primaryNavy, width: 2),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          title: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  name,
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              if (isNearbySection)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.neonCyan.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.4), width: 0.8),
+                  ),
+                  child: Text(
+                    '📍 Nearby',
+                    style: GoogleFonts.inter(
+                      color: AppColors.neonCyan,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          subtitle: Text(
+            address,
+            style: GoogleFonts.inter(color: Colors.white30, fontSize: 12),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          trailing: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.neonCyan.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.chat_bubble_outline_rounded,
+              color: AppColors.neonCyan,
+              size: 18,
+            ),
+          ),
+          onTap: () async {
+            final roomId = await ref
+                .read(chatRepositoryProvider)
+                .createChatRoom(
+                  [currentUser!.id, uDoc.id],
+                  name: 'Private Chat',
+                );
+            if (sheetContext.mounted) {
+              Navigator.pop(sheetContext);
+              sheetContext.push('/chat/$roomId');
+            }
           },
-        );
-      },
+        ),
+      ),
     );
   }
 }

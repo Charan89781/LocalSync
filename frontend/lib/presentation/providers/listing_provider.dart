@@ -18,13 +18,12 @@ final listingsProvider = StreamProvider<List<ListingEntity>>((ref) {
 
 /// Strictly filters marketplace listings by 5 KM neighborhood radius
 final nearbyListingsProvider = StreamProvider.autoDispose<List<ListingEntity>>((ref) {
-  final listingsAsync = ref.watch(listingsProvider);
   final userPosition = ref.watch(userCoordinatesProvider).value;
   final userCity = ref.watch(userLocationProvider).value;
   final currentUser = ref.watch(authStateProvider).value;
   final radiusKm = ref.watch(neighborhoodRadiusKmProvider);
 
-  return listingsAsync.whenData((listings) {
+  return ref.watch(listingRepositoryProvider).getListings().map((listings) {
     return listings.where((item) {
       return LocationService.isWithinNeighborhoodRadius(
         itemLat: item.latitude,

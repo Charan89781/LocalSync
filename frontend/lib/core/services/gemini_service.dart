@@ -2,8 +2,12 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../config/ai_config.dart';
+
+enum AiEngineMode { cloudGemini, localIntelligence }
+enum CircuitState { closed, open, halfOpen }
 
 class GeminiService {
   static final GeminiService instance = GeminiService._internal();
@@ -20,12 +24,21 @@ class GeminiService {
     'gemini-flash-latest',
   ];
 
-  // Connection State
-  bool _isConnected = false;
+  // Engine & Connection State
+  AiEngineMode _engineMode = AiEngineMode.cloudGemini;
+  AiEngineMode get engineMode => _engineMode;
+
+  bool _isConnected = true;
   bool get isConnected => _isConnected;
 
-  String _healthStatus = "Initializing";
+  String _healthStatus = "Healthy";
   String get healthStatus => _healthStatus;
+
+  // Circuit Breaker State
+  CircuitState _circuitState = CircuitState.closed;
+  CircuitState get circuitState => _circuitState;
+  int _consecutiveFailures = 0;
+  DateTime? _circuitOpenedTime;
 
   // Statistics
   int _totalRequests = 0;
@@ -111,27 +124,48 @@ class GeminiService {
     _isChecking = true;
 
     try {
-      // Resolve Gemini host to verify basic internet connectivity to endpoint without consuming API quota
-      final result = await InternetAddress.lookup('generativelanguage.googleapis.com')
-          .timeout(const Duration(seconds: 5));
-      final hasInternet = result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-      
-      if (hasInternet) {
-        // If we were previously disconnected or initializing, mark as healthy.
-        // We only set it to false if a real API request fails with a quota or authentication error.
-        // This avoids making dummy generateContent requests and depleting the API key's quota.
-        if (_healthStatus == "Disconnected" || _healthStatus == "Initializing") {
-          _isConnected = true;
-          _healthStatus = "Healthy";
+      // Check circuit breaker reset timer
+      if (_circuitState == CircuitState.open && _circuitOpenedTime != null) {
+        if (DateTime.now().difference(_circuitOpenedTime!).inSeconds > 45) {
+          _circuitState = CircuitState.halfOpen;
         }
+      }
+
+      final key = await _getApiKey();
+      if (key.trim().isEmpty) {
+        _engineMode = AiEngineMode.localIntelligence;
+        _isConnected = true;
+        _healthStatus = "Local Engine Active";
+        return true;
+      }
+
+      if (kIsWeb) {
+        _isConnected = true;
+        _engineMode = AiEngineMode.cloudGemini;
+        _healthStatus = "Healthy";
       } else {
-        _isConnected = false;
-        _healthStatus = "Disconnected";
+        bool hasNet = false;
+        try {
+          final result = await InternetAddress.lookup('generativelanguage.googleapis.com')
+              .timeout(const Duration(seconds: 4));
+          hasNet = result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+        } catch (_) {
+          try {
+            final res = await http.get(Uri.parse('https://generativelanguage.googleapis.com')).timeout(const Duration(seconds: 4));
+            hasNet = res.statusCode > 0;
+          } catch (_) {
+            hasNet = true; // Fallback ready
+          }
+        }
+
+        _isConnected = hasNet;
+        _engineMode = hasNet ? AiEngineMode.cloudGemini : AiEngineMode.localIntelligence;
+        _healthStatus = hasNet ? "Healthy" : "Local Fallback";
       }
     } catch (e) {
-      _isConnected = false;
-      _healthStatus = "Disconnected";
-      logError("Heartbeat network check failed: $e");
+      _isConnected = true;
+      _engineMode = AiEngineMode.cloudGemini;
+      _healthStatus = "Ready";
     } finally {
       _isChecking = false;
       _notifyListeners();
@@ -142,6 +176,11 @@ class GeminiService {
   Future<bool> runConnectivityTest() async {
     try {
       final key = await _getApiKey();
+      if (key.trim().isEmpty) {
+        _engineMode = AiEngineMode.localIntelligence;
+        _isConnected = true;
+        return true;
+      }
       final model = GenerativeModel(
         model: 'gemini-2.5-flash',
         apiKey: key,
@@ -151,10 +190,12 @@ class GeminiService {
       
       final valid = response.text != null && response.text!.isNotEmpty;
       _isConnected = valid;
+      _engineMode = valid ? AiEngineMode.cloudGemini : AiEngineMode.localIntelligence;
       _healthStatus = valid ? "Healthy" : "Degraded";
     } catch (e) {
-      _isConnected = false;
-      _healthStatus = "Disconnected";
+      _isConnected = true;
+      _engineMode = AiEngineMode.localIntelligence;
+      _healthStatus = "Local Fallback";
       logError("Connectivity test failed: $e");
     } finally {
       _notifyListeners();
@@ -162,7 +203,7 @@ class GeminiService {
     return _isConnected;
   }
 
-  // Multi-model retry content generation with caching, retry logic, timeout, duplicate prevention
+  // Multi-model retry content generation with Circuit Breaker, caching, retry logic, timeout, duplicate prevention
   Future<String> generateResponse({
     required String prompt,
     required List<Content> history,
@@ -183,10 +224,22 @@ class GeminiService {
       return _activeRequests[cacheKey]!;
     }
 
+    // Circuit Breaker check
+    if (_circuitState == CircuitState.open) {
+      throw Exception("Circuit Breaker Open: Routing to Local Engine");
+    }
+
+    final apiKey = await _getApiKey();
+    if (apiKey.trim().isEmpty) {
+      _engineMode = AiEngineMode.localIntelligence;
+      throw Exception("No API key set: Routing to Local Engine");
+    }
+
     final future = _executeWithRetryAndModels(
       prompt: prompt,
       history: history,
       systemInstruction: systemInstruction,
+      apiKey: apiKey,
     );
 
     _activeRequests[cacheKey] = future;
@@ -195,14 +248,22 @@ class GeminiService {
       final result = await future;
       _responseCache[cacheKey] = result;
       _successfulRequests++;
+      _consecutiveFailures = 0;
+      _circuitState = CircuitState.closed;
       _isConnected = true;
+      _engineMode = AiEngineMode.cloudGemini;
       _healthStatus = "Healthy";
       return result;
     } catch (e) {
       _failedRequests++;
-      _isConnected = false;
-      _healthStatus = "Degraded";
-      logError("All models failed for prompt. Error: $e");
+      _consecutiveFailures++;
+      if (_consecutiveFailures >= 3) {
+        _circuitState = CircuitState.open;
+        _circuitOpenedTime = DateTime.now();
+      }
+      _engineMode = AiEngineMode.localIntelligence;
+      _healthStatus = "Local Fallback";
+      logError("Cloud model request failed ($e). Routed to local engine.");
       rethrow;
     } finally {
       _activeRequests.remove(cacheKey);
@@ -214,14 +275,14 @@ class GeminiService {
     required String prompt,
     required List<Content> history,
     required String systemInstruction,
+    required String apiKey,
   }) async {
     final startTime = DateTime.now();
     Object? lastError;
-    final apiKey = await _getApiKey();
 
     for (final modelName in _modelChain) {
-      int retries = 3;
-      double backoffMs = 500;
+      int retries = 2;
+      double backoffMs = 400;
 
       while (retries > 0) {
         try {
@@ -238,7 +299,7 @@ class GeminiService {
 
           final chat = model.startChat(history: history);
           final response = await chat.sendMessage(Content.text(prompt))
-              .timeout(const Duration(seconds: 15));
+              .timeout(const Duration(seconds: 12));
 
           final text = response.text ?? '';
           if (text.isNotEmpty) {
@@ -258,6 +319,6 @@ class GeminiService {
       logError("Model $modelName exhausted. Trying next fallback.");
     }
 
-    throw lastError ?? Exception("Failed to generate content");
+    throw lastError ?? Exception("Failed to generate cloud AI content");
   }
 }

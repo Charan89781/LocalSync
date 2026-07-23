@@ -18,13 +18,12 @@ final spacesProvider = StreamProvider<List<SpaceEntity>>((ref) {
 
 /// Strictly filters rental spaces by 5 KM neighborhood radius
 final nearbySpacesProvider = StreamProvider.autoDispose<List<SpaceEntity>>((ref) {
-  final spacesAsync = ref.watch(spacesProvider);
   final userPosition = ref.watch(userCoordinatesProvider).value;
   final userCity = ref.watch(userLocationProvider).value;
   final currentUser = ref.watch(authStateProvider).value;
   final radiusKm = ref.watch(neighborhoodRadiusKmProvider);
 
-  return spacesAsync.whenData((spaces) {
+  return ref.watch(spaceRepositoryProvider).getSpaces().map((spaces) {
     return spaces.where((space) {
       return LocationService.isWithinNeighborhoodRadius(
         itemLat: space.latitude,

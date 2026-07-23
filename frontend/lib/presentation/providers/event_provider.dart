@@ -16,13 +16,12 @@ final upcomingEventsProvider = StreamProvider<List<EventEntity>>((ref) {
 
 /// Strictly filters upcoming community events by 5 KM neighborhood radius
 final nearbyEventsProvider = StreamProvider.autoDispose<List<EventEntity>>((ref) {
-  final eventsAsync = ref.watch(upcomingEventsProvider);
   final userPosition = ref.watch(userCoordinatesProvider).value;
   final userCity = ref.watch(userLocationProvider).value;
   final currentUser = ref.watch(authStateProvider).value;
   final radiusKm = ref.watch(neighborhoodRadiusKmProvider);
 
-  return eventsAsync.whenData((events) {
+  return ref.watch(eventRepositoryProvider).getUpcomingEvents().map((events) {
     return events.where((event) {
       return LocationService.isWithinNeighborhoodRadius(
         itemLat: event.latitude,

@@ -17,13 +17,12 @@ final feedPostsProvider = StreamProvider.autoDispose<List<PostEntity>>((ref) {
 
 /// Strictly filters feed posts by user's 5 KM neighborhood radius & location isolation
 final nearbyFeedPostsProvider = StreamProvider.autoDispose<List<PostEntity>>((ref) {
-  final postsAsync = ref.watch(feedPostsProvider);
   final userPosition = ref.watch(userCoordinatesProvider).value;
   final userCity = ref.watch(userLocationProvider).value;
   final currentUser = ref.watch(authStateProvider).value;
   final radiusKm = ref.watch(neighborhoodRadiusKmProvider);
 
-  return postsAsync.whenData((posts) {
+  return ref.watch(postRepositoryProvider).getFeedPosts().map((posts) {
     return posts.where((post) {
       return LocationService.isWithinNeighborhoodRadius(
         itemLat: post.latitude,
@@ -41,9 +40,26 @@ final nearbyFeedPostsProvider = StreamProvider.autoDispose<List<PostEntity>>((re
 
 /// Strictly filters help requests by 5 KM neighborhood radius
 final nearbyHelpRequestsProvider = StreamProvider.autoDispose<List<PostEntity>>((ref) {
-  final postsAsync = ref.watch(nearbyFeedPostsProvider);
-  return postsAsync.whenData((posts) {
-    return posts.where((p) => p.type == PostType.help).toList();
+  final userPosition = ref.watch(userCoordinatesProvider).value;
+  final userCity = ref.watch(userLocationProvider).value;
+  final currentUser = ref.watch(authStateProvider).value;
+  final radiusKm = ref.watch(neighborhoodRadiusKmProvider);
+
+  return ref.watch(postRepositoryProvider).getFeedPosts().map((posts) {
+    return posts.where((post) {
+      final isHelp = post.type == PostType.help;
+      final isNearby = LocationService.isWithinNeighborhoodRadius(
+        itemLat: post.latitude,
+        itemLng: post.longitude,
+        itemLocationLabel: post.locationLabel,
+        userPosition: userPosition,
+        userCity: userCity,
+        radiusKm: radiusKm,
+        currentUserId: currentUser?.id,
+        authorId: post.authorId,
+      );
+      return isHelp && isNearby;
+    }).toList();
   });
 });
 

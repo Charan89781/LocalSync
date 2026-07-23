@@ -2154,6 +2154,9 @@ class _HelpRequestScreenState extends ConsumerState<HelpRequestScreen> with Sing
                       } catch (e) {
                         debugPrint('Location capture failed: $e');
                       }
+                      if (address == null || address.trim().isEmpty) {
+                        address = ref.read(cityNameProvider);
+                      }
 
                       final newPost = PostEntity(
                         id: DateTime.now().millisecondsSinceEpoch.toString(),

@@ -41,6 +41,9 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
     final user = ref.read(authStateProvider).value;
     if (user == null) return;
     final position = ref.read(userCoordinatesProvider).value;
+    final locLabel = (user.address != null && user.address!.trim().isNotEmpty)
+        ? user.address!
+        : ref.read(cityNameProvider);
 
     setSheetState(() => _isSubmitting = true);
     setState(() => _isSubmitting = true);
@@ -75,7 +78,7 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
         poll: poll,
         latitude: position?.latitude,
         longitude: position?.longitude,
-        locationLabel: user.address,
+        locationLabel: locLabel,
       );
 
       await ref.read(postRepositoryProvider).createPost(newPost);

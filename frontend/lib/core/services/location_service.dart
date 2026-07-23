@@ -163,9 +163,8 @@ class LocationService {
         if (city.isNotEmpty) return city;
       }
     } catch (_) {}
-    return 'New Delhi';
+    return 'Kuthambakkam, Chennai';
   }
-}
 
   /// Checks whether an item's location falls within the user's neighborhood radius (default 5.0 KM).
   static bool isWithinNeighborhoodRadius({
@@ -189,7 +188,7 @@ class LocationService {
     }
 
     // 3. Exact GPS Distance Calculation (Haversine formula via Geolocator)
-    if (userPosition != null && itemLat != null && itemLng != null) {
+    if (userPosition != null && itemLat != null && itemLng != null && itemLat != 0.0 && itemLng != 0.0) {
       final distanceInMeters = Geolocator.distanceBetween(
         userPosition.latitude,
         userPosition.longitude,
@@ -201,26 +200,28 @@ class LocationService {
     }
 
     // 4. Locality / City Text Matching Fallback when GPS coordinates are partial
-    if (itemLocationLabel != null && itemLocationLabel.isNotEmpty) {
+    if (itemLocationLabel != null && itemLocationLabel.trim().isNotEmpty &&
+        userCity != null && userCity.trim().isNotEmpty) {
       final labelLower = itemLocationLabel.toLowerCase();
-      if (userCity != null && userCity.isNotEmpty) {
-        final cityLower = userCity.toLowerCase();
-        final cityTokens = cityLower.split(RegExp(r'[\s,]+')).where((t) => t.length > 2);
-        for (final token in cityTokens) {
-          if (labelLower.contains(token)) {
-            return true;
-          }
+      final cityLower = userCity.toLowerCase();
+      final cityTokens = cityLower.split(RegExp(r'[\s,]+')).where((t) => t.length > 2);
+      for (final token in cityTokens) {
+        if (labelLower.contains(token)) {
+          return true;
         }
       }
-    }
-
-    // If user position is available and item coords are available but outside radiusKm -> Hide
-    if (userPosition != null && itemLat != null && itemLng != null) {
+      // If explicit location labels exist on both item & user but do not match -> Hide
       return false;
     }
 
-    // Default to true if location info is unavailable to prevent blank feed on initial startup
-    return true;
+    // If user position is available and item coords are available but outside radiusKm -> Hide
+    if (userPosition != null && itemLat != null && itemLng != null && itemLat != 0.0 && itemLng != 0.0) {
+      return false;
+    }
+
+    // 5. If item has NO valid location data (lat/lng null or 0, and locationLabel null/empty),
+    // strictly HIDE IT from other users when neighborhood radius isolation is active!
+    return false;
   }
 }
 
@@ -250,19 +251,19 @@ final userLocationProvider = FutureProvider<String>((ref) async {
   return service._cityFromIp();
 });
 
-/// Exposes just the city name as a simple string (non-null, non-async).
+/// Exposes just the city/neighborhood name as a simple string (non-null, non-async).
 final cityNameProvider = Provider<String>((ref) {
   final locationAsync = ref.watch(userLocationProvider);
   return locationAsync.when(
     data: (address) {
-      if (address.isEmpty) return 'Your City';
-      final parts = address.split(',');
-      if (parts.length > 1) {
-        return parts.last.trim();
+      if (address.isEmpty) return 'Your Locality';
+      final parts = address.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+      if (parts.length >= 2) {
+        return '${parts[0]}, ${parts[1]}';
       }
       return address;
     },
     loading: () => 'Locating...',
-    error: (_, __) => 'Your City',
+    error: (_, __) => 'Your Locality',
   );
 });

@@ -29,7 +29,7 @@ class NeighborhoodFilterBar extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground.withValues(alpha: 0.8),
+        color: AppColors.secondaryNavy.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.2)),
         boxShadow: [

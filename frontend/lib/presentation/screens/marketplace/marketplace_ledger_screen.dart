@@ -89,7 +89,7 @@ class _MarketplaceLedgerScreenState extends ConsumerState<MarketplaceLedgerScree
               return Column(
                 children: [
                   _buildHeader(context),
-                  _buildFeatureSelectorCard(incoming, outgoing),
+                  _buildFeatureSelectorCard(incoming, outgoing, ownedListings),
                   const SizedBox(height: 8),
                   Expanded(
                     child: _buildActiveTabBody(ownedListings, listings, incoming, outgoing, user),
@@ -218,11 +218,13 @@ class _MarketplaceLedgerScreenState extends ConsumerState<MarketplaceLedgerScree
     );
   }
 
-  Widget _buildFeatureSelectorCard(List<BorrowRequestEntity> incoming, List<BorrowRequestEntity> outgoing) {
+  Widget _buildFeatureSelectorCard(List<BorrowRequestEntity> incoming, List<BorrowRequestEntity> outgoing, List<ListingEntity> ownedListings) {
     final acceptedIncoming = incoming.where((r) => r.status == RequestStatus.accepted).toList();
     final acceptedOutgoing = outgoing.where((r) => r.status == RequestStatus.accepted).toList();
 
-    final activeLentCount = acceptedIncoming.length;
+    final lentLabel = acceptedIncoming.isNotEmpty
+        ? '${acceptedIncoming.length} Active'
+        : (ownedListings.isNotEmpty ? '${ownedListings.length} Listed' : '0 Active');
     final activeBorrowedCount = acceptedOutgoing.length;
 
     return Container(
@@ -286,7 +288,7 @@ class _MarketplaceLedgerScreenState extends ConsumerState<MarketplaceLedgerScree
                             const Icon(Icons.arrow_upward_rounded, color: AppColors.neonCyan, size: 18),
                             const SizedBox(width: 4),
                             Text(
-                              '$activeLentCount Active',
+                              lentLabel,
                               style: GoogleFonts.outfit(
                                 color: Colors.white,
                                 fontSize: 17,
@@ -575,7 +577,7 @@ class _MarketplaceLedgerScreenState extends ConsumerState<MarketplaceLedgerScree
         return GlassCard(
           borderRadius: 20,
           margin: const EdgeInsets.only(bottom: 14),
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(16),
           child: Column(
             children: [
               Row(
@@ -646,16 +648,39 @@ class _MarketplaceLedgerScreenState extends ConsumerState<MarketplaceLedgerScree
               ),
               const SizedBox(height: 12),
               Row(
-                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton.icon(
-                    onPressed: () => context.push('/marketplace/${item.id}'),
-                    icon: const Icon(Icons.visibility_rounded, size: 14),
-                    label: const Text('View', style: TextStyle(fontSize: 11)),
-                    style: TextButton.styleFrom(foregroundColor: Colors.white70),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => context.push('/marketplace/${item.id}'),
+                      icon: const Icon(Icons.info_outline_rounded, size: 15),
+                      label: const Text('Item Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 8),
-                  if (item.ownerId == currentUserId)
+                  if (isCurrentlyLent) ...[
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          final templateMsg = "Hi ${activeBorrow.requesterName}! Regarding the item \"${item.title}\"...";
+                          await _navigateToDirectChat(context, ref, activeBorrow.requesterId, templateMsg);
+                        },
+                        icon: const Icon(Icons.chat_bubble_outline_rounded, size: 15),
+                        label: const Text('Contact Borrower', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.neonCyan,
+                          foregroundColor: AppColors.primaryNavy,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ),
+                  ] else if (item.ownerId == currentUserId) ...[
                     ElevatedButton.icon(
                       onPressed: () async {
                         final confirm = await _showDeleteConfirmation(item);
@@ -664,28 +689,34 @@ class _MarketplaceLedgerScreenState extends ConsumerState<MarketplaceLedgerScree
                           ref.invalidate(listingsProvider);
                         }
                       },
-                      icon: const Icon(Icons.delete_outline_rounded, size: 14),
-                      label: const Text('Delete', style: TextStyle(fontSize: 11)),
+                      icon: const Icon(Icons.delete_outline_rounded, size: 15),
+                      label: const Text('Delete', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.errorRed.withValues(alpha: 0.15),
                         foregroundColor: AppColors.errorRed,
-                        elevation: 0,
-                      ),
-                    )
-                  else
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        final templateMsg = "Hi! I am returning/contacting you about the item \"${item.title}\" I borrowed.";
-                        await _navigateToDirectChat(context, ref, item.ownerId, templateMsg);
-                      },
-                      icon: const Icon(Icons.chat_bubble_outline_rounded, size: 14),
-                      label: const Text('Contact Owner', style: TextStyle(fontSize: 11)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.neonCyan.withValues(alpha: 0.15),
-                        foregroundColor: AppColors.neonCyan,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         elevation: 0,
                       ),
                     ),
+                  ] else ...[
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          final templateMsg = "Hi! I am contacting you about the item \"${item.title}\".";
+                          await _navigateToDirectChat(context, ref, item.ownerId, templateMsg);
+                        },
+                        icon: const Icon(Icons.chat_bubble_outline_rounded, size: 15),
+                        label: const Text('Contact Owner', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.neonCyan,
+                          foregroundColor: AppColors.primaryNavy,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ],
