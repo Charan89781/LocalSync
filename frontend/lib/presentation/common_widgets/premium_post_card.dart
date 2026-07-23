@@ -440,7 +440,7 @@ class PremiumPostCard extends ConsumerWidget {
                   Expanded(
                     child: TextField(
                       controller: commentController,
-                      style: const TextStyle(color: AppColors.textDark),
+                      style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         hintText: 'Add a comment...',
                         border: OutlineInputBorder(

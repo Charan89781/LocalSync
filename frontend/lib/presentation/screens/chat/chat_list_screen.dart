@@ -358,9 +358,60 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen>
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       physics: const BouncingScrollPhysics(),
-      itemCount: rooms.length + 1,
+      itemCount: rooms.isEmpty ? 2 : rooms.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) return _buildAiAssistantTile();
+
+        if (rooms.isEmpty && index == 1) {
+          return Container(
+            margin: const EdgeInsets.only(top: 20),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08), width: 1.5),
+            ),
+            child: Column(
+              children: [
+                const Icon(Icons.forum_outlined, color: AppColors.neonCyan, size: 44),
+                const SizedBox(height: 12),
+                Text(
+                  'No Direct Messages Yet',
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Tap "NEW CHAT" below to connect with nearby neighbors or search community members!',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(color: Colors.white54, fontSize: 12, height: 1.4),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: _showNewChatDialog,
+                  icon: const Icon(Icons.add_comment_rounded, color: AppColors.primaryNavy, size: 18),
+                  label: Text(
+                    'START A CHAT',
+                    style: GoogleFonts.inter(
+                      color: AppColors.primaryNavy,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 11,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.neonCyan,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
 
         final room = rooms[index - 1];
         final timeStr = room.lastMessageTime != null
@@ -396,7 +447,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen>
               }
             }
 
-            final unreadCount = 0;
+            const unreadCount = 0;
 
             return Dismissible(
               key: Key(room.id),
@@ -585,9 +636,11 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen>
   String _formatTime(DateTime dt) {
     final now = DateTime.now();
     final diff = now.difference(dt);
-    if (diff.inDays > 0) return DateFormat('MMM d').format(dt);
-    if (diff.inHours > 0) return '${diff.inHours}h';
-    return DateFormat.Hm().format(dt);
+    if (diff.inSeconds < 60) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m';
+    if (diff.inHours < 24) return '${diff.inHours}h';
+    if (diff.inDays < 7) return DateFormat('E').format(dt);
+    return DateFormat('MMM d').format(dt);
   }
 
   Widget _buildAiAssistantTile() {

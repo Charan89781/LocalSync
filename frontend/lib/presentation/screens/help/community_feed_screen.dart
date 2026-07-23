@@ -376,7 +376,7 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
                   TextField(
                     controller: _postController,
                     maxLines: _selectedType == PostType.poll ? 2 : 4,
-                    style: const TextStyle(color: AppColors.textDark),
+                    style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       hintText: _selectedType == PostType.poll
                           ? "What do you want to ask?"
@@ -398,7 +398,7 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
                         padding: const EdgeInsets.only(bottom: 12.0),
                         child: TextField(
                           controller: _pollOptionControllers[index],
-                          style: const TextStyle(color: AppColors.textDark),
+                          style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
                             hintText: "Option ${index + 1}",
                             prefixIcon:

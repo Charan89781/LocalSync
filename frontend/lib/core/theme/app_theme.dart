@@ -133,6 +133,11 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: AppColors.primaryBlue,
+        selectionColor: Color(0x400066FF),
+        selectionHandleColor: AppColors.primaryBlue,
+      ),
       textTheme: _buildTextTheme(AppColors.textDark, AppColors.textGray),
       scaffoldBackgroundColor: AppColors.backgroundLight,
       appBarTheme: AppBarTheme(
@@ -416,6 +421,10 @@ class AppTheme {
       surface: AppColors.secondaryNavy,
       onSurface: Colors.white,
       surfaceContainerHighest: AppColors.surfaceNavy,
+      surfaceContainerHigh: AppColors.surfaceNavy,
+      surfaceContainer: AppColors.secondaryNavy,
+      surfaceContainerLow: AppColors.primaryNavy,
+      surfaceContainerLowest: AppColors.primaryNavy,
       onSurfaceVariant: Color(0xFFCAC4D0),
       outline: Color(0xFF49454F),
       outlineVariant: Color(0xFF1E2732),
@@ -430,6 +439,11 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: colorScheme,
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: AppColors.neonCyan,
+        selectionColor: Color(0x6600E5FF),
+        selectionHandleColor: AppColors.neonCyan,
+      ),
       textTheme: _buildTextTheme(Colors.white, const Color(0xFFCAC4D0)),
       scaffoldBackgroundColor: AppColors.primaryNavy,
       appBarTheme: AppBarTheme(
@@ -499,6 +513,8 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surfaceNavy,
+        focusColor: AppColors.surfaceNavy,
+        hoverColor: AppColors.surfaceNavy,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         border: OutlineInputBorder(
